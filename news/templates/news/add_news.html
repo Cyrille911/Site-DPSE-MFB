@@ -1,0 +1,74 @@
+{% extends 'index.html' %}
+
+{% block content %}
+<div class="container py-5">
+  <h1 class="text-center mb-4 text-primary">Ajouter une actualité</h1>
+  
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    
+    <!-- Titre de l'actualité -->
+    <div class="mb-4">
+      <label for="headline" class="form-label">Titre de l'actualité :</label>
+      <input type="text" name="headline" id="headline" class="form-control" required>
+    </div>
+
+    <!-- Contenu de l'actualité avec Quill.js -->
+    <div class="mb-4">
+      <label for="content" class="form-label">Contenu :</label>
+      <div id="content" style="height: 200px;"></div> <!-- Conteneur Quill -->
+      <input type="hidden" name="content" id="content-input"> <!-- Champ caché pour soumettre le contenu -->
+    </div>
+
+    <!-- Image associée -->
+    <div class="mb-4">
+      <label for="image" class="form-label">Image associée :</label>
+      <input type="file" name="image" id="image" class="form-control" accept="image/*">
+    </div>
+
+    <!-- Actualité en vedette -->
+    <div class="mb-4">
+      <label for="is_featured" class="form-check-label">Actualité en vedette :</label>
+      <input type="checkbox" name="is_featured" id="is_featured" class="form-check-input">
+    </div>
+
+    <!-- Lien externe -->
+    <div class="mb-4">
+      <label for="external_link" class="form-label">Lien externe :</label>
+      <input type="url" name="external_link" id="external_link" class="form-control">
+    </div>
+
+    <!-- Bouton d'ajout -->
+    <div class="text-center">
+      <button type="submit" class="btn btn-success btn-lg">Ajouter l'actualité</button>
+    </div>
+  </form>
+</div>
+
+<!-- Initialisation de Quill.js -->
+<link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+<script>
+  // Initialiser l'éditeur Quill
+  var quill = new Quill('#content', {
+    theme: 'snow',
+    modules: {
+      toolbar: [
+        [{ 'header': '1' }, { 'header': '2' }, { 'font': [] }],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        [{ 'align': [] }],
+        ['bold', 'italic', 'underline'],
+        ['link'],
+        ['image'],
+      ]
+    }
+  });
+
+  // Lors de la soumission du formulaire, récupérer le contenu de Quill et le placer dans le champ caché
+  document.querySelector('form').onsubmit = function() {
+    var content = document.querySelector('#content-input');
+    content.value = quill.root.innerHTML;
+  };
+</script>
+
+{% endblock %}

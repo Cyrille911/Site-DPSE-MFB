@@ -1,0 +1,176 @@
+{% extends 'index.html' %}
+
+{% block title %}Service Qualité et Normalisation{% endblock %}
+
+{% block style %}
+<style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f8f9fa;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    .section-title {
+      font-size: 2rem;
+      margin-top: 40px;
+      margin-bottom: 20px;
+      text-align: center;
+      font-weight: bold;
+      color: #FF6A13;
+      text-transform: uppercase;
+    }
+    .subsection-title {
+      font-size: 1.5rem;
+      margin-top: 30px;
+      margin-bottom: 15px;
+      color: #FF6A13;
+      font-weight: 600;
+    }
+    .container {
+      margin-top: 50px;
+      padding: 0 15px;
+    }
+    .card {
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      margin-bottom: 30px;
+      transition: transform 0.3s ease-in-out;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+    }
+    .card-header {
+      background-color: #FF6A13;
+      color: white;
+      font-weight: bold;
+      padding: 12px 15px;
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
+    }
+    .card-body {
+      padding: 20px;
+      background-color: #ffffff;
+      border-bottom-left-radius: 12px;
+      border-bottom-right-radius: 12px;
+    }
+    .icon {
+      font-size: 40px;
+      color: #FF6A13;
+      margin-right: 15px;
+    }
+    .row {
+      margin-top: 30px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <div class="section-title">
+      Service Qualité et Normalisation
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        Présentation du Service
+      </div>
+      <div class="card-body">
+        <p>Le Service Qualité et Normalisation du Ministère des Finances et du Budget est responsable de l’élaboration et de la mise en œuvre de normes de qualité dans les processus administratifs et financiers...</p>
+      </div>
+    </div>
+
+    <!-- Missions -->
+    <div class="subsection-title">
+      Missions du Service
+    </div>
+    <div class="row">
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-header">
+            Normalisation
+          </div>
+          <div class="card-body">
+            <p>Établir des normes et procédures claires afin d’assurer une gestion financière cohérente...</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-header">
+            Qualité
+          </div>
+          <div class="card-body">
+            <p>Assurer l'amélioration continue des services et des processus en appliquant des standards de qualité...</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-header">
+            Conformité
+          </div>
+          <div class="card-body">
+            <p>Garantir le respect des régulations locales et internationales...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="section-title">
+      Actions et Réalisations
+    </div>
+    <div class="row">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            Formation et Sensibilisation
+          </div>
+          <div class="card-body">
+            <p>Le Service organise des sessions de formation pour sensibiliser les agents publics...</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            Audits de Conformité
+          </div>
+          <div class="card-body">
+            <p>Des audits sont réalisés pour vérifier la conformité des processus internes...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Objectifs Futurs -->
+    <div class="section-title">
+      Objectifs Futurs
+    </div>
+    <div class="card">
+      <div class="card-header">
+        Développement de Normes Internationales
+      </div>
+      <div class="card-body">
+        <p>Le Service s’efforcera de développer des partenariats avec des institutions internationales...</p>
+      </div>
+    </div>
+
+    <!-- Contacts -->
+    <div class="section-title">
+      Nous Contacter
+    </div>
+    <div class="card">
+      <div class="card-header">
+        Informations de Contact
+      </div>
+      <div class="card-body">
+        <p><strong>Email :</strong> qualité.normalisation@finances.gov</p>
+        <p><strong>Téléphone :</strong> +221 33 123 4567</p>
+        <p><strong>Adresse :</strong> Ministère des Finances et du Budget, 12 rue des Finances, Dakar, Sénégal.</p>
+      </div>
+    </div>
+  </div>
+  
+{% endblock %}

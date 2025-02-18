@@ -1,0 +1,50 @@
+# Environnement virtuel
+myvenv/
+venv/
+
+# Dépendances Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Logs et fichiers temporaires
+*.log
+*.pot
+*.pid
+*.seed
+*.cover
+*.py,cover
+*.so
+
+# Paramètres locaux et secrets
+.env
+*.env
+config/settings/local.py
+config/settings/.env
+
+# Base de données SQLite
+db.sqlite3
+*.sqlite3
+
+# Migrations compilées (facultatif si tu veux les ignorer)
+**/migrations/*.pyc
+**/migrations/__pycache__/
+
+# Node.js (si utilisé pour frontend)
+node_modules/
+package-lock.json
+yarn.lock
+
+# IDE et éditeurs de texte
+.vscode/
+.idea/
+*.iml
+
+# Fichiers générés par Django
+staticfiles/
+media/
+
+# Docker et virtualisation (au besoin)
+.dockerignore
+docker-compose.override.yml

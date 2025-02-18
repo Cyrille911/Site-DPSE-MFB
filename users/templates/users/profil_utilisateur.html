@@ -1,0 +1,46 @@
+{% extends 'index.html' %}
+
+{% block title %}Profil Utilisateur{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="text-center">
+        <h1 class="mb-4">Profil de l'utilisateur</h1>
+    </div>
+    <div class="card mx-auto shadow-lg" style="width: 24rem; border-radius: 10px; overflow: hidden;">
+        <div class="text-center pt-4">
+            {% if utilisateur.photo %}
+                <img src="{{ utilisateur.photo.url }}" class="rounded-circle border" style="width: 120px; height: 120px; object-fit: cover;" alt="Photo de profil">
+            {% else %}
+                <div class="rounded-circle bg-primary text-white d-flex justify-content-center align-items-center"
+                    style="width: 120px; height: 120px; font-size: 36px; font-weight: bold; margin: auto;">
+                    {{ utilisateur.first_name|default:''|slice:":1" }}{{ utilisateur.last_name|default:''|slice:":1" }}
+                </div>
+            {% endif %}
+        </div>
+        <div class="card-body d-flex flex-column align-items-center px-4">
+            <h4 class="card-title text-primary mb-4 text-center">{{ utilisateur.first_name }} {{ utilisateur.last_name }}</h4>
+            <hr class="mb-3" style="width: 80%; margin: auto;">
+            
+            <div style="text-align: left; width: 85%;">
+                <p class="card-text mb-3"><strong>Email :</strong> {{ utilisateur.email }}</p>
+                <p class="card-text mb-3"><strong>Numéro de téléphone :</strong> {{ utilisateur.phone_number }}</p>
+                <p class="card-text mb-3"><strong>Rôle :</strong> {{ utilisateur.get_role_display }}</p>
+                
+                {% if utilisateur.role == 'membre' %}
+                    <p class="card-text mb-3"><strong>Programme :</strong> {{ utilisateur.program }}</p>
+                    <p class="card-text mb-3"><strong>Entité :</strong> {{ utilisateur.entity }}</p>
+                    <p class="card-text mb-3"><strong>Fonction :</strong> {{ utilisateur.function }}</p>
+                {% elif utilisateur.role == 'visiteur' %}
+                    <p class="card-text mb-3"><strong>Profession :</strong> {{ utilisateur.profession }}</p>
+                    <p class="card-text mb-3"><strong>Intérêt :</strong> {{ utilisateur.interest }}</p>
+                {% endif %}
+            </div>
+            
+            <div class="text-center mt-4">
+                <a href="{% url 'modifier_profil' %}" class="btn btn-outline-primary">Modifier mon profil</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

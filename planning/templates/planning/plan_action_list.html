@@ -1,0 +1,100 @@
+{% extends 'index.html' %}
+
+{% block title %}
+Liste des Plans d'Actions
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4 text-primary fw-bold">Plans d'Actions</h1>
+
+    <!-- Liste des Plans d'Actions -->
+    <div id="plans-actions-list">
+        {% for plan in plans %}
+            <div class="card shadow-lg mb-4 border border-info rounded-3">
+                <div class="card-header bg-info text-white">
+                    <h4 class="card-title">{{ plan.titre }}</h4>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">{{ plan.impact|truncatewords:20 }}</p>
+                    <p class="text-muted">Horizon : {{ plan.horizon }}</p>
+                    <a href="{% url 'plan_action_detail' plan.id %}" class="btn btn-outline-primary">Visualiser le plan</a>
+                    <a href="{% url 'edit_plan_action' plan.id %}" class="btn btn-outline-warning ms-2">Modifier le plan</a>
+                </div>
+            </div>
+        {% empty %}
+            <div class="no-news text-center">
+                <h3 class="text-warning">Aucun plan d'actions !</h3>
+            </div>
+        {% endfor %}
+    </div>
+    <!-- Bouton d'ajout -->
+    <div class="text-center mt-5">
+    {% if is_member %}
+        <a href="{% url 'add_plan_action' %}" class="btn btn-success btn-lg d-inline-flex align-items-center">
+            <span class="me-2">+</span> Ajouter un plan d'actions
+        </a>
+    {% else %}
+    <!-- <a href="#" class="btn btn-success btn-lg d-inline-flex align-items-center" data-bs-toggle="modal" data-bs-target="#loginModal2">-->
+        <a href="{% url 'add_plan_action' %}" class="btn btn-success btn-lg d-inline-flex align-items-center">        
+        <span class="me-2">+</span> Ajouter un plan d'actions
+    </a>
+    {% endif %}    
+    </div>
+</div>
+
+<!-- Modale pour inviter à se connecter -->
+<div class="modal fade" id="loginModal2" tabindex="-1" aria-labelledby="loginModalLabel2" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Accès restreint</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Vous devez être membre et connecté(e) pour ajouter un plan d'actions. Veuillez vous connecter ou vous inscrire.
+            </div>
+            <div class="modal-footer">
+                <a class="btn btn-secondary" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">Se connecter</a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .no-news {
+        height: 50vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: #6c757d;
+    }
+    .text-warning {
+        color: #ff5722; /* Couleur orange pour attirer l'attention */
+        font-weight: bold;
+    }
+    .btn-success {
+        border-radius: 50px;
+        padding: 10px 20px;
+        font-size: 1.25rem;
+        font-weight: bold;
+    }
+    .btn-success span {
+        font-size: 2rem;
+    }
+    .btn-secondary {
+        border-radius: 50px;
+        padding: 10px 20px;
+        font-size: 1.25rem;
+        font-weight: bold;
+        background-color: #6c757d;
+        color: white;
+    }
+    .btn-secondary span {
+        font-size: 2rem;
+    }
+</style>
+{% endblock %}

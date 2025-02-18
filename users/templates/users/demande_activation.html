@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demande d'activation de compte</title>
+</head>
+<body>
+    <h1>Demande d'activation de compte</h1>
+    <p>Un nouveau membre a demandé l'activation de son compte.</p>
+    <ul>
+        <li><strong>Nom :</strong> {{ user.username }}</li>
+        <li><strong>Nom :</strong> {{ user.last_name }}</li>
+        <li><strong>Prénoms :</strong> {{ user.first_name }}</li>
+        <li><strong>Programme :</strong> {{ user.program }}</li>
+        <li><strong>Entité :</strong> {{ user.entity }}</li>
+        <li><strong>Fonction :</strong> {{ user.function }}</li>
+        <li><strong>Email :</strong> {{ user.email }}</li>
+        <li><strong>Téléphone :</strong> {{ user.phone_number }}</li>
+    </ul>
+    <p>
+        <a href="http://{{ domain }}/nouveau/membre/{{ uid }}/{{ token }}">Cliquer ici pour l'activer</a>
+    </p>
+</body>
+</html>

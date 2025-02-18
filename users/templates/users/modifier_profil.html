@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	{% load static %}
+	<title>Login V5</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--===============================================================================================-->
+	<link rel="stylesheet" href="{% static 'general/login/vendor/bootstrap/css/bootstrap.min.css' %}">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="{% static 'general/login/vendor/bootstrap/css/bootstrap.min.css' %}">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="{% static 'general/login/fonts/Linearicons-Free-v1.0.0/icon-font.min.css' %}">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="{% static 'general/login/vendor/animate/animate.css' %}">
+<!--===============================================================================================-->	
+	<link rel="stylesheet" type="text/css" href="{% static 'general/login/vendor/css-hamburgers/hamburgers.min.css' %}">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="{% static 'general/login/vendor/animsition/css/animsition.min.css' %}">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="{% static 'general/login/vendor/select2/select2.min.css' %}">
+<!--===============================================================================================-->	
+	<link rel="stylesheet" type="text/css" href="{% static 'general/login/vendor/daterangepicker/daterangepicker.css' %}">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="{% static 'general/login/css/util.css' %}">
+	<link rel="stylesheet" type="text/css" href="{% static 'general/login/css/main.css' %}">
+<!--===============================================================================================-->
+</head>
+<body>
+	
+	<div class="limiter">
+		<div class="container-login100" style="background: linear-gradient(to right, #f77f00, #ffffff, #009e60);">
+			<div class="wrap-login100 p-l-110 p-r-110 p-t-62 p-b-33">
+                <form class="login100-form validate-form flex-sb flex-w" method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <span class="login100-form-title">
+                        Mise à jour du profil
+                    </span>
+                
+                    <!-- Prénom -->
+                    <div class="p-t-31 p-b-9">
+                        <span class="txt1">Prénom</span>
+                    </div>
+                    <div class="wrap-input100 validate-input">
+                        <input class="input100" type="text" name="first_name" value="{{ utilisateur.first_name }}" required>
+                        <span class="focus-input100"></span>
+                    </div>
+                
+                    <!-- Nom -->
+                    <div class="p-t-31 p-b-9">
+                        <span class="txt1">Nom</span>
+                    </div>
+                    <div class="wrap-input100 validate-input">
+                        <input class="input100" type="text" name="last_name" value="{{ utilisateur.last_name }}" required>
+                        <span class="focus-input100"></span>
+                    </div>
+                
+                    <!-- Email -->
+                    <div class="p-t-31 p-b-9">
+                        <span class="txt1">Email</span>
+                    </div>
+                    <div class="wrap-input100 validate-input">
+                        <input class="input100" type="email" name="email" value="{{ utilisateur.email }}" required>
+                        <span class="focus-input100"></span>
+                    </div>
+                
+                    <!-- Numéro de téléphone -->
+                    <div class="p-t-31 p-b-9">
+                        <span class="txt1">Numéro de téléphone</span>
+                    </div>
+                    <div class="wrap-input100 validate-input">
+                        <input class="input100" type="text" name="phone_number" value="{{ utilisateur.phone_number }}">
+                        <span class="focus-input100"></span>
+                    </div>
+                
+                    <!-- Photo de profil -->
+                    <div class="p-t-31 p-b-9">
+                        <span class="txt1">Photo de profil</span>
+                    </div>
+                    <div class="wrap-input100 validate-input">
+                        <input class="input100" type="file" name="photo">
+                        <span class="focus-input100"></span>
+                    </div>
+                
+                    <!-- Champs spécifiques au rôle -->
+                    {% if utilisateur.role == 'membre' %}
+                        <div class="p-t-31 p-b-9">
+                            <span class="txt1">Programme</span>
+                        </div>
+                        <div class="wrap-input100 validate-input">
+                            <input class="input100" type="text" name="program" value="{{ utilisateur.program }}">
+                            <span class="focus-input100"></span>
+                        </div>
+                
+                        <div class="p-t-31 p-b-9">
+                            <span class="txt1">Entité</span>
+                        </div>
+                        <div class="wrap-input100 validate-input">
+                            <input class="input100" type="text" name="entity" value="{{ utilisateur.entity }}">
+                            <span class="focus-input100"></span>
+                        </div>
+                
+                        <div class="p-t-31 p-b-9">
+                            <span class="txt1">Fonction</span>
+                        </div>
+                        <div class="wrap-input100 validate-input">
+                            <input class="input100" type="text" name="function" value="{{ utilisateur.function }}">
+                            <span class="focus-input100"></span>
+                        </div>
+                
+                    {% elif utilisateur.role == 'visiteur' %}
+                        <div class="p-t-31 p-b-9">
+                            <span class="txt1">Profession</span>
+                        </div>
+                        <div class="wrap-input100 validate-input">
+                            <input class="input100" type="text" name="profession" value="{{ utilisateur.profession }}">
+                            <span class="focus-input100"></span>
+                        </div>
+                
+                        <div class="p-t-31 p-b-9">
+                            <span class="txt1">Intérêt</span>
+                        </div>
+                        <div class="wrap-input100 validate-input">
+                            <input class="input100" type="text" name="interest" value="{{ utilisateur.interest }}">
+                            <span class="focus-input100"></span>
+                        </div>
+                    {% endif %}
+                
+                    <!-- Boutons -->
+                    <div class="container-login100-form-btn m-t-17">
+                        <button class="login100-form-btn" type="submit">
+                            Enregistrer les modifications
+                        </button>
+                    </div>
+                
+                    <div class="container-login100-form-btn m-t-17">
+                        <a href="{% url 'profil_utilisateur' %}" class="btn btn-outline-secondary login100-form-btn">
+                            Annuler
+                        </a>
+                    </div>
+                
+                </form>
+			</div>
+		</div>
+	</div>
+	
+
+	<div id="dropDownSelect1"></div>
+	
+<!--===============================================================================================-->
+	<script src="{% static 'general/login/vendor/jquery/jquery-3.2.1.min.js'%}"></script>
+<!--===============================================================================================-->
+	<script src="{% static 'general/login/vendor/animsition/js/animsition.min.js'%}"></script>
+<!--===============================================================================================-->
+	<script src="{% static 'general/login/vendor/bootstrap/js/popper.js'%}"></script>
+	<script src="{% static 'general/login/vendor/bootstrap/js/bootstrap.min.js'%}"></script>
+<!--===============================================================================================-->
+	<script src="{% static 'general/login/vendor/select2/select2.min.js'%}"></script>
+<!--===============================================================================================-->
+	<script src="{% static 'general/login/vendor/daterangepicker/moment.min.js'%}"></script>
+	<script src="{% static 'general/login/vendor/daterangepicker/daterangepicker.js'%}"></script>
+<!--===============================================================================================-->
+	<script src="{% static 'general/login/vendor/countdowntime/countdowntime.js'%}"></script>
+<!--===============================================================================================-->
+	<script src="{% static 'general/login/js/main.js'%}"></script>
+
+</body>
+</html>
+

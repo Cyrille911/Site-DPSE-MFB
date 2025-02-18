@@ -1,0 +1,70 @@
+{% extends 'index.html' %}
+
+{% block content %}
+    <div class="container mt-4">
+        <h1 class="text-center">{{ document.name }}</h1>
+        <hr>
+
+        <!-- Section pour les détails du document -->
+        <div class="document-details my-4">
+            <h5><strong>Structure :</strong> {{ document.structure }}</h5>
+            <h6><strong>Description :</strong></h6>
+            <p>{{ document.description }}</p>
+            <h6><strong>Pans couverts :</strong></h6>
+            <p>{{ document.pans }}</p>
+            <h6><strong>Principaux résultats :</strong></h6>
+            <p>{{ document.results }}</p>
+        </div>
+
+        <!-- Section pour afficher le contenu du document -->
+        <div class="document-content my-4">
+            <h4>Contenu du document :</h4>
+            {% for block in content_blocks %}
+                {% if block.type == 'text' %}
+                    <p>{{ block.content }}</p>
+                {% elif block.type == 'table' %}
+                    <div class="table-responsive">
+                        {{ block.content|safe }}  <!-- On utilise |safe pour rendre le tableau HTML sécurisé -->
+                    </div>
+                {% elif block.type == 'image' %}
+                    <div class="my-3">
+                        <img src="{{ block.content }}" alt="Image" class="img-fluid" />
+                    </div>
+                {% elif block.type == 'chart' %}
+                    <div class="my-3">
+                        <img src="{{ block.content }}" alt="Graphique" class="img-fluid" />
+                    </div>
+                {% elif block.type == 'pdf' %}
+                    <div class="my-3">
+                        <iframe src="{{ block.content }}" style="width:100%; height:600px;" frameborder="0"></iframe>
+                    </div>
+                {% else %}
+                    <p>Type de contenu non supporté.</p>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        {% if user.is_authenticated %}
+        <div class="mt-4 text-center">
+            <a href="{% url 'edit_document' document_type=document_type pk=document.pk %}" class="btn btn-primary btn-sm">Modifier le document</a>
+        </div>
+        {% endif %}
+
+        <!-- Bouton de suppression du document -->
+        {% if user.is_authenticated %}
+        <div class="mt-4 text-center">
+            <form action="{% url 'delete_document' document_type=document_type pk=document.pk %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Supprimer le document 🗑️</button>
+            </form>
+        </div>
+        {% endif %}
+
+        <!-- Bouton retour -->
+        <div class="mt-4 text-center">
+            <a href="{% url 'document_list' document_type=document_type %}" class="btn btn-info">Retour 🔙</a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

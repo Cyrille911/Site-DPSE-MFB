@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    {% load static %}
+    <title>Formulaire</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Styles CSS -->
+    <link rel="stylesheet" href="{% static 'general/login/vendor/bootstrap/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'general/login/fonts/Linearicons-Free-v1.0.0/icon-font.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'general/login/vendor/animate/animate.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'general/login/vendor/css-hamburgers/hamburgers.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'general/login/vendor/animsition/css/animsition.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'general/login/vendor/select2/select2.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'general/login/vendor/daterangepicker/daterangepicker.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'general/login/css/util.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'general/login/css/main.css' %}">
+</head>
+<body>
+
+    <!-- Formulaire Django -->
+    <div class="limiter">
+        <div class="container-login100" style="background: linear-gradient(to right, #f77f00, #ffffff, #009e60);">
+            <div class="wrap-login100 p-l-110 p-r-110 p-t-62 p-b-33">
+                <form class="login100-form validate-form flex-sb flex-w" method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <span class="login100-form-title">
+                        Formulaire
+                    </span>
+
+                    <!-- Personnalisation des champs Django -->
+                    {% for field in form %}
+                        <div class="p-t-13 p-b-9">
+                            <span class="txt1">{{ field.label }}</span>
+                        </div>
+                        <div class="wrap-input100 validate-input">
+                            {{ field }}
+                            <span class="focus-input100"></span>
+                        </div>
+                    {% endfor %}
+
+                    <!-- Bouton de soumission -->
+                    <div class="container-login100-form-btn m-t-17">
+                        <button class="login100-form-btn" type="submit">Soumettre</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="dropDownSelect1"></div>
+
+    <!-- Scripts -->
+    <script src="{% static 'general/login/vendor/jquery/jquery-3.2.1.min.js'%}"></script>
+    <script src="{% static 'general/login/vendor/animsition/js/animsition.min.js'%}"></script>
+    <script src="{% static 'general/login/vendor/bootstrap/js/popper.js'%}"></script>
+    <script src="{% static 'general/login/vendor/bootstrap/js/bootstrap.min.js'%}"></script>
+    <script src="{% static 'general/login/vendor/select2/select2.min.js'%}"></script>
+    <script src="{% static 'general/login/vendor/daterangepicker/moment.min.js'%}"></script>
+    <script src="{% static 'general/login/vendor/daterangepicker/daterangepicker.js'%}"></script>
+    <script src="{% static 'general/login/vendor/countdowntime/countdowntime.js'%}"></script>
+    <script src="{% static 'general/login/js/main.js'%}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var hasMessages = document.querySelector('.messages li');
+            if (hasMessages) {
+                var messageModal = new bootstrap.Modal(document.getElementById('messageModal'));
+                messageModal.show();
+                setTimeout(function(){
+                    messageModal.hide();
+                }, 3000);
+            }
+        });
+    </script>
+
+</body>
+</html>
+

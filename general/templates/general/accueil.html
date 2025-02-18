@@ -1,0 +1,848 @@
+{% extends 'index.html' %}
+
+{% load static %}
+
+{% block title %}Accueil - DPSE{% endblock %}
+
+{% block content %}
+
+<main class="main">
+
+    <!-- Accueil -->
+    <section id="hero" class="hero section dark-background">
+
+      <img src="{% static 'general/images/plateau.jpg' %}" alt="" data-aos="fade-in">
+
+      <div class="container">
+
+        <div class="row justify-content-center text-center" data-aos="fade-up" data-aos-delay="100">
+          <div class="col-xl-9 col-lg-8">
+            <h2>Direction de la Planification et du Suivi Evaluation</h2>
+            <p>Planifier, suivre, évaluer : agir mieux !</p>
+          </div>
+        </div>
+
+        <div class="row gy-4 mt-5 justify-content-center" data-aos="fade-up" data-aos-delay="200">
+          <div class="col-xl-2 col-md-4" data-aos="fade-up" data-aos-delay="300">
+            <div class="icon-box">
+              <i class="bi bi-house"></i>
+              <h3><a href="">Le Ministère</a></h3>
+            </div>
+          </div>
+          <div class="col-xl-2 col-md-4" data-aos="fade-up" data-aos-delay="400">
+            <div class="icon-box">
+              <i class="bi bi-bar-chart"></i>
+              <h3><a href="">La DPSE</a></h3>
+            </div>
+          </div>
+          <div class="col-xl-2 col-md-4" data-aos="fade-up" data-aos-delay="500">
+            <div class="icon-box">
+              <i class="bi bi-puzzle"></i>
+              <h3><a href="">GAR</a></h3>
+            </div>
+          </div>
+          <div class="col-xl-2 col-md-4" data-aos="fade-up" data-aos-delay="600">
+            <div class="icon-box">
+              <i class="bi bi-person-fill"></i>
+              <h3><a href="">Letmotiv</a></h3>
+            </div>
+          </div>
+          <div class="col-xl-2 col-md-4" data-aos="fade-up" data-aos-delay="700">
+            <div class="icon-box">
+              <i class="bi bi-person-vcard-fill"></i>
+              <h3><a href="">Contacts</a></h3>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section><!-- /Accueil -->
+
+
+    <!-- Le Ministère -->
+    <section id="about" class="about section">
+
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="row gy-4">
+          <div class="col-lg-6 order-1 order-lg-2">
+            <img src="{% static 'general/images/mfb-1.jpg' %}" class="img-fluid" alt="">
+          </div>
+          <div class="col-lg-6 order-2 order-lg-1 content">
+            <h3>Le Ministre des Finances et du Budget</h3>
+            <p class="fst-italic">
+              Le Ministre des Finances et du Budget est chargé de la mise en œuvre de la politique du
+              Gouvernement en matière financière, monétaire, budgétaire, douanière, fiscale, de gestion
+              des marchés publics et de gestion statistique des finances publiques.
+            </p>
+            <ul>
+              <li><i class="bi bi-check2-all"></i> <span>Il met en œuvre la politique financière et budgétaire du Gouvernement.</span></li>
+              <li><i class="bi bi-check2-all"></i> <span>Il assure la gestion des finances publiques, y compris les recettes et dépenses de l'État.</span></li>
+              <li><i class="bi bi-check2-all"></i> <span>Il supervise les régulations douanières, fiscales et des marchés publics.</span></li>
+            </ul>
+            <p>
+              Le Ministre des Finances et du Budget joue un rôle crucial dans la gestion économique du pays,
+              en assurant l'équilibre financier et en veillant à la transparence des opérations financières.
+            </p>
+          </div>
+          
+        </div>
+
+      </div>
+
+    </section><!-- /Le Ministère -->
+
+    <!-- Structures -->
+    <section id="clients" class="clients section">
+
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="swiper init-swiper">
+          <script type="application/json" class="swiper-config">
+            {
+              "loop": true,
+              "speed": 600,
+              "autoplay": {
+                "delay": 5000
+              },
+              "slidesPerView": "auto",
+              "pagination": {
+                "el": ".swiper-pagination",
+                "type": "bullets",
+                "clickable": true
+              },
+              "breakpoints": {
+                "500": {
+                  "slidesPerView": 2,
+                  "spaceBetween": 20
+                },
+                "480": {
+                  "slidesPerView": 3,
+                  "spaceBetween": 30
+                },
+                "640": {
+                  "slidesPerView": 4,
+                  "spaceBetween": 40
+                },
+                "992": {
+                  "slidesPerView": 6,
+                  "spaceBetween": 60
+                }
+              }
+            }
+          </script>
+          <div class="swiper-wrapper align-items-center">
+            <div class="swiper-slide">
+              <a href="{% url 'mfb_structures' %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="auto" height="64" viewBox="0 0 48 24" fill="none">
+                  <text x="50%" y="50%" text-anchor="middle" dy=".3em" font-size="12" font-family="Roboto, sans-serif" fill="#2F4F4F">DGBF</text>
+                </svg>
+              </a>
+            </div>
+            <div class="swiper-slide">
+              <a href="{% url 'mfb_structures' %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="auto" height="64" viewBox="0 0 48 24" fill="none">
+                  <text x="50%" y="50%" text-anchor="middle" dy=".3em" font-size="12" font-family="Roboto, sans-serif" fill="#2F4F4F">DGD</text>
+                </svg>
+              </a>
+            </div>
+            <!-- Répétez pour chaque élément -->
+            <div class="swiper-slide">
+              <a href="{% url 'mfb_structures' %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="auto" height="64" viewBox="0 0 48 24" fill="none">
+                  <text x="50%" y="50%" text-anchor="middle" dy=".3em" font-size="12" font-family="Roboto, sans-serif" fill="#2F4F4F">DGTCP</text>
+                </svg>
+              </a>
+            </div>
+            <div class="swiper-slide">
+              <a href="{% url 'mfb_structures' %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="auto" height="64" viewBox="0 0 48 24" fill="none">
+                  <text x="50%" y="50%" text-anchor="middle" dy=".3em" font-size="12" font-family="Roboto, sans-serif" fill="#2F4F4F">DGI</text>
+                </svg>
+              </a>
+            </div>
+            <!-- Répétez pour chaque élément -->
+            <div class="swiper-slide">
+              <a href="{% url 'mfb_structures' %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="auto" height="64" viewBox="0 0 48 24" fill="none">
+                  <text x="50%" y="50%" text-anchor="middle" dy=".3em" font-size="12" font-family="Roboto, sans-serif" fill="#2F4F4F">DGMP</text>
+                </svg>
+              </a>
+            </div>
+            <div class="swiper-slide">
+              <a href="{% url 'mfb_structures' %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="auto" height="64" viewBox="0 0 48 24" fill="none">
+                  <text x="50%" y="50%" text-anchor="middle" dy=".3em" font-size="12" font-family="Roboto, sans-serif" fill="#2F4F4F">DGF</text>
+                </svg>
+              </a>
+            </div>
+            <!-- Répétez pour chaque élément -->
+            <div class="swiper-slide">
+              <a href="{% url 'mfb_structures' %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="auto" height="64" viewBox="0 0 48 24" fill="none">
+                  <text x="50%" y="50%" text-anchor="middle" dy=".3em" font-size="12" font-family="Roboto, sans-serif" fill="#2F4F4F">LONACI</text>
+                </svg>
+              </a>
+            </div>
+            <div class="swiper-slide">
+              <a href="{% url 'mfb_structures' %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="auto" height="64" viewBox="0 0 48 24" fill="none">
+                  <text x="50%" y="50%" text-anchor="middle" dy=".3em" font-size="12" font-family="Roboto, sans-serif" fill="#2F4F4F">BNI</text>
+                </svg>
+              </a>
+            </div>
+            <div class="swiper-slide">
+              <a href="{% url 'mfb_structures' %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="auto" height="64" viewBox="0 0 48 24" fill="none">
+                  <text x="50%" y="50%" text-anchor="middle" dy=".3em" font-size="12" font-family="Roboto, sans-serif" fill="#2F4F4F">DPSE</text>
+                </svg>
+              </a>
+            </div>                                                
+          </div>
+          <div class="swiper-pagination"></div>
+        </div>
+
+      </div>
+
+    </section><!-- /Structures -->
+
+    <!-- Le Cabinet -->
+    <section id="team" class="team section">
+
+      <!-- Section Title -->
+      <div class="container section-title" data-aos="fade-up">
+        <h2>Cabinet du MFB</h2>
+        <p>Noyau exécutif</p>
+      </div><!-- End Section Title -->
+
+      <div class="container">
+
+        <div class="row gy-4">
+
+          <div class="col-lg-3 col-md-6 d-flex align-items-stretch" data-aos="fade-up" data-aos-delay="100">
+            <div class="team-member">
+              <div class="member-img">
+                <img src="{% static 'general/images/team-1.jpg' %}" class="img-fluid" alt="">
+                <div class="social">
+                  <a href=""><i class="bi bi-twitter-x"></i></a>
+                  <a href=""><i class="bi bi-facebook"></i></a>
+                  <a href=""><i class="bi bi-instagram"></i></a>
+                  <a href=""><i class="bi bi-linkedin"></i></a>
+                </div>
+              </div>
+              <div class="member-info">
+                <h4 style="color:white;">M. Adama Coulibaly</h4>
+                <span style="color:#f4efef;">Ministre des Finances et du Budget</span>
+              </div>
+            </div>
+          </div><!-- End Team Member -->
+
+          <div class="col-lg-3 col-md-6 d-flex align-items-stretch" data-aos="fade-up" data-aos-delay="200">
+            <div class="team-member">
+              <div class="member-img">
+                <img src="{% static 'general/images/team-2.jpg' %}" class="img-fluid" alt="">
+                <div class="social">
+                  <a href=""><i class="bi bi-twitter-x"></i></a>
+                  <a href=""><i class="bi bi-facebook"></i></a>
+                  <a href=""><i class="bi bi-instagram"></i></a>
+                  <a href=""><i class="bi bi-linkedin"></i></a>
+                </div>
+              </div>
+              <div class="member-info">
+                <h4 style="color:white;">Mme Minafou KONE</h4>
+                <span style="color:#f4efef;">Directrice de Cabinet du Ministre</span>
+              </div>
+            </div>
+          </div><!-- End Team Member -->
+
+          <div class="col-lg-3 col-md-6 d-flex align-items-stretch" data-aos="fade-up" data-aos-delay="300">
+            <div class="team-member">
+              <div class="member-img">
+                <img src="{% static 'general/images/team-3.jpg' %}" class="img-fluid" alt="">
+                <div class="social">
+                  <a href=""><i class="bi bi-twitter-x"></i></a>
+                  <a href=""><i class="bi bi-facebook"></i></a>
+                  <a href=""><i class="bi bi-instagram"></i></a>
+                  <a href=""><i class="bi bi-linkedin"></i></a>
+                </div>
+              </div>
+              <div class="member-info">
+                <h4 style="color:white;">M. Vassogbo BAMBA</h4>
+                <span style="color:#f4efef;">Directeur de Cabinet Adjoint du Ministre</span>
+              </div>
+            </div>
+          </div><!-- End Team Member -->
+
+          <div class="col-lg-3 col-md-6 d-flex align-items-stretch" data-aos="fade-up" data-aos-delay="400">
+            <div class="team-member">
+              <div class="member-img">
+                <img src="{% static 'general/images/team-4.jpg' %}" class="img-fluid" alt="">
+                <div class="social">
+                  <a href=""><i class="bi bi-twitter-x"></i></a>
+                  <a href=""><i class="bi bi-facebook"></i></a>
+                  <a href=""><i class="bi bi-instagram"></i></a>
+                  <a href=""><i class="bi bi-linkedin"></i></a>
+                </div>
+              </div>
+              <div class="member-info">
+                <h4 style="color:white;">M. Gondo DIOMANDE</h4>
+                <span style="color:#f4efef;">Chef de Cabinet du Ministre</span>
+              </div>
+            </div>
+          </div><!-- End Team Member -->
+
+        </div>
+
+      </div>
+
+    </section><!-- /Le Cabinet -->
+    
+    <!-- Ecrire au Ministre -->
+    <section id="call-to-action" class="call-to-action section dark-background">
+
+      <img src="{% static 'general/images/cta-bg.jpg' %}" alt="">
+
+      <div class="container">
+        <div class="row justify-content-center" data-aos="zoom-in" data-aos-delay="100">
+          <div class="col-xl-10">
+            <div class="text-center">
+              <h3>Ecrire au Ministre</h3>
+              <p>Ecrire directement au Ministre en cliquant sur le bouton ci-dessous.</p>
+              <a class="cta-btn" href="mailto:cyrilletaha01@email.com">Ecrire</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section><!-- /Ecrire au Ministre -->
+    
+<!-- Projets et programmes -->
+<section id="services" class="services section">
+
+  <!-- Titre de la section -->
+  <div class="container section-title" data-aos="fade-up">
+    <h2>Nos actions</h2>
+    <p>Réformes sectorielles</p>
+  </div><!-- Fin du titre de la section -->
+
+  <div class="container">
+
+    <div class="row gy-4" style="color:#d3d3d3;">
+
+      <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
+        <div class="service-item position-relative">
+          <div class="icon">
+            <i class="bi bi-graph-up"></i>
+          </div>
+          <a href="https://www.gouv.ci/_actualite-article.php?recordID=15868" class="stretched-link">
+            <h3 style="color:white;">Programme d'Investissement Public</h3>
+          </a>
+          <p>Augmentation significative du budget d'investissement pour renforcer les infrastructures socio-économiques et soutenir la croissance durable.</p>
+        </div>
+      </div><!-- Fin de l'élément de service -->
+
+      <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
+        <div class="service-item position-relative">
+          <div class="icon">
+            <i class="bi bi-shield-lock"></i>
+          </div>
+          <a href="https://www.gouv.ci/_actualite-article.php?recordID=17539" class="stretched-link">
+            <h3 style="color:white;">Renforcement de la Sécurité</h3>
+          </a>
+          <p>Allocation de ressources accrues pour la consolidation du dispositif sécuritaire, assurant la protection des citoyens et des biens.</p>
+        </div>
+      </div><!-- Fin de l'élément de service -->
+
+      <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
+        <div class="service-item position-relative">
+          <div class="icon">
+            <i class="bi bi-people"></i>
+          </div>
+          <a href="https://budget.gouv.ci/253-about-actualites.html" class="stretched-link">
+            <h3 style="color:white;">Programme Social du Gouvernement (Psgouv)</h3>
+          </a>
+          <p>Mise en œuvre d'initiatives visant à réduire la pauvreté et les disparités sociales, avec un accent particulier sur la jeunesse.</p>
+        </div>
+      </div><!-- Fin de l'élément de service -->
+
+      <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="400">
+        <div class="service-item position-relative">
+          <div class="icon">
+            <i class="bi bi-tree"></i>
+          </div>
+          <a href="https://www.dgbf.ci/" class="stretched-link">
+            <h3 style="color:white;">Protection de l'Environnement</h3>
+          </a>
+          <p>Investissements dédiés à la protection de l'environnement, à la gestion des forêts et à l'amélioration du cadre de vie.</p>
+        </div>
+      </div><!-- Fin de l'élément de service -->
+
+      <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="500">
+        <div class="service-item position-relative">
+          <div class="icon">
+            <i class="bi bi-currency-exchange"></i>
+          </div>
+          <a href="https://finances.gouv.ci/" class="stretched-link">
+            <h3 style="color:white;">Mobilisation des Ressources Intérieures</h3>
+          </a>
+          <p>Stratégies renforcées pour augmenter les recettes fiscales et non fiscales, soutenant ainsi le financement des projets nationaux.</p>
+        </div>
+      </div><!-- Fin de l'élément de service -->
+
+      <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="600">
+        <div class="service-item position-relative">
+          <div class="icon">
+            <i class="bi bi-gear"></i>
+          </div>
+          <a href="https://www.economie-ivoirienne.ci/cadre-macroeconomique/politique-budgetaire.html" class="stretched-link">
+            <h3 style="color:white;">Modernisation de la Gestion Publique</h3>
+          </a>
+          <p>Initiatives visant à améliorer l'efficacité et la transparence de la gestion des finances publiques.</p>
+        </div>
+      </div><!-- Fin de l'élément de service -->
+
+    </div>
+
+  </div>
+
+</section><!-- Fin des Projets et programmes -->
+
+<section id="services" class="services section">
+
+  <!-- Titre de la section -->
+  <div class="container section-title" data-aos="fade-up">
+    <p>Projets d'Investissement Public</p>
+  </div><!-- Fin du titre de la section -->
+
+  <div class="container">
+
+    <div class="row gy-4" style="color:#d3d3d3;">
+
+      <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
+        <div class="service-item position-relative">
+          <div class="icon">
+            <i class="bi bi-building"></i>
+          </div>
+          <a href="https://www.gouv.ci/_actualite-article.php?recordID=13461" class="stretched-link">
+            <h3 style="color:white;">Programme National de Développement (PND) 2021-2025</h3>
+          </a>
+          <p>Un plan stratégique visant à transformer l'économie et la société ivoiriennes pour atteindre l'émergence à l'horizon 2030, avec un investissement global prévu de 90 milliards d'euros, principalement porté par le secteur privé.</p>
+        </div>
+      </div><!-- Fin de l'élément de service -->
+
+      <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
+        <div class="service-item position-relative">
+          <div class="icon">
+            <i class="bi bi-droplet"></i>
+          </div>
+          <a href="https://www.banquemondiale.org/fr/news/press-release/2024/07/10/cote-ivoire-programme-825-millions-dollars-acces-eau-et-assainissement" class="stretched-link">
+            <h3 style="color:white;">Projet d'Appui à la Sécurité de l'Eau et de l'Assainissement (PASEA)</h3>
+          </a>
+          <p>Un projet ambitieux doté de 825 millions de dollars visant à améliorer l'accès à l'eau potable et aux services d'assainissement pour les populations ivoiriennes.</p>
+        </div>
+      </div><!-- Fin de l'élément de service -->
+
+      <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
+        <div class="service-item position-relative">
+          <div class="icon">
+            <i class="bi bi-tree"></i>
+          </div>
+          <a href="https://www.eib.org/fr/press/news/eib-supports-transformative-forestry-project-in-cote-d-ivoire" class="stretched-link">
+            <h3 style="color:white;">Projet de Réhabilitation et d'Extension des Zones Forestières</h3>
+          </a>
+          <p>Une initiative soutenue par la Banque Européenne d'Investissement visant à protéger, réhabiliter et étendre les zones forestières en Côte d'Ivoire.</p>
+        </div>
+      </div><!-- Fin de l'élément de service -->
+
+      <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="400">
+        <div class="service-item position-relative">
+          <div class="icon">
+            <i class="bi bi-lightning"></i>
+          </div>
+          <a href="https://www.lemonde.fr/afrique/article/2024/10/25/la-cote-d-ivoire-mise-a-la-fois-sur-les-energies-vertes-et-les-energies-fossiles_6359441_3212.html" class="stretched-link">
+            <h3 style="color:white;">Programme de Diversification Énergétique</h3>
+          </a>
+          <p>Un programme visant à combiner les énergies renouvelables et fossiles pour répondre à la demande croissante en électricité, avec des projets solaires et biomasse prévus.</p>
+        </div>
+      </div><!-- Fin de l'élément de service -->
+
+      <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="500">
+        <div class="service-item position-relative">
+          <div class="icon">
+            <i class="bi bi-people"></i>
+          </div>
+          <a href="https://www.gouv.ci/_actualite-article.php?recordID=15868" class="stretched-link">
+            <h3 style="color:white;">Programme d'Investissement Public 2018-2020</h3>
+          </a>
+          <p>Un programme visant à renforcer les infrastructures socio-économiques et soutenir la croissance durable en Côte d'Ivoire.</p>
+        </div>
+      </div><!-- Fin de l'élément de service -->
+
+      <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="600">
+        <div class="service-item position-relative">
+          <div class="icon">
+            <i class="bi bi-globe"></i>
+          </div>
+          <a href="https://www.gcpnd.gouv.ci/presentation/cgpnd/fr" class="stretched-link">
+            <h3 style="color:white;">Plan National de Développement Touristique "Sublime Côte d'Ivoire"</h3>
+          </a>
+          <p>Une stratégie visant à positionner la Côte d'Ivoire comme une destination touristique de premier plan, avec pour objectif d'augmenter le nombre de visiteurs et la contribution du tourisme au PIB.</p>
+        </div>
+      </div><!-- Fin de l'élément de service -->
+
+    </div>
+
+  </div>
+
+</section><!-- Fin des Projets d'Investissement Public -->
+
+    <!-- La DPSE -->
+    <section id="features" class="features section">
+      
+      <!-- Section Title -->
+      <div class="container section-title" data-aos="fade-up">
+        <h2>DPSE</h2>
+        <p>Direction de la Planification et du Suivi Evaluation</p>
+      </div><!-- End Section Title -->
+
+      <div class="container">
+
+        <div class="row gy-4">
+          <p>
+            La Direction de la Planification et du Suivi-Évaluation assure la planification, le suivi-évaluation, la gestion de la qualité, et la production des statistiques sectorielles. Elle coordonne les activités des services concernés, réalise des études, vulgarise les approches modernes, et participe à l'élaboration et au suivi des plans et projets sectoriels, incluant les Plans Nationaux de Développement et les Programmes d'Investissement Publics.
+          </p>
+          <div class="features-image col-lg-6" data-aos="fade-up" data-aos-delay="100"><img src="{% static 'general/images/dpse-1.jpg' %}" alt=""></div>
+          <div class="col-lg-6">
+
+            <div class="features-item d-flex ps-0 ps-lg-3 pt-4 pt-lg-0" data-aos="fade-up" data-aos-delay="200">
+              <i class="bi bi-graph-up-arrow flex-shrink-0"></i>
+              <div>
+                <h4>S/D Etudes et Statistiques</h4>
+                <p>Collecte, analyse les données de Finances Publiques en lien avec les mfb_structures responsable. Produit les statistiques de Finances Publiques</p>
+              </div>
+            </div><!-- End Features Item-->
+
+            <div class="features-item d-flex mt-5 ps-0 ps-lg-3" data-aos="fade-up" data-aos-delay="300">
+              <i class="bi bi-clock-history flex-shrink-0"></i>
+              <div>
+                <h4>S/D Prospective et Planification</h4>
+                <p>Élabore les plans stratégiques, anticipe les besoins futurs, oriente les politiques publiques et coordonne les stratégies de développement.</p>
+              </div>
+            </div><!-- End Features Item-->
+
+            <div class="features-item d-flex mt-5 ps-0 ps-lg-3" data-aos="fade-up" data-aos-delay="400">
+              <i class="bi bi-clipboard2-check-fill flex-shrink-0"></i>
+              <div>
+                <h4>S/D Programmation et Suivi-Evaluation</h4>
+                <p>Planifie les activités en collaboration avec les mfb_structures, suit et évalue projets. Propose des ajustements pour garantir atteinte des objectifs.</p>
+              </div>
+            </div><!-- End Features Item-->
+
+            <div class="features-item d-flex mt-5 ps-0 ps-lg-3" data-aos="fade-up" data-aos-delay="500">
+              <i class="bi bi-exclamation-diamond-fill flex-shrink-0"></i>
+              <div>
+                <h4>S/D Qualité et Normalisation</h4>
+                <p>Sensibilise sur les enjeux de qualité, promeut les bonnes pratiques et audite les processus.</p>
+              </div>
+            </div><!-- End Features Item-->
+
+          </div>
+        </div>
+
+      </div>
+
+    </section><!-- /La DPSE -->
+
+    <!-- GAR -->
+    <section id="stats" class="stats section">
+          <!-- Section Title -->
+      <div class="container section-title" data-aos="fade-up">
+        <h2>GAR</h2>
+        <p>Gestion Axée sur les Résultats</p>
+      </div><!-- End Section Title -->
+
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="row gy-4 align-items-center justify-content-between">
+
+          <div class="col-lg-5">
+            <img src="{% static 'general/images/gar-1.jpg' %}" alt="" class="img-fluid" style="border: 2px solid rgba(0, 0, 0, 0.1); border-radius: 8px;">
+
+          </div>
+
+          <div class="col-lg-6">
+
+            <h3 class="fw-bold fs-2 mb-3">La Gestion Axée sur les Résultats</h3>
+            <p>La <strong>GAR</strong> est une approche qui se concentre sur l'obtention de résultats mesurables. Elle repose sur :</p>
+    
+            <ul>
+                <li><strong>Objectifs clairs</strong> : Définir des objectifs spécifiques, mesurables et temporels.</li>
+                <li><strong>Suivi des performances</strong> : Utiliser des indicateurs pour mesurer les progrès.</li>
+                <li><strong>Responsabilité</strong> : Chaque acteur est responsable des résultats.</li>
+                <li><strong>Réajustement</strong> : Adapter les stratégies selon les résultats obtenus.</li>
+                <li><strong>Efficacité des ressources</strong> : Utiliser au mieux les ressources disponibles.</li>
+            </ul>
+        
+            <p>Elle est utilisée dans la gestion de projets, dans les secteurs public et privé pour améliorer l’efficacité, mais peut nécessiter des efforts importants pour la mise en place du suivi et des évaluations régulières.</p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section><!-- /Chaine 3PBSE -->
+    <!-- Chaine 3PBSE -->
+    <section id="stats" class="stats section">
+
+      <!-- Section Title -->
+      <div class="container section-title" data-aos="fade-up">
+        <p>Prospective, Planification, Programmation, Budgétisation, Suivi et Evaluation (3PBSE)</p>
+      </div><!-- End Section Title -->
+
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="align-items-center justify-content-between">
+          <p>
+            La chaine <strong>PPPBSE</strong> est un processus de gestion stratégique qui repose sur six étapes clés : 
+            <strong>Prospective</strong>, <strong>Planification</strong>, <strong>Programmation</strong>, <strong>Budgétisation</strong>, <strong>Suivi</strong> et <strong>Évaluation</strong>. 
+            Chaque étape est cruciale pour assurer la réussite d'un projet et garantir des résultats mesurables.
+          </p>
+        
+          <div class="row gy-4">
+        
+            <div class="col-lg-6">
+              <div class="stats-item d-flex">
+                <i class="bi bi-search flex-shrink-0"></i> <!-- Icone pour Prospective -->
+                <div>
+                  <h3 class="fw-bold fs-2 mb-3">Prospective</h3>
+                  <p><strong>Anticipation des tendances et des scénarios futurs</strong>. La prospective permet d'analyser les évolutions possibles dans l'environnement interne et externe, en identifiant les opportunités et les menaces à venir. Cela aide à planifier à long terme et à prendre des décisions éclairées.</p>
+                </div>
+              </div>
+            </div><!-- End Stats Item -->
+        
+            <div class="col-lg-6">
+              <div class="stats-item d-flex">
+                <i class="bi bi-calendar-check flex-shrink-0"></i> <!-- Icone pour Planification -->
+                <div>
+                  <h3 class="fw-bold fs-2 mb-3">Planification</h3>
+                  <p><strong>Définition des objectifs clairs et des actions nécessaires</strong>. La planification consiste à établir un cadre détaillé des actions à mener pour atteindre les objectifs. Cela comprend l'identification des ressources nécessaires et la définition des priorités.</p>
+                </div>
+              </div>
+            </div><!-- End Stats Item -->
+        
+            <div class="col-lg-6">
+              <div class="stats-item d-flex">
+                <i class="bi bi-gear flex-shrink-0"></i> <!-- Icone pour Programmation -->
+                <div>
+                  <h3 class="fw-bold fs-2 mb-3">Programmation</h3>
+                  <p><strong>Organisation des actions et allocation des ressources</strong>. La programmation est l’étape où les actions définies lors de la planification sont structurées dans le temps, avec des échéances précises. Elle veille à ce que les ressources humaines et matérielles soient disponibles et correctement allouées.</p>
+                </div>
+              </div>
+            </div><!-- End Stats Item -->
+        
+            <div class="col-lg-6">
+              <div class="stats-item d-flex">
+                <i class="bi bi-wallet flex-shrink-0"></i> <!-- Icone pour Budgétisation -->
+                <div>
+                  <h3 class="fw-bold fs-2 mb-3">Budgétisation</h3>
+                  <p><strong>Prévision et allocation des ressources financières</strong>. La budgétisation consiste à estimer les coûts et à allouer des fonds pour chaque activité ou projet. Cela permet de s'assurer que le financement est suffisant et que les ressources sont utilisées de manière optimale.</p>
+                </div>
+              </div>
+            </div><!-- End Stats Item -->
+        
+            <div class="col-lg-6">
+              <div class="stats-item d-flex">
+                <i class="bi bi-bar-chart-line flex-shrink-0"></i> <!-- Icone pour Suivi -->
+                <div>
+                  <h3 class="fw-bold fs-2 mb-3">Suivi</h3>
+                  <p><strong>Contrôle continu des progrès et ajustement des actions</strong>. Le suivi permet de vérifier l’avancement des actions en temps réel, d’évaluer les écarts par rapport aux objectifs et d’ajuster les actions si nécessaire pour garantir la réussite du projet.</p>
+                </div>
+              </div>
+            </div><!-- End Stats Item -->
+        
+            <div class="col-lg-6">
+              <div class="stats-item d-flex">
+                <i class="bi bi-check-circle flex-shrink-0"></i> <!-- Icone pour Évaluation -->
+                <div>
+                  <h3 class="fw-bold fs-2 mb-3">Évaluation</h3>
+                  <p><strong>Mesure des résultats obtenus et analyse des impacts</strong>. L'évaluation consiste à mesurer les résultats du projet, à vérifier si les objectifs ont été atteints et à analyser les impacts sur l’organisation. Cela permet d'identifier les leçons apprises et d'apporter des améliorations pour les projets futurs.</p>
+                </div>
+              </div>
+            </div><!-- End Stats Item -->
+        
+          </div>
+        
+        </div>        
+
+      </div>
+
+    </section><!-- /Chaine 3PBSE -->
+
+    
+    <!-- Letmotiv -->
+      
+    <div class="container section-title" data-aos="fade-up">
+        <h2>Letmotiv</h2>
+        <p>Le cœur de notre mission</p>
+    </div><!-- End Section Title -->
+    
+    <section id="testimonials" class="testimonials section dark-background">
+      
+
+      <img src="{% static 'general/images/testimonials-bg.jpg' %}" class="testimonials-bg" alt="">
+
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="swiper init-swiper">
+          <script type="application/json" class="swiper-config">
+            {
+              "loop": true,
+              "speed": 600,
+              "autoplay": {
+                "delay": 5000
+              },
+              "slidesPerView": "auto",
+              "pagination": {
+                "el": ".swiper-pagination",
+                "type": "bullets",
+                "clickable": true
+              }
+            }
+          </script>
+          <div class="swiper-wrapper">
+
+            <div class="swiper-slide">
+              <div class="testimonial-item">
+                <img src="{% static 'general/images/letmotiv-1.jpg' %}" class="testimonial-img" alt="">
+                <h3>Alassane OUATTARA</h3>
+                <h4>Président de la République</h4>
+                <p>
+                  <i class="bi bi-quote quote-icon-left"></i>
+                  <span>Citation 1</span>
+                  <i class="bi bi-quote quote-icon-right"></i>
+                </p>
+              </div>
+            </div><!-- End testimonial item -->
+
+            <div class="swiper-slide">
+              <div class="testimonial-item">
+                <img src="{% static 'general/images/letmotiv-2.jpg' %}" class="testimonial-img" alt="">
+                <h3>Robert Beugre MAMBE</h3>
+                <h4>Premier Ministre</h4>
+                <p>
+                  <i class="bi bi-quote quote-icon-left"></i>
+                  <span>Citation 2</span>
+                  <i class="bi bi-quote quote-icon-right"></i>
+                </p>
+              </div>
+            </div><!-- End testimonial item -->
+
+            <div class="swiper-slide">
+              <div class="testimonial-item">
+                <img src="{% static 'general/images/letmotiv-3.jpg' %}" class="testimonial-img" alt="">
+                <h3>Adama COULIBALY</h3>
+                <h4>Ministre des Finances et du Budget</h4>
+                <p>
+                  <i class="bi bi-quote quote-icon-left"></i>
+                  <span>Citation 3</span>
+                  <i class="bi bi-quote quote-icon-right"></i>
+                </p>
+              </div>
+            </div><!-- End testimonial item -->
+
+          </div>
+          <div class="swiper-pagination"></div>
+        </div>
+
+      </div>
+
+    </section><!-- /Letmotiv -->
+
+    <!-- Contacts -->
+    <section id="contact" class="contact section">
+
+      <!-- Section Title -->
+      <div class="container section-title" data-aos="fade-up">
+        <h2>Contact</h2>
+        <p>Contactez-nous</p>
+      </div><!-- End Section Title -->
+
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="mb-4" data-aos="fade-up" data-aos-delay="200">
+          <iframe style="border:0; width: 100%; height: 270px;" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3972.593110545722!2d-4.020969626345279!3d5.325982094652534!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xfc1ebba800c8475%3A0xdda7f1e756e1d56a!2simmeuble%20sciam!5e0!3m2!1sfr!2sci!4v1735614167146!5m2!1sfr!2sci" frameborder="0" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div><!-- End Google Maps -->
+
+        <div class="row gy-4">
+          <div class="col-lg-4">
+            <div class="info-item d-flex" data-aos="fade-up" data-aos-delay="300">
+              <i class="bi bi-geo-alt flex-shrink-0"></i>
+              <div>
+                <h3>Adresse</h3>
+                <p>63 Avenue Marchand, <br> Abidjan-Plateau, Côte d'Ivoire</p>
+              </div>
+            </div><!-- End Info Item -->
+
+            <div class="info-item d-flex" data-aos="fade-up" data-aos-delay="400">
+              <i class="bi bi-telephone flex-shrink-0"></i>
+              <div>
+                <h3>Appeler</h3>
+                <p>+225 27 203 302 538</p>
+              </div>
+            </div><!-- End Info Item -->
+
+            <div class="info-item d-flex" data-aos="fade-up" data-aos-delay="500">
+              <i class="bi bi-envelope flex-shrink-0"></i>
+              <div>
+                <h3>Email</h3>
+                <p>c.infomef@gmail.com</p>
+              </div>
+            </div><!-- End Info Item -->
+
+          </div>
+
+          <div class="col-lg-8">
+            <form action="#" method="post" class="php-email-form" data-aos="fade-up" data-aos-delay="200">
+              <div class="row gy-4">
+
+                <div class="col-md-6">
+                  <input type="text" name="name" class="form-control" placeholder="Nom et Prénoms" required="">
+                </div>
+
+                <div class="col-md-6 ">
+                  <input type="email" class="form-control" name="email" placeholder="Email" required="">
+                </div>
+
+                <div class="col-md-12">
+                  <input type="text" class="form-control" name="subject" placeholder="Objet" required="">
+                </div>
+
+                <div class="col-md-12">
+                  <textarea class="form-control" name="message" rows="6" placeholder="Message" required=""></textarea>
+                </div>
+
+                <div class="col-md-12 text-center">
+                  <div class="loading">Chargement</div>
+                  <div class="error-message"></div>
+                  <div class="sent-message">Votre message a été envoyé. Merci!</div>
+
+                  <button type="submit">Envoyer</button>
+                </div>
+
+              </div>
+            </form>
+          </div><!-- End Contact Form -->
+
+        </div>
+
+      </div>
+
+    </section><!-- /Contacts -->
+
+  </main>
+
+{% endblock %}

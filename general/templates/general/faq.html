@@ -1,0 +1,148 @@
+{% extends 'index.html' %}
+
+{% block title %}Foire Aux Questions (FAQ) - Ministère des Finances et du Budget de la Côte d'Ivoire{% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <h2 class="text-center text-primary">Foire Aux Questions (FAQ)</h2>
+        <p class="text-center">
+            Le Ministère des Finances et du Budget de la Côte d'Ivoire vous invite à échanger sur les enjeux liés à la gestion des finances publiques et à poser vos questions sur nos initiatives en matière de statistiques économiques.
+        </p>
+
+        <!-- Onglets -->
+        <ul class="nav nav-tabs" id="faqTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <a class="nav-link active" id="questions-courantes-tab" data-bs-toggle="tab" href="#questions-courantes" role="tab" aria-controls="questions-courantes" aria-selected="true">Questions Courantes</a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="discussions-tab" data-bs-toggle="tab" href="#discussions" role="tab" aria-controls="discussions" aria-selected="false">Discussions</a>
+            </li>
+        </ul>
+
+        <!-- Contenu des Onglets -->
+        <div class="tab-content mt-4" id="faqTabContent">
+            <!-- Onglet Questions Courantes -->
+            <div class="tab-pane fade show active" id="questions-courantes" role="tabpanel" aria-labelledby="questions-courantes-tab">
+                <h4>Questions fréquemment posées</h4>
+                <div class="accordion" id="faqAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingOne">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                Quelles sont les priorités du Ministère des Finances et du Budget de la Côte d'Ivoire ?
+                            </button>
+                        </h2>
+                        <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Le Ministère des Finances et du Budget se concentre sur la gestion prudente des finances publiques, la transparence, et la mise en œuvre de politiques fiscales qui soutiennent la croissance durable.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingTwo">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                Comment le MFB collecte-t-il les données économiques ?
+                            </button>
+                        </h2>
+                        <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Le MFB utilise des méthodes statistiques rigoureuses, incluant les enquêtes, les rapports financiers, et la collecte de données administratives pour suivre les indicateurs économiques clés.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingThree">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                Comment les citoyens peuvent-ils suivre les finances publiques ?
+                            </button>
+                        </h2>
+                        <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Le MFB rend accessible ses rapports et données financières via son site web, ainsi que des plateformes de transparence pour garantir un suivi direct par la population.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Onglet Discussions -->
+            <div class="tab-pane fade" id="discussions" role="tabpanel" aria-labelledby="discussions-tab">
+                <div class="container mt-5">
+                    <h2 class="text-center text-primary">Foire Aux Questions (FAQ)</h2>
+                                    
+                    <!-- Questions répondues -->
+                    <h4 class="mt-4">Questions avec réponse</h4>
+                    <div class="list-group">
+                        {% for question in questions_repondues %}
+                            <div class="list-group-item">
+                                <strong>{{ question.question }}</strong>
+                                <p class="text-muted">Posée par {{ question.auteur_question.username }} le {{ question.date_question|date:"d/m/Y H:i" }}</p>
+                                <p><strong>Réponse :</strong> {{ question.reponse }}</p>
+                                <p class="text-muted">Répondu par {{ question.auteur_reponse.username }} le {{ question.date_reponse|date:"d/m/Y H:i" }}</p>
+                            </div>
+                        {% empty %}
+                            <p>Aucune question avec réponse pour le moment.</p>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Questions en attente de réponse -->
+                    <h4>Questions en attente de réponse</h4>
+                    <div class="list-group">
+                        {% for question in questions_non_repondues %}
+                            <div class="list-group-item">
+                                <strong>{{ question.question }}</strong>
+                                <p class="text-muted">Posée par {{ question.auteur_question.username }} le {{ question.date_question|date:"d/m/Y H:i" }}</p>
+                            </div>
+                        {% empty %}
+                            <p>Aucune question en attente.</p>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Formulaire pour poser une question -->
+                    <form method="POST" class="mb-4">
+                        {% csrf_token %}
+                        <textarea name="question" class="form-control" placeholder="Posez votre question ici..." required></textarea>
+                        <button type="submit" class="btn btn-primary mt-2">Envoyer</button>
+                    </form>
+                    <a href="{% url 'faq_r' %}" class="btn btn-primary">Répondre aux questions</a>
+                    </div>
+                </div>                
+            </div>
+        </div>
+    </div>
+
+    <!-- Section JavaScript -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const discussionForm = document.getElementById('discussionForm');
+            const discussionInput = document.getElementById('discussionInput');
+            const discussionList = document.getElementById('discussion-list');
+            const confirmationMessage = document.getElementById('confirmationMessage');
+
+            // Ajouter un message de discussion
+            discussionForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const commentContent = discussionInput.value.trim();
+                if (commentContent) {
+                    const li = document.createElement('li');
+                    li.classList.add('list-group-item', 'mb-3');
+                    li.innerHTML = `<strong>Utilisateur :</strong> ${commentContent} <div class="mt-2"><strong>Réponse du MFB:</strong> Merci pour votre question. Un représentant vous répondra sous peu.</div>`;
+                    discussionList.appendChild(li);
+
+                    // Afficher un message de confirmation
+                    confirmationMessage.classList.remove('d-none');
+                    
+                    // Réinitialiser le champ de saisie
+                    discussionInput.value = '';
+
+                    // Faire défiler jusqu'à la fin de la liste des discussions
+                    discussionList.scrollTop = discussionList.scrollHeight;
+                }
+            });
+
+            // Effet de défilement au moment où l'utilisateur soumet une discussion
+            discussionList.scrollTop = discussionList.scrollHeight;
+        });
+    </script>
+
+{% endblock %}

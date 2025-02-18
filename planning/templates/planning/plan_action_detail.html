@@ -1,0 +1,74 @@
+{% extends 'index.html' %}
+
+{% block title %}
+Détails du Plan d'Action - {{ plan.titre }}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4 text-primary fw-bold">Plan d'Action : {{ plan.titre }}</h1>
+
+    <!-- Élément Synthétique -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <h4 class="card-title text-center text-success fw-bold">Synthèse du Plan d'Action</h4>
+            <p><strong>Coût Total :</strong> {{ plan.cout_total|default:"N/A" }} FCFA</p>
+            <p><strong>Durée :</strong> {{ plan.duree|default:"Non précisée" }}</p>
+            <p><strong>Objectif Global :</strong> {{ plan.objectif|default:"Non défini" }}</p>
+            <p><strong>Responsable :</strong> {{ plan.responsable|default:"Non assigné" }}</p>
+        </div>
+    </div>
+
+    <!-- Tableau Détails -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>Effet</th>
+                    <th>Produit</th>
+                    <th>Action</th>
+                    <th>Activité</th>
+                    <th>Type</th>
+                    <th>Indicateur</th>
+                    <th>Référence</th>
+                    <th>Coût total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for effet in plan.plan_effet.all %}
+                    <tr class="table-primary">
+                        <td rowspan="{{ effet.nombre_produits|default:1 }}">{{ effet.titre }}</td>
+                        {% for produit in effet.effet_produit.all %}
+                            {% if not forloop.first %}<tr>{% endif %}
+                            <td rowspan="{{ produit.nombre_actions|default:1 }}">{{ produit.titre }}</td>
+                            {% for action in produit.produit_action.all %}
+                                {% if not forloop.first %}<tr>{% endif %}
+                                <td rowspan="{{ action.nombre_activites|default:1 }}">{{ action.titre }}</td>
+                                {% for activite in action.action_activite.all %}
+                                    {% if not forloop.first %}<tr>{% endif %}
+                                    <td>{{ activite.titre }}</td>
+                                    <td>{{ activite.type }}</td>
+                                    <td>{{ activite.indicator }}</td>
+                                    <td>{{ activite.reference }}</td>
+                                    <td>{{ activite.get_cout_total }}</td>
+                                    </tr>
+                                {% empty %}
+                                    <td colspan="4">Pas d'activités</td></tr>
+                                {% endfor %}
+                            {% empty %}
+                                <td colspan="5">Pas d'actions</td></tr>
+                            {% endfor %}
+                        {% empty %}
+                            <td colspan="6">Pas de produits</td></tr>
+                        {% endfor %}
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center">Aucun effet défini pour ce plan.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
