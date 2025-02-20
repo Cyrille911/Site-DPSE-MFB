@@ -8,7 +8,7 @@ import os
 
 def user_directory_path(instance, filename):
     
-    return os.path.join('user', 'media', 'profiles', filename)
+    return os.path.join('users', 'media', 'profiles', filename)
 
 class User(AbstractUser):
     ROLE_CHOICES = (

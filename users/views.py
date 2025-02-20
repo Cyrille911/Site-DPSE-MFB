@@ -1,23 +1,12 @@
 # Modules externes
-import os
-import zipfile
-from openpyxl import load_workbook
-from docx import Document as DocxDocument
-
 from django.shortcuts import render
-import pandas as pd
-import plotly.express as px
-import plotly.io as pio
 
-from django.shortcuts import render, get_object_or_404, redirect
-from django.http import HttpResponseForbidden
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.urls import reverse
-from django.contrib.contenttypes.models import ContentType
 
 # Modules Django
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.models import Group
 from django.contrib.auth.decorators import login_required
@@ -35,7 +24,7 @@ from .forms import ConnexionForm, InscriptionMembreForm, InscriptionVisiteurForm
 from .models import User
 from .tokens import account_activation_token
 
-## Personnes (Membres, Visiteurs)
+## Comptes membres
 def inscription_membre(request):
     context = {'message': "Bienvenue sur la page d'inscription pour les membres !"}
     form = InscriptionMembreForm(request.POST or None, request.FILES or None)
@@ -61,35 +50,6 @@ def inscription_membre(request):
 
         messages.success(request, 'Un email de confirmation vous a été envoyé.')
         return redirect('connexion_membre')  # Redirection après succès
-
-    context['form'] = form
-    return render(request, 'users/formulaire.html', context)
-
-def inscription_visiteur(request):
-    context = {'message': "Bienvenue sur la page d'inscription pour les visiteurs !"}
-    form = InscriptionVisiteurForm(request.POST or None, request.FILES or None)
-
-    if request.method == 'POST' and form.is_valid():
-        user = form.save(commit=False)
-        user.role = 'visiteur'  # Attribuer le rôle 'visiteur'
-        group, _ = Group.objects.get_or_create(name='Visiteurs')
-        user.is_active = False  # Désactiver le compte jusqu'à confirmation par email
-        user.save()
-
-        # Envoyer un email de confirmation
-        current_site = get_current_site(request)
-        subject = 'Confirmez votre inscription'
-        message = render_to_string('users/email_activation_visiteur.html', {
-            'user': user,
-            'domain': current_site.domain,
-            'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-            'token': account_activation_token.make_token(user),
-        })
-        plain_message = strip_tags(message)
-        send_mail(subject, plain_message, settings.DEFAULT_FROM_EMAIL, [user.email], html_message=message)
-
-        messages.success(request, 'Un email de confirmation vous a été envoyé.')
-        return redirect('connexion_visiteur')  # Redirection après succès
 
     context['form'] = form
     return render(request, 'users/formulaire.html', context)
@@ -149,27 +109,6 @@ def activer_nouveau_membre(request, uidb64, token):
     else:
         messages.error(request, 'Le lien d\'activation est invalide ou a expiré.')
         return redirect('accueil')  # Remplacez par la page vers laquelle vous voulez rediriger
-
-def activer_compte_visiteur(request, uidb64, token):
-    try:
-        uid = urlsafe_base64_decode(uidb64).decode()
-        user = User.objects.get(pk=uid)
-    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-        user = None
-
-    if user is not None and account_activation_token.check_token(user, token):
-        user.is_active = True  # Activer le compte
-        user.save()
-        messages.success(request, 'Votre compte a été activé avec succès !')
-        return redirect('connexion_visiteur')  # Rediriger selon le type de connexion
-    else:
-        if user is not None:
-            user.delete()  # Supprimer l'utilisateur si le lien a expiré
-            messages.error(request, 'Le lien d\'activation a expiré, votre compte a été supprimé.')
-        else:
-            messages.error(request, 'Le lien d\'activation est invalide.')
-        return redirect('inscription_visiteur')
-
 def connexion_membre(request):
     context = {'message': "Bienvenue sur la page de connexion pour les membres !"}
     form = ConnexionForm(request.POST or None)
@@ -194,6 +133,56 @@ def connexion_membre(request):
     context['form'] = form
     return render(request, 'users/formulaire.html', context)
 
+## Comptes visiteurs
+def inscription_visiteur(request):
+    context = {'message': "Bienvenue sur la page d'inscription pour les visiteurs !"}
+    form = InscriptionVisiteurForm(request.POST or None, request.FILES or None)
+
+    if request.method == 'POST' and form.is_valid():
+        user = form.save(commit=False)
+        user.role = 'visiteur'  # Attribuer le rôle 'visiteur'
+        group, _ = Group.objects.get_or_create(name='Visiteurs')
+        user.is_active = False  # Désactiver le compte jusqu'à confirmation par email
+        user.save()
+
+        # Envoyer un email de confirmation
+        current_site = get_current_site(request)
+        subject = 'Confirmez votre inscription'
+        message = render_to_string('users/email_activation_visiteur.html', {
+            'user': user,
+            'domain': current_site.domain,
+            'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+            'token': account_activation_token.make_token(user),
+        })
+        plain_message = strip_tags(message)
+        send_mail(subject, plain_message, settings.DEFAULT_FROM_EMAIL, [user.email], html_message=message)
+
+        messages.success(request, 'Un email de confirmation vous a été envoyé.')
+        return redirect('connexion_visiteur')  # Redirection après succès
+
+    context['form'] = form
+    return render(request, 'users/formulaire.html', context)
+
+def activer_compte_visiteur(request, uidb64, token):
+    try:
+        uid = urlsafe_base64_decode(uidb64).decode()
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user is not None and account_activation_token.check_token(user, token):
+        user.is_active = True  # Activer le compte
+        user.save()
+        messages.success(request, 'Votre compte a été activé avec succès !')
+        return redirect('connexion_visiteur')  # Rediriger selon le type de connexion
+    else:
+        if user is not None:
+            user.delete()  # Supprimer l'utilisateur si le lien a expiré
+            messages.error(request, 'Le lien d\'activation a expiré, votre compte a été supprimé.')
+        else:
+            messages.error(request, 'Le lien d\'activation est invalide.')
+        return redirect('inscription_visiteur')
+
 def connexion_visiteur(request):
     context = {'message': "Bienvenue sur la page de connexion pour les visiteurs !"}
     form = ConnexionForm(request.POST or None)
@@ -207,7 +196,7 @@ def connexion_visiteur(request):
             
             # Authentification de l'utilisateur
             user = authenticate(request, username=username, password=password)
-            
+            print(user)           
             if user is not None and request.user.groups.filter(name="Visiteurs").exists():
                 login(request, user)
                 messages.success(request, f"Bienvenue, {user.first_name} !")

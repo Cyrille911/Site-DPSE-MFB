@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 from django.conf import settings
 
 def default():
-    return [0.0] * 3  # Génère une liste de trois zéros
+    return [0] * 3  # Génère une liste de trois zéros
 
 class PlanAction(models.Model):
     id = models.AutoField(primary_key=True)
@@ -18,12 +18,13 @@ class PlanAction(models.Model):
     nombre_activites = models.PositiveIntegerField(default=0)
 
     def calculer_couts(self):
-        """Calcul du coût total du plan pour chaque année."""
-        couts = [0] * self.horizon
+        """Calcul du coût total du plan en additionnant les coûts de ses effets."""
+        couts = [0.0] * self.horizon
         for effet in self.plan_effet.all():
             for i, cout in enumerate(effet.couts):
-                couts[i] += cout
+                couts[i] += cout  # Ajout des coûts des effets
         self.couts = couts
+        self.save()
 
     def calculer_nombres(self):
         """Met à jour le nombre total d'effets, produits, actions et activités."""
@@ -49,13 +50,15 @@ class Effet(models.Model):
     nombre_activites = models.PositiveIntegerField(default=0)
 
     def calculer_couts(self):
-        """Calcul du coût total de l'effet pour chaque année."""
+        """Calcul du coût total de l'effet en additionnant les coûts de ses produits."""
         couts = [0.0] * self.plan.horizon
         for produit in self.effet_produit.all():
             for i, cout in enumerate(produit.couts):
-                couts[i] += cout
+                couts[i] += cout  # Ajout des coûts des produits
         self.couts = couts
-    
+        self.save()
+        self.plan.calculer_couts()  # Mise à jour des coûts du plan d'action
+
     def calculer_nombres(self):
         """Calcul du nombre de produits, actions et activités."""
         effet_produit = self.effet_produit.prefetch_related('produit_action__action_activite')
@@ -63,13 +66,12 @@ class Effet(models.Model):
         self.nombre_produits = effet_produit.count()
         self.nombre_actions = sum(produit.produit_action.count() for produit in effet_produit)
         self.nombre_activites = sum(action.action_activite.count() for produit in effet_produit for action in produit.produit_action.all())
+        self.plan.calculer_nombres()
 
     def save(self, *args, **kwargs):
         self.full_clean()
-        super().save(*args, **kwargs)
-        
+        super().save(*args, **kwargs)        
         self.plan.calculer_nombres()
-        self.plan.calculer_couts()
 
     def delete(self, *args, **kwargs):
         super().delete(*args, **kwargs)
@@ -90,28 +92,27 @@ class Produit(models.Model):
     nombre_activites = models.PositiveIntegerField(default=0)
 
     def calculer_couts(self):
-        """Calcul du coût total de l'action pour chaque année."""
-        couts = [0] * self.effet.plan.horizon
+        """Calcul du coût total du produit en additionnant les coûts de ses actions."""
+        couts = [0.0] * self.effet.plan.horizon
         for action in self.produit_action.all():
             for i, cout in enumerate(action.couts):
-                couts[i] += cout
+                couts[i] += cout  # Ajout des coûts des actions
         self.couts = couts
-    
+        self.save()
+        self.effet.calculer_couts()  # Mise à jour des coûts de l'effet
+
+        
     def calculer_nombres(self):
         """Calcul du nombre d'actions et d'activités."""
         produit_action = self.produit_action.prefetch_related('action_activite')
         self.nombre_actions = produit_action.count()
         self.nombre_activites = sum(action.action_activite.count() for action in produit_action)
+        self.effet.calculer_nombres()
 
     def save(self, *args, **kwargs):
         self.full_clean()
         super().save(*args, **kwargs)
-
         self.effet.calculer_nombres()
-        self.effet.plan.calculer_nombres()
-
-        self.effet.calculer_couts()
-        self.effet.plan.calculer_couts()
 
     def delete(self, *args, **kwargs):
         super().delete(*args, **kwargs)
@@ -119,10 +120,6 @@ class Produit(models.Model):
         self.effet.calculer_nombres()
         self.effet.calculer_couts()
         self.effet.save()
-
-        self.effet.plan.calculer_nombres()
-        self.effet.plan.calculer_couts()
-        self.effet.plan.save()
 
     def __str__(self):
         return f"Produit {self.id} : {self.titre}"
@@ -136,27 +133,25 @@ class Action(models.Model):
 
     def calculer_couts(self):
         """Calcul du coût total de l'action pour chaque année."""
-        couts = [0.0] * self.produit.effet.plan.horizon
+        couts = [0.0] * self.produit.effet.plan.horizon  # Initialisation du tableau de coûts
         for activite in self.action_activite.all():
+            print(activite.couts)  # Affichage des coûts de l'activité
             for i, cout in enumerate(activite.couts):
-                couts[i] += cout
-        self.couts = couts
-    
+                couts[i] += cout  # Addition des coûts de chaque activité à la liste globale
+        self.couts = couts  # Mise à jour des coûts de l'action
+        self.save()  # Sauvegarde de l'objet Action
+        self.produit.calculer_couts()  # Mise à jour des coûts du produit
+
+
     def calculer_nombres(self):
         """Calcul du nombre d'activités."""
         self.nombre_activites = self.action_activite.count()
+        self.produit.calculer_nombres()
 
     def save(self, *args, **kwargs):
         self.full_clean()
         super().save(*args, **kwargs)
-
         self.produit.calculer_nombres()
-        self.produit.effet.calculer_nombres()
-        self.produit.effet.plan.calculer_nombres()
-
-        self.produit.calculer_couts()
-        self.produit.effet.calculer_couts()
-        self.produit.effet.plan.calculer_couts()
 
     def delete(self, *args, **kwargs):
         super().delete(*args, **kwargs)
@@ -164,14 +159,6 @@ class Action(models.Model):
         self.produit.calculer_nombres()
         self.produit.calculer_couts()
         self.produit.save()
-
-        self.produit.effet.calculer_nombres()
-        self.produit.effet.calculer_couts()
-        self.produit.effet.save()
-
-        self.produit.effet.plan.calculer_nombres()
-        self.produit.effet.plan.calculer_couts()
-        self.produit.effet.plan.save()
 
     def __str__(self):
         return f"Action {self.id} : {self.titre}"
@@ -209,36 +196,15 @@ class Activite(models.Model):
     def save(self, *args, **kwargs):
         self.full_clean()
         super().save(*args, **kwargs)
-
         self.action.calculer_nombres()
-        self.action.produit.calculer_nombres()
-        self.action.produit.effet.calculer_nombres()
-        self.action.produit.effet.plan.calculer_nombres()
-
         self.action.calculer_couts()
-        self.action.produit.calculer_couts()
-        self.action.produit.effet.calculer_couts()
-        self.action.produit.effet.plan.calculer_couts()
 
     def delete(self, *args, **kwargs):
-        super().delete(*args, **kwargs)
-        
+        super().delete(*args, **kwargs)      
         # Mise à jour en cascade
         self.action.calculer_nombres()
         self.action.calculer_couts()
         self.action.save()
-
-        self.action.produit.calculer_nombres()
-        self.action.produit.calculer_couts()
-        self.action.produit.save()
-
-        self.action.produit.effet.calculer_nombres()
-        self.action.produit.effet.calculer_couts()
-        self.action.produit.effet.save()
-
-        self.action.produit.effet.plan.calculer_nombres()
-        self.action.produit.effet.plan.calculer_couts()
-        self.action.produit.effet.plan.save()
 
     def __str__(self):
         return self.titre
