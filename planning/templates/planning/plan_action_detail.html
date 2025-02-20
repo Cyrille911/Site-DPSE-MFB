@@ -8,67 +8,127 @@ Détails du Plan d'Action - {{ plan.titre }}
 <div class="container mt-5">
     <h1 class="text-center mb-4 text-primary fw-bold">Plan d'Action : {{ plan.titre }}</h1>
 
-    <!-- Élément Synthétique -->
-    <div class="card mb-4 shadow-sm">
-        <div class="card-body">
-            <h4 class="card-title text-center text-success fw-bold">Synthèse du Plan d'Action</h4>
-            <p><strong>Coût Total :</strong> {{ plan.cout_total|default:"N/A" }} FCFA</p>
-            <p><strong>Durée :</strong> {{ plan.duree|default:"Non précisée" }}</p>
-            <p><strong>Objectif Global :</strong> {{ plan.objectif|default:"Non défini" }}</p>
-            <p><strong>Responsable :</strong> {{ plan.responsable|default:"Non assigné" }}</p>
-        </div>
-    </div>
-
-    <!-- Tableau Détails -->
-    <div class="table-responsive">
-        <table class="table table-bordered table-striped">
-            <thead class="table-dark">
-                <tr>
-                    <th>Effet</th>
-                    <th>Produit</th>
-                    <th>Action</th>
-                    <th>Activité</th>
-                    <th>Type</th>
-                    <th>Indicateur</th>
-                    <th>Référence</th>
-                    <th>Coût total</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for effet in plan.plan_effet.all %}
-                    <tr class="table-primary">
-                        <td rowspan="{{ effet.nombre_produits|default:1 }}">{{ effet.titre }}</td>
-                        {% for produit in effet.effet_produit.all %}
-                            {% if not forloop.first %}<tr>{% endif %}
-                            <td rowspan="{{ produit.nombre_actions|default:1 }}">{{ produit.titre }}</td>
-                            {% for action in produit.produit_action.all %}
-                                {% if not forloop.first %}<tr>{% endif %}
-                                <td rowspan="{{ action.nombre_activites|default:1 }}">{{ action.titre }}</td>
-                                {% for activite in action.action_activite.all %}
-                                    {% if not forloop.first %}<tr>{% endif %}
-                                    <td>{{ activite.titre }}</td>
-                                    <td>{{ activite.type }}</td>
-                                    <td>{{ activite.indicator }}</td>
-                                    <td>{{ activite.reference }}</td>
-                                    <td>{{ activite.get_cout_total }}</td>
-                                    </tr>
-                                {% empty %}
-                                    <td colspan="4">Pas d'activités</td></tr>
-                                {% endfor %}
-                            {% empty %}
-                                <td colspan="5">Pas d'actions</td></tr>
-                            {% endfor %}
-                        {% empty %}
-                            <td colspan="6">Pas de produits</td></tr>
-                        {% endfor %}
-                    </tr>
-                {% empty %}
-                    <tr>
-                        <td colspan="8" class="text-center">Aucun effet défini pour ce plan.</td>
-                    </tr>
+    <!-- Filtrage par Type d'Activité, Année, Effet, Produit, Action et Structure -->
+    <form method="get" class="mb-4">
+        <div class="row">
+            <!-- Filtre par Type d'Activité -->
+            <div class="col-md-4">
+                <h4>Filtrer par Type d'Activité</h4>
+                {% for activity_type in activity_types %}
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="type" value="{{ activity_type }}" 
+                               {% if activity_type in selected_types %} checked {% endif %}>
+                        <label class="form-check-label">{{ activity_type }}</label>
+                    </div>
                 {% endfor %}
-            </tbody>
-        </table>
+            </div>
+
+            <!-- Filtre par Année -->
+            <div class="col-md-4">
+                <h4>Filtrer par Année</h4>
+                {% for year in available_years %}
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="annee" value="{{ year }}" 
+                               {% if year|stringformat:"s" in selected_years %} checked {% endif %}>
+                        <label class="form-check-label">{{ year }}</label>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Filtre par Effet -->
+            <div class="col-md-4">
+                <h4>Filtrer par Effet</h4>
+                {% for effet in available_effects %}
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="effet" value="{{ effet.id }}" 
+                               {% if effet.id|stringformat:"s" in selected_effects %} checked {% endif %}>
+                        <label class="form-check-label">{{ effet.titre }}</label>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Filtre par Produit -->
+            <div class="col-md-4">
+                <h4>Filtrer par Produit</h4>
+                {% for produit in available_products %}
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="produit" value="{{ produit.id }}" 
+                               {% if produit.id|stringformat:"s" in selected_products %} checked {% endif %}>
+                        <label class="form-check-label">{{ produit.titre }}</label>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Filtre par Action -->
+            <div class="col-md-4">
+                <h4>Filtrer par Action</h4>
+                {% for action in available_actions %}
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="action" value="{{ action.id }}" 
+                               {% if action.id|stringformat:"s" in selected_actions %} checked {% endif %}>
+                        <label class="form-check-label">{{ action.titre }}</label>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Filtre par Structure -->
+            <div class="col-md-4">
+                <h4>Filtrer par Structure</h4>
+                {% for structure in available_structures %}
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="structure" value="{{ structure }}" 
+                               {% if structure in selected_structures %} checked {% endif %}>
+                        <label class="form-check-label">{{ structure }}</label>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Appliquer les filtres</button>
+    </form>
+
+    <!-- Affichage des activités par année -->
+    {% for year, activites in activites_by_year.items %}
+        <h4 class="text-center text-primary mt-4">Année {{ year }}</h4>
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Activité</th>
+                        <th>Indicateur</th>
+                        <th>Référence</th>
+                        <th>Coût total</th>
+                        <th>Type</th>
+                        <th>Effet</th>
+                        <th>Produit</th>
+                        <th>Action</th>
+                        <th>Structure</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for activite in activites %}
+                        <tr>
+                            <td>{{ activite.titre }}</td>
+                            <td>{{ activite.indicator }}</td>
+                            <td>{{ activite.reference }}</td>
+                            <td>{{ activite.cout_total }}</td>
+                            <td>{{ activite.type }}</td>
+                            <td>{{ activite.effet }}</td>
+                            <td>{{ activite.produit }}</td>
+                            <td>{{ activite.action }}</td>
+                            <td>{{ activite.structure }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endfor %}
+
+    <!-- Bouton d'impression -->
+    <div class="text-center mt-4">
+        <button onclick="window.print()" class="btn btn-secondary">Imprimer cette page</button>
     </div>
 </div>
 {% endblock %}

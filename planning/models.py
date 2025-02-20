@@ -1,8 +1,9 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.conf import settings
 
 def default():
-    return [0] * 3  # Génère une liste de trois zéros
+    return [0.0] * 3  # Génère une liste de trois zéros
 
 class PlanAction(models.Model):
     id = models.AutoField(primary_key=True)
@@ -19,28 +20,28 @@ class PlanAction(models.Model):
     def calculer_couts(self):
         """Calcul du coût total du plan pour chaque année."""
         couts = [0] * self.horizon
-        for effet in self.plan_effets.prefetch_related('effet_produits__produit_actions__action_activites'):
+        for effet in self.plan_effet.all():
             for i, cout in enumerate(effet.couts):
                 couts[i] += cout
         self.couts = couts
 
     def calculer_nombres(self):
         """Met à jour le nombre total d'effets, produits, actions et activités."""
-        plan_effets = self.plan_effets.prefetch_related(
-            'effet_produits__produit_actions__action_activites'
+        plan_effet = self.plan_effet.prefetch_related(
+            'effet_produit__produit_action__action_activite'
         )
         
-        self.nombre_effets = plan_effets.count()
-        self.nombre_produits = sum(effet.effet_produits.count() for effet in plan_effets)
-        self.nombre_actions = sum(produit.produit_actions.count() for effet in plan_effets for produit in effet.effet_produits.all())
-        self.nombre_activites = sum(action.action_activites.count() for effet in plan_effets for produit in effet.effet_produits.all() for action in produit.produit_actions.all())
+        self.nombre_effets = plan_effet.count()
+        self.nombre_produits = sum(effet.effet_produit.count() for effet in plan_effet)
+        self.nombre_actions = sum(produit.produit_action.count() for effet in plan_effet for produit in effet.effet_produit.all())
+        self.nombre_activites = sum(action.action_activite.count() for effet in plan_effet for produit in effet.effet_produit.all() for action in produit.produit_action.all())
 
     def __str__(self):
         return f"Plan d'actions {self.id} : {self.titre}"
 
 class Effet(models.Model):
     id = models.AutoField(primary_key=True)
-    plan = models.ForeignKey(PlanAction, related_name="plan_effets", on_delete=models.CASCADE)
+    plan = models.ForeignKey(PlanAction, related_name="plan_effet", on_delete=models.CASCADE)
     titre = models.CharField(max_length=255)
     couts = models.JSONField(default=default)
     nombre_produits = models.PositiveIntegerField(default=0)
@@ -49,19 +50,19 @@ class Effet(models.Model):
 
     def calculer_couts(self):
         """Calcul du coût total de l'effet pour chaque année."""
-        couts = [0] * self.plan.horizon
-        for produit in self.effet_produits.prefetch_related('produit_actions__action_activites'):
+        couts = [0.0] * self.plan.horizon
+        for produit in self.effet_produit.all():
             for i, cout in enumerate(produit.couts):
                 couts[i] += cout
         self.couts = couts
     
     def calculer_nombres(self):
         """Calcul du nombre de produits, actions et activités."""
-        effet_produits = self.effet_produits.prefetch_related('produit_actions__action_activites')
+        effet_produit = self.effet_produit.prefetch_related('produit_action__action_activite')
         
-        self.nombre_produits = effet_produits.count()
-        self.nombre_actions = sum(produit.produit_actions.count() for produit in effet_produits)
-        self.nombre_activites = sum(action.action_activites.count() for produit in effet_produits for action in produit.produit_actions.all())
+        self.nombre_produits = effet_produit.count()
+        self.nombre_actions = sum(produit.produit_action.count() for produit in effet_produit)
+        self.nombre_activites = sum(action.action_activite.count() for produit in effet_produit for action in produit.produit_action.all())
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -82,25 +83,25 @@ class Effet(models.Model):
 
 class Produit(models.Model):
     id = models.AutoField(primary_key=True)
-    effet = models.ForeignKey(Effet, related_name="effet_produits", on_delete=models.CASCADE)
+    effet = models.ForeignKey(Effet, related_name="effet_produit", on_delete=models.CASCADE)
     titre = models.CharField(max_length=255)
     couts = models.JSONField(default=default)
     nombre_actions = models.PositiveIntegerField(default=0)
     nombre_activites = models.PositiveIntegerField(default=0)
 
     def calculer_couts(self):
-        """Calcul du coût total du produit pour chaque année."""
+        """Calcul du coût total de l'action pour chaque année."""
         couts = [0] * self.effet.plan.horizon
-        for action in self.produit_actions.prefetch_related('action_activites'):
+        for action in self.produit_action.all():
             for i, cout in enumerate(action.couts):
                 couts[i] += cout
         self.couts = couts
     
     def calculer_nombres(self):
         """Calcul du nombre d'actions et d'activités."""
-        produit_actions = self.produit_actions.prefetch_related('action_activites')
-        self.nombre_actions = produit_actions.count()
-        self.nombre_activites = sum(action.action_activites.count() for action in produit_actions)
+        produit_action = self.produit_action.prefetch_related('action_activite')
+        self.nombre_actions = produit_action.count()
+        self.nombre_activites = sum(action.action_activite.count() for action in produit_action)
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -128,22 +129,22 @@ class Produit(models.Model):
 
 class Action(models.Model):
     id = models.AutoField(primary_key=True)
-    produit = models.ForeignKey(Produit, related_name="produit_actions", on_delete=models.CASCADE)
+    produit = models.ForeignKey(Produit, related_name="produit_action", on_delete=models.CASCADE)
     titre = models.CharField(max_length=255)
     couts = models.JSONField(default=default)
     nombre_activites = models.PositiveIntegerField(default=0)
 
     def calculer_couts(self):
         """Calcul du coût total de l'action pour chaque année."""
-        couts = [0] * self.produit.effet.plan.horizon
-        for activite in self.action_activites.all():
+        couts = [0.0] * self.produit.effet.plan.horizon
+        for activite in self.action_activite.all():
             for i, cout in enumerate(activite.couts):
                 couts[i] += cout
         self.couts = couts
     
     def calculer_nombres(self):
         """Calcul du nombre d'activités."""
-        self.nombre_activites = self.action_activites.count()
+        self.nombre_activites = self.action_activite.count()
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -178,7 +179,7 @@ class Action(models.Model):
 # Modèle pour les activités
 class Activite(models.Model):
     id = models.AutoField(primary_key=True)
-    action = models.ForeignKey(Action, related_name="action_activites", on_delete=models.CASCADE)
+    action = models.ForeignKey(Action, related_name="action_activite", on_delete=models.CASCADE)
     titre = models.CharField(max_length=255)
     type = models.CharField(
         max_length=50, 
@@ -194,6 +195,9 @@ class Activite(models.Model):
     indicateur_reference = models.CharField(max_length=255)
     cibles = models.JSONField(default=default)  
     couts = models.JSONField(default=default)  
+    point_focal = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=False, blank=False, related_name='point_focal_activites')
+    responsable = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True, related_name='responsable_activites')
+
 
     def clean(self):
         horizon = self.action.produit.effet.plan.horizon

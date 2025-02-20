@@ -17,11 +17,15 @@ Création d'un Plan d'Action
             <div class="card shadow-lg p-5 mb-5 bg-gradient rounded-4 border border-primary">
                 <h3 class="text-primary mb-4">Informations sur le Plan d'Action</h3>
                 <div class="row">
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
                         <label for="titre" class="form-label">Titre du Plan d'Action</label>
                         <input type="text" class="form-control shadow-sm border-primary" id="titre" name="titre" placeholder="Entrez le titre du plan" required>
                     </div>
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
+                        <label for="annee_depart" class="form-label">Année de Départ</label>
+                        <input type="number" class="form-control shadow-sm border-primary" id="annee_depart" name="annee_depart" placeholder="Entrez l'année de départ" required min="2010">
+                    </div>
+                    <div class="col-md-4 mb-3">
                         <label for="horizon" class="form-label">Horizon</label>
                         <input type="number" class="form-control shadow-sm border-primary" id="horizon" name="horizon" placeholder="En nombre d'années" required min="1">
                     </div>
@@ -29,7 +33,9 @@ Création d'un Plan d'Action
                 <div class="mb-3">
                     <label for="impact" class="form-label">Impact</label>
                     <textarea class="form-control shadow-sm border-primary" id="impact" name="impact" rows="3" placeholder="Impact du plan" required></textarea>
-                </div>
+                </div>  
+
+                <!-- A revoir             
                 <div id="stats" class="mb-4">
                     <h4 class="text-info">Statistiques :</h4>
                     <p>
@@ -39,6 +45,8 @@ Création d'un Plan d'Action
                         Activités : <span id="activite_count" class="text-primary">0</span>
                     </p>
                 </div>
+                -->
+
                 <div class="d-flex justify-content-center">
                     <button type="button" class="btn btn-outline-warning me-3 shadow-sm" onclick="ajouterEffet()">Ajouter un effet</button>
                     <button type="submit" class="btn btn-success shadow-sm">Créer le plan d'action</button>
@@ -398,89 +406,141 @@ Création d'un Plan d'Action
                 mettreAJourStatistiques();
             }
         }
-
-    document.getElementById("horizon").addEventListener("input", function () {
-        const horizon = parseInt(this.value) || 1;
-        document.querySelectorAll(".activite-container").forEach((activite) => {
-            const ids = activite.id.split("_")[1].split(".");
-            const [effetNum, produitNum, actionNum, activiteNum] = ids.map(Number);
-            generateCiblesCouts(horizon, effetNum, produitNum, actionNum, activiteNum);
+        
+        // Générer dynamiquement les champs cibles et couts
+        document.addEventListener("DOMContentLoaded", () => {
+            document.getElementById("horizon").addEventListener("input", updateResults);
+            document.getElementById("annee_depart").addEventListener("input", updateResults);
         });
-    });
 
-    function ajouterActivite(effetNum, produitNum, actionNum) {
-        activiteCounts[`${effetNum}.${produitNum}.${actionNum}`]++;
-        const activiteNum = activiteCounts[`${effetNum}.${produitNum}.${actionNum}`];
+        function updateResults() {
+            let horizonInput = document.getElementById("horizon");
+            let anneeDepartInput = document.getElementById("annee_depart");
 
-        const activiteContainer = document.createElement("div");
-        activiteContainer.className =
-            "card shadow-lg p-3 mb-2 border border-primary rounded-3 bg-light activite-container";
-        activiteContainer.id = `activite_${effetNum}.${produitNum}.${actionNum}.${activiteNum}`;
+            let horizon = parseInt(horizonInput.value) || 1;
+            let anneeDepart = parseInt(anneeDepartInput.value) || 2010;
 
-        activiteContainer.innerHTML = `
-            <h6 class="text-primary">Activité ${effetNum}.${produitNum}.${actionNum}.${activiteNum}</h6>
+            if (horizon > 0 && anneeDepart > 0) {
+                document.querySelectorAll(".activite-container").forEach((activite) => {
+                    const ids = activite.id.split("_")[1].split(".");
+                    const [effetNum, produitNum, actionNum, activiteNum] = ids.map(Number);
+                    generateCiblesCouts(anneeDepart, horizon, effetNum, produitNum, actionNum, activiteNum);
+                });
+            }
+        }
+
+        function generateCiblesCouts(anneeDepart, horizon, effetNum, produitNum, actionNum, activiteNum) {
+            let ciblesContainer = document.getElementById(`cibles_${effetNum}.${produitNum}.${actionNum}.${activiteNum}`);
+            let coutsContainer = document.getElementById(`couts_${effetNum}.${produitNum}.${actionNum}.${activiteNum}`);
+
+            ciblesContainer.innerHTML = "";
+            coutsContainer.innerHTML = "";
+
+            for (let i = 1; i <= horizon; i++) {
+                let cibleInput = document.createElement("input");
+                cibleInput.type = "text";
+                cibleInput.classList.add("form-control", "shadow-sm", "border-primary", "mb-2");
+                cibleInput.name = `cible_${effetNum}.${produitNum}.${actionNum}.${activiteNum}[${i}]`;
+                cibleInput.placeholder = `Cible ${anneeDepart + i - 1}`;
+                ciblesContainer.appendChild(cibleInput);
+
+                let coutInput = document.createElement("input");
+                coutInput.type = "number";
+                coutInput.classList.add("form-control", "shadow-sm", "border-primary", "mb-2");
+                coutInput.name = `cout_${effetNum}.${produitNum}.${actionNum}.${activiteNum}[${i}]`;
+                coutInput.placeholder = `Coût ${anneeDepart + i - 1}`;
+                coutsContainer.appendChild(coutInput);
+            }
+        }
+
+        function ajouterActivite(effetNum, produitNum, actionNum) {
+            activiteCounts[`${effetNum}.${produitNum}.${actionNum}`]++;
+            const activiteNum = activiteCounts[`${effetNum}.${produitNum}.${actionNum}`];
+
+            const activiteContainer = document.createElement("div");
+            activiteContainer.className = "card shadow-lg p-3 mb-2 border border-primary rounded-3 bg-light activite-container";
+            activiteContainer.id = `activite_${effetNum}.${produitNum}.${actionNum}.${activiteNum}`;
+
+            activiteContainer.innerHTML = `
+            <h6 class="text-primary" id="activite_id_${effetNum}.${produitNum}.${actionNum}.${activiteNum}">Activité ${effetNum}.${produitNum}.${actionNum}.${activiteNum}</h6>
+
             <div class="mb-3">
-                <label for="activite_titre_${effetNum}.${produitNum}.${actionNum}.${activiteNum}" class="form-label">
+                <label for="activite_titre_${effetNum}.${produitNum}.${actionNum}.${activiteNum}" class="form-label" id="activite_label_${effetNum}.${produitNum}.${actionNum}.${activiteNum}">
                     Intitulé de l'activité
                 </label>
-                <input type="text" class="form-control shadow-sm border-primary"
-                    id="activite_titre_${effetNum}.${produitNum}.${actionNum}.${activiteNum}"
-                    name="activite_titre_${effetNum}.${produitNum}.${actionNum}.${activiteNum}" required>
+                <input type="text" class="form-control shadow-sm border-primary" 
+                    id="activite_titre_${effetNum}.${produitNum}.${actionNum}.${activiteNum}" 
+                    name="activite_titre_${effetNum}.${produitNum}.${actionNum}.${activiteNum}" 
+                    required>
             </div>
 
             <div class="mb-3">
-                <label class="form-label">Cibles</label>
-                <div id="cibles_${effetNum}.${produitNum}.${actionNum}.${activiteNum}"></div>
+                <label for="activite_type_${effetNum}.${produitNum}.${actionNum}.${activiteNum}" class="form-label" id="activite_type_label_${effetNum}.${produitNum}.${actionNum}.${activiteNum}">
+                    Type d'activité
+                </label>
+                <select class="form-control shadow-sm border-primary" 
+                    id="activite_type_${effetNum}.${produitNum}.${actionNum}.${activiteNum}" 
+                    name="activite_type_${effetNum}.${produitNum}.${actionNum}.${activiteNum}" 
+                    required>
+                    <option value="reforme">Réforme</option>
+                    <option value="investissement">Investissement</option>
+                    <option value="etude">Étude</option>
+                    <option value="texte">Texte</option>
+                    <option value="ordinaire">Activité ordinaire</option>
+                </select>
             </div>
 
             <div class="mb-3">
-                <label class="form-label">Coûts</label>
-                <div id="couts_${effetNum}.${produitNum}.${actionNum}.${activiteNum}"></div>
+                <label for="indicateur_label_${effetNum}.${produitNum}.${actionNum}.${activiteNum}" class="form-label" id="activite_indicateur_label_${effetNum}.${produitNum}.${actionNum}.${activiteNum}">
+                    Indicateur (Label)
+                </label>
+                <input type="text" class="form-control shadow-sm border-primary" 
+                    id="indicateur_label_${effetNum}.${produitNum}.${actionNum}.${activiteNum}" 
+                    name="indicateur_label_${effetNum}.${produitNum}.${actionNum}.${activiteNum}" 
+                    required>
+            </div>
+
+            <div class="mb-3">
+                <label for="indicateur_reference_${effetNum}.${produitNum}.${actionNum}.${activiteNum}" class="form-label" id="activite_indicateur_reference_${effetNum}.${produitNum}.${actionNum}.${activiteNum}">
+                    Référence de l'indicateur
+                </label>
+                <input type="text" class="form-control shadow-sm border-primary" 
+                    id="indicateur_reference_${effetNum}.${produitNum}.${actionNum}.${activiteNum}" 
+                    name="indicateur_reference_${effetNum}.${produitNum}.${actionNum}.${activiteNum}" 
+                    required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" id="activite_cibles_label_${effetNum}.${produitNum}.${actionNum}.${activiteNum}">
+                    Cibles
+                </label>
+                <div id="cibles_${effetNum}.${produitNum}.${actionNum}.${activiteNum}">
+                    <!-- Afficher dynamiquement les cibles ici -->
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" id="activite_couts_label_${effetNum}.${produitNum}.${actionNum}.${activiteNum}">
+                    Coûts
+                </label>
+                <div id="couts_${effetNum}.${produitNum}.${actionNum}.${activiteNum}">
+                    <!-- Afficher dynamiquement les coûts ici -->
+                </div>
             </div>
 
             <div class="d-flex justify-content-end">
-                <button type="button" class="btn btn-outline-danger mt-2 shadow-sm"
+                <button type="button" class="btn btn-outline-danger mt-2 shadow-sm" 
+                    id="supprimer_activite_${effetNum}.${produitNum}.${actionNum}.${activiteNum}" 
                     onclick="supprimerActivite(${effetNum}, ${produitNum}, ${actionNum}, ${activiteNum})">
                     Supprimer l'activité
                 </button>
             </div>
-        `;
+            `;
 
-        document.getElementById(`activites_action_${effetNum}.${produitNum}.${actionNum}`).appendChild(activiteContainer);
+            document.getElementById(`activites_action_${effetNum}.${produitNum}.${actionNum}`).appendChild(activiteContainer);
 
-        const horizon = parseInt(document.getElementById("horizon").value) || 1;
-        generateCiblesCouts(horizon, effetNum, produitNum, actionNum, activiteNum);
-        mettreAJourStatistiques();
-    }
-
-    function generateCiblesCouts(horizon, effetNum, produitNum, actionNum, activiteNum) {
-        let ciblesContainer = document.getElementById(`cibles_${effetNum}.${produitNum}.${actionNum}.${activiteNum}`);
-        let coutsContainer = document.getElementById(`couts_${effetNum}.${produitNum}.${actionNum}.${activiteNum}`);
-
-        ciblesContainer.innerHTML = "";
-        coutsContainer.innerHTML = "";
-
-        for (let i = 1; i <= horizon; i++) {
-            let cibleInput = document.createElement("input");
-            cibleInput.type = "text";  // 🔥 On passe à du texte au lieu de nombre
-            cibleInput.classList.add("form-control", "shadow-sm", "border-primary", "mb-2");
-            cibleInput.name = `activite_cibles_${effetNum}.${produitNum}.${actionNum}.${activiteNum}[${i}]`;
-            cibleInput.placeholder = `Cible ${i}`;
-            ciblesContainer.appendChild(cibleInput);
-
-            let coutInput = document.createElement("input");
-            coutInput.type = "number";
-            coutInput.classList.add("form-control", "shadow-sm", "border-primary", "mb-2");
-            coutInput.name = `activite_couts_${effetNum}.${produitNum}.${actionNum}.${activiteNum}[${i}]`;
-            coutInput.placeholder = `Coût ${i}`;
-            coutsContainer.appendChild(coutInput);
+            updateResults();
         }
-    }
-
-    // 🔥 Fonction pour préparer les cibles avant enregistrement
-    function prepareCiblesPourSauvegarde(cibles) {
-        return cibles.map(cible => `"${cible}"`);  // 🔥 Ajoute des guillemets autour des valeurs
-    }
 
         // Fonction de suppression d'une activité
         function supprimerActivite(effetNum, produitNum, actionNum, activiteNum) {
@@ -500,11 +560,14 @@ Création d'un Plan d'Action
                     document.getElementById(`activite_label_${effetNum}.${produitNum}.${actionNum}.${l}`).id = `activite_label_${effetNum}.${produitNum}.${actionNum}.${l - 1}`;
                     document.getElementById(`activite_label_${effetNum}.${produitNum}.${actionNum}.${l - 1}`).textContent = `Intitulé de l'activité ${effetNum}.${produitNum}.${actionNum}.${l - 1}`;
                     document.getElementById(`activite_titre_${effetNum}.${produitNum}.${actionNum}.${l}`).id = `activite_titre_${effetNum}.${produitNum}.${actionNum}.${l - 1}`;
-                    document.getElementById(`activite_titre_${effetNum}.${produitNum}.${actionNum}.${l - 1}`).name = `activite_titre_${effetNum}.${produitNum}.${actionNum}.${l - 1}`;
-                    document.getElementById(`supprimer_activite_${effetNum}.${produitNum}.${actionNum}.${l}`).id = `supprimer_activite_${effetNum}.${produitNum}.${actionNum}.${l - 1}`;
+                    document.getElementById(`activite_titre_${effetNum}.${produitNum}.${actionNum}.${l}`).name = `activite_titre_${effetNum}.${produitNum}.${actionNum}.${l - 1}`;
+                    document.getElementById(`supprimer_activite_${effetNum}.${produitNum}.${actionNum}.${l}`).id = `supprimer_activite_${effetNum}.${produitNum}.${actionNum}.${l - 1}`;                    
                     document.getElementById(`supprimer_activite_${effetNum}.${produitNum}.${actionNum}.${l - 1}`).setAttribute('onclick', `supprimerActivite(${effetNum}, ${produitNum}, ${actionNum}, ${l - 1})`);
+
+                    document.getElementById(`cibles_${effetNum}.${produitNum}.${actionNum}.${l}`).id = `cibles_${effetNum}.${produitNum}.${actionNum}.${l - 1}`;
+                    document.getElementById(`couts_${effetNum}.${produitNum}.${actionNum}.${l}`).id = `couts_${effetNum}.${produitNum}.${actionNum}.${l - 1}`;
                 }
-                // Décrémenter le compteur
+
                 activiteCounts[`${effetNum}.${produitNum}.${actionNum}`]--;
                 mettreAJourStatistiques();
             }
