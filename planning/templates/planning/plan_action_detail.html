@@ -1,134 +1,245 @@
-{% extends 'index.html' %}
-
-{% block title %}
-Détails du Plan d'Action - {{ plan.titre }}
-{% endblock %}
+{% extends "index.html" %}
 
 {% block content %}
-<div class="container mt-5">
-    <h1 class="text-center mb-4 text-primary fw-bold">Plan d'Action : {{ plan.titre }}</h1>
-
-    <!-- Filtrage par Type d'Activité, Année, Effet, Produit, Action et Structure -->
-    <form method="get" class="mb-4">
-        <div class="row">
-            <!-- Filtre par Type d'Activité -->
-            <div class="col-md-4">
-                <h4>Filtrer par Type d'Activité</h4>
-                {% for activity_type in activity_types %}
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="checkbox" name="type" value="{{ activity_type }}" 
-                               {% if activity_type in selected_types %} checked {% endif %}>
-                        <label class="form-check-label">{{ activity_type }}</label>
-                    </div>
-                {% endfor %}
-            </div>
-
-            <!-- Filtre par Année -->
-            <div class="col-md-4">
-                <h4>Filtrer par Année</h4>
-                {% for year in available_years %}
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="checkbox" name="annee" value="{{ year }}" 
-                               {% if year|stringformat:"s" in selected_years %} checked {% endif %}>
-                        <label class="form-check-label">{{ year }}</label>
-                    </div>
-                {% endfor %}
-            </div>
-
-            <!-- Filtre par Effet -->
-            <div class="col-md-4">
-                <h4>Filtrer par Effet</h4>
-                {% for effet in available_effects %}
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="checkbox" name="effet" value="{{ effet.id }}" 
-                               {% if effet.id|stringformat:"s" in selected_effects %} checked {% endif %}>
-                        <label class="form-check-label">{{ effet.titre }}</label>
-                    </div>
-                {% endfor %}
+<div class="container mt-4">
+    <h2 class="text-center">{{ plan.titre }}</h2>
+    <div class="row my-3">
+        <!-- Première zone de filtre -->
+        <div class="col-md-3">
+            <label for="filtre-type" class="mb-2">Filtrer par type d'activité :</label>
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                    Sélectionner les types
+                </button>
+                <ul class="dropdown-menu w-100" aria-labelledby="dropdownMenuButton1">
+                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" id="select-all"> Tout sélectionner</label></li>
+                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" value="Réforme"> Réforme</label></li>
+                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" value="Investissement"> Investissement</label></li>
+                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" value="Etude"> Étude</label></li>
+                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" value="Texte"> Texte</label></li>
+                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" value="Activité ordinaire"> Activité ordinaire</label></li>
+                </ul>
             </div>
         </div>
 
-        <div class="row">
-            <!-- Filtre par Produit -->
-            <div class="col-md-4">
-                <h4>Filtrer par Produit</h4>
-                {% for produit in available_products %}
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="checkbox" name="produit" value="{{ produit.id }}" 
-                               {% if produit.id|stringformat:"s" in selected_products %} checked {% endif %}>
-                        <label class="form-check-label">{{ produit.titre }}</label>
-                    </div>
-                {% endfor %}
-            </div>
-
-            <!-- Filtre par Action -->
-            <div class="col-md-4">
-                <h4>Filtrer par Action</h4>
-                {% for action in available_actions %}
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="checkbox" name="action" value="{{ action.id }}" 
-                               {% if action.id|stringformat:"s" in selected_actions %} checked {% endif %}>
-                        <label class="form-check-label">{{ action.titre }}</label>
-                    </div>
-                {% endfor %}
-            </div>
-
-            <!-- Filtre par Structure -->
-            <div class="col-md-4">
-                <h4>Filtrer par Structure</h4>
-                {% for structure in available_structures %}
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="checkbox" name="structure" value="{{ structure }}" 
-                               {% if structure in selected_structures %} checked {% endif %}>
-                        <label class="form-check-label">{{ structure }}</label>
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
-
-        <button type="submit" class="btn btn-primary">Appliquer les filtres</button>
-    </form>
-
-    <!-- Affichage des activités par année -->
-    {% for year, activites in activites_by_year.items %}
-        <h4 class="text-center text-primary mt-4">Année {{ year }}</h4>
-        <div class="table-responsive">
-            <table class="table table-bordered table-striped">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Activité</th>
-                        <th>Indicateur</th>
-                        <th>Référence</th>
-                        <th>Coût total</th>
-                        <th>Type</th>
-                        <th>Effet</th>
-                        <th>Produit</th>
-                        <th>Action</th>
-                        <th>Structure</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for activite in activites %}
-                        <tr>
-                            <td>{{ activite.titre }}</td>
-                            <td>{{ activite.indicator }}</td>
-                            <td>{{ activite.reference }}</td>
-                            <td>{{ activite.cout_total }}</td>
-                            <td>{{ activite.type }}</td>
-                            <td>{{ activite.effet }}</td>
-                            <td>{{ activite.produit }}</td>
-                            <td>{{ activite.action }}</td>
-                            <td>{{ activite.structure }}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    {% endfor %}
-
-    <!-- Bouton d'impression -->
-    <div class="text-center mt-4">
-        <button onclick="window.print()" class="btn btn-secondary">Imprimer cette page</button>
+        <!-- Autres zones de filtre ici -->
     </div>
 </div>
+
+
+
+<div class="table-container"> 
+    <div class="table-horizontal-container">
+        <table class="unfixed-table">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Effet</th>
+                    <th>Produit</th>
+                    <th>Action</th>
+                    <th>Activité</th>
+                    <th>Type</th>
+                    <th>Coûts</th>
+                </tr>
+            </thead>
+            <tbody id="plan-table-body">
+                <!-- Les lignes de données seront insérées ici par JavaScript -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const checkboxes = document.querySelectorAll('.checkbox-option');
+    const selectAllCheckbox = document.getElementById('select-all');
+    
+    // Fonction pour mettre à jour le texte du bouton avec les options sélectionnées
+    function updateDropdownButton(dropdownButton) {
+        const selectedOptions = [];
+        checkboxes.forEach(checkbox => {
+            if (checkbox.checked && checkbox !== selectAllCheckbox) {
+                selectedOptions.push(checkbox.value);
+            }
+        });
+        
+        if (selectedOptions.length > 0) {
+            dropdownButton.textContent = selectedOptions.join(', ');
+        } else {
+            dropdownButton.textContent = "Sélectionner les types";
+        }
+    }
+    
+    // Fonction pour tout sélectionner ou tout désélectionner
+    selectAllCheckbox.addEventListener('change', function () {
+        const isChecked = selectAllCheckbox.checked;
+        checkboxes.forEach(checkbox => {
+            if (checkbox !== selectAllCheckbox) {
+                checkbox.checked = isChecked;
+            }
+        });
+        document.querySelectorAll('.dropdown-toggle').forEach(btn => updateDropdownButton(btn));
+        chargerTableau(); // Rafraîchit le tableau
+    });
+    
+    // Ajoute un écouteur d'événement pour chaque case à cocher
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function () {
+            if (this !== selectAllCheckbox) {
+                selectAllCheckbox.checked = checkboxes.length === document.querySelectorAll('.checkbox-option:checked').length;
+            }
+            document.querySelectorAll('.dropdown-toggle').forEach(btn => updateDropdownButton(btn));
+            chargerTableau(); // Rafraîchit le tableau
+        });
+    });
+    
+    // Fonction pour charger le tableau en fonction des filtres sélectionnés
+    function chargerTableau() {
+        let selectedValues = [];
+        checkboxes.forEach(checkbox => {
+            if (checkbox.checked && checkbox !== selectAllCheckbox) {
+                selectedValues.push(checkbox.value);
+            }
+        });
+
+        let tableBody = document.getElementById('plan-table-body');
+        
+        // Affiche un message de chargement
+        tableBody.innerHTML = `<tr><td colspan="6" class="text-center">Chargement...</td></tr>`;
+
+        // Effectue la requête AJAX avec les valeurs sélectionnées
+        fetch(`?types=${selectedValues.join(',')}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Données reçues après conversion JSON:', data);  // Debug console
+
+                tableBody.innerHTML = '';  // Vide le tableau
+                
+                if (data.activites.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="6" class="text-center">Aucune activité trouvée</td></tr>';
+                } else {
+                    data.activites.forEach(activite => {
+                        let row = `<tr>
+                            <td>${activite.effet}</td>
+                            <td>${activite.produit}</td>
+                            <td>${activite.action}</td>
+                            <td>${activite.activite}</td>
+                            <td>${activite.type}</td>
+                            <td>${activite.couts}</td>
+                        </tr>`;
+                        tableBody.innerHTML += row;
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Erreur AJAX:', error);
+                tableBody.innerHTML = '<tr><td colspan="6" class="text-center">Erreur de chargement des données</td></tr>';
+            });
+    }
+
+    // Appel initial pour charger le tableau lorsque la page est prête
+    chargerTableau();
+});
+</script>
 {% endblock %}
+
+{% block style %}
+<style>
+
+.dropdown-menu {
+    max-height: 250px;
+    overflow-y: auto;
+}
+.checkbox-option {
+    margin-right: 10px;
+}
+
+/* Ajuster le bouton pour que le texte sélectionné s'adapte */
+.dropdown-toggle {
+    white-space: normal;  /* Permet au texte de revenir à la ligne */
+    word-wrap: break-word;  /* Permet de couper les mots si nécessaire */
+    width: auto;  /* La largeur du bouton peut augmenter si le texte dépasse */
+    min-width: 200px;  /* Définir une largeur minimale pour le bouton */
+    padding: 10px;  /* Ajouter un peu de padding pour un rendu plus esthétique */
+}
+
+
+table {
+    border-collapse: collapse;
+    font-family: helvetica;
+    width: 100%;
+    border: 1px solid #007A3D; /* Bordure des cellules du tableau */
+}
+
+td, th {
+    border: 1px solid #007A3D; /* Bordure des cellules */
+    padding: 10px;
+    min-width: 150px;
+    background: white;
+    box-sizing: border-box;
+    text-align: left;
+}
+
+.table-container {
+    margin: 40px;
+    position: relative;
+    max-height: 500px;
+    overflow: scroll;
+    border: 5px solid #007A3D; /* Bordure plus épaisse en vert ivoirien */
+    border-radius: 20px; /* Coins arrondis */
+    padding: 20px; /* Espacement entre la bordure et le tableau */
+    background-color: #fff; /* Fond blanc */
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2); /* Ombre douce pour un effet de profondeur */
+}
+
+thead th {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: orange; /* Couleur orange du drapeau ivoirien */
+    color: white;
+}
+
+thead th:first-child {
+    left: 0;
+    z-index: 3;
+}
+
+tfoot {
+    position: -webkit-sticky;
+    bottom: 0;
+    z-index: 2;
+}
+
+tfoot td {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    background: green; /* Couleur verte du drapeau ivoirien */
+    color: white;
+}
+
+tfoot td:first-child {
+    z-index: 3;
+}
+
+tbody {
+    overflow: scroll;
+    height: 200px;
+}
+
+/* MAKE LEFT COLUMN FIXED */
+tr > :first-child {
+    position: -webkit-sticky;
+    position: sticky; 
+    background: white;
+    left: 0; 
+    box-shadow: inset 1px 0px 5px rgba(0, 0, 0, 0.1);
+}
+
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+</style>
+{% endblock %}
+

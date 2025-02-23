@@ -1,82 +1,56 @@
 # Modules Django
 import json  # Pour traiter les champs JSON
 from django.shortcuts import render, get_object_or_404, redirect
-# Imports spécifiques au projet
 from .models import PlanAction, Effet, Produit, Action, Activite
+from django.http import JsonResponse
 
 ## Plan d'Actions
 def plan_action_list(request):
     plans = PlanAction.objects.all()
-    return render(request, 'planning/plan_action_list.html', {'plans': plans})
+    return render(request, 'planning/plan_action_list.html', {'plans':plans})
+
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from .models import PlanAction
+
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, render
+from .models import PlanAction, Activite
 
 def plan_action_detail(request, id):
-    plan = PlanAction.objects.get(id=id)
+    plan = get_object_or_404(PlanAction, id=id)
 
-    # Récupérer les types d'activités et les années disponibles
-    activity_types = ['Investissement', 'Réformes', 'Autre']  # Exemples de types
-    available_years = [plan.annee_debut + i for i in range(plan.horizon + 1)]
-    available_effects = Effet.objects.all()  # Récupérer tous les effets
-    available_products = Produit.objects.all()  # Récupérer tous les produits
-    available_actions = Action.objects.all()  # Récupérer toutes les actions
-    available_structures = Activite.objects.values_list('point_focal__program', flat=True).distinct()
+    # Récupération optimisée des activités
+    activites = (
+        Activite.objects
+        .filter(action__produit__effet__plan=plan)
+        .select_related('action__produit__effet')  # Optimisation SQL
+    )
 
-    # Récupérer les filtres envoyés par l'utilisateur
-    selected_types = request.GET.getlist('type')  # Liste des types sélectionnés
-    selected_years = request.GET.getlist('annee')  # Liste des années sélectionnées
-    selected_effects = request.GET.getlist('effet')  # Liste des effets sélectionnés
-    selected_products = request.GET.getlist('produit')  # Liste des produits sélectionnés
-    selected_actions = request.GET.getlist('action')  # Liste des actions sélectionnées
-    selected_structures = request.GET.getlist('structure')  # Liste des structures sélectionnées
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        type_filtre = request.GET.get('type', None)
+        if type_filtre:
+            activites = activites.filter(type=type_filtre)  # Correct
 
-    # Appliquer les filtres : si des types ou des années sont sélectionnés
-    activites = Activite.objects.all()
+        if not activites.exists():
+            # Optionnel : ajouter un message d'erreur ou retour pour l'utilisateur
+            pass
 
-    if selected_types:
-        activites = activites.filter(type__in=selected_types)
-    if selected_years:
-        activites = activites.filter(annee__in=selected_years)
-    if selected_effects:
-        activites = activites.filter(effet__in=selected_effects)
-    if selected_products:
-        activites = activites.filter(produit__in=selected_products)
-    if selected_actions:
-        activites = activites.filter(action__in=selected_actions)
-    if selected_structures:
-        activites = activites.filter(structure__in=selected_structures)
+        data = [
+            {
+                'effet': getattr(activite.action.produit.effet, 'titre', "N/A"),
+                'produit': getattr(activite.action.produit, 'titre', "N/A"),
+                'action': getattr(activite.action, 'titre', "N/A"),
+                'activite': activite.titre,
+                'type': activite.type,
+                'couts': activite.couts,
+            }
+            for activite in activites
+        ]
 
-    # Regroupement des activités par année
-    activites_by_year = {}
-    for activite in activites:
-        if activite.annee not in activites_by_year:
-            activites_by_year[activite.annee] = []
-        activites_by_year[activite.annee].append({
-            'titre': activite.titre,
-            'indicator': activite.indicator,
-            'reference': activite.reference,
-            'cout_total': activite.get_cout_total,
-            'type': activite.type,
-            'structure': activite.structure,
-            'effet': activite.effet.titre if activite.effet else "N/A",
-            'produit': activite.produit.titre if activite.produit else "N/A",
-            'action': activite.action.titre if activite.action else "N/A",
-        })
+        return JsonResponse({'activites': data}, safe=False)
 
-    return render(request, 'plan_detail.html', {
-        'plan': plan,
-        'activites_by_year': activites_by_year,
-        'activity_types': activity_types,
-        'available_years': available_years,
-        'available_effects': available_effects,
-        'available_products': available_products,
-        'available_actions': available_actions,
-        'available_structures': available_structures,
-        'selected_types': selected_types,
-        'selected_years': selected_years,
-        'selected_effects': selected_effects,
-        'selected_products': selected_products,
-        'selected_actions': selected_actions,
-        'selected_structures': selected_structures,
-    })
+    return render(request, 'planning/plan_action_detail.html', {'plan': plan})
 
 def add_plan_action(request):
     if request.method == 'POST':
@@ -207,7 +181,6 @@ def edit_plan_action(request, id):
         return redirect('plan_action_list')  # Redirection après modification
 
     return render(request, 'planning/edit_plan_action.html', {'plan': plan})
-
 
 ## Liste des activiités par struture
 def task_list(request):

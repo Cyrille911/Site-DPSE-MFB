@@ -18,16 +18,14 @@ class PlanAction(models.Model):
     nombre_activites = models.PositiveIntegerField(default=0)
 
     def calculer_couts(self):
-        """Calcul du coût total du plan en additionnant les coûts de ses effets."""
         couts = [0.0] * self.horizon
         for effet in self.plan_effet.all():
             for i, cout in enumerate(effet.couts):
-                couts[i] += cout  # Ajout des coûts des effets
+                couts[i] += cout
         self.couts = couts
         self.save()
 
     def calculer_nombres(self):
-        """Met à jour le nombre total d'effets, produits, actions et activités."""
         plan_effet = self.plan_effet.prefetch_related(
             'effet_produit__produit_action__action_activite'
         )
@@ -50,7 +48,6 @@ class Effet(models.Model):
     nombre_activites = models.PositiveIntegerField(default=0)
 
     def calculer_couts(self):
-        """Calcul du coût total de l'effet en additionnant les coûts de ses produits."""
         couts = [0.0] * self.plan.horizon
         for produit in self.effet_produit.all():
             for i, cout in enumerate(produit.couts):
@@ -60,7 +57,6 @@ class Effet(models.Model):
         self.plan.calculer_couts()  # Mise à jour des coûts du plan d'action
 
     def calculer_nombres(self):
-        """Calcul du nombre de produits, actions et activités."""
         effet_produit = self.effet_produit.prefetch_related('produit_action__action_activite')
         
         self.nombre_produits = effet_produit.count()
@@ -92,7 +88,6 @@ class Produit(models.Model):
     nombre_activites = models.PositiveIntegerField(default=0)
 
     def calculer_couts(self):
-        """Calcul du coût total du produit en additionnant les coûts de ses actions."""
         couts = [0.0] * self.effet.plan.horizon
         for action in self.produit_action.all():
             for i, cout in enumerate(action.couts):
@@ -103,7 +98,6 @@ class Produit(models.Model):
 
         
     def calculer_nombres(self):
-        """Calcul du nombre d'actions et d'activités."""
         produit_action = self.produit_action.prefetch_related('action_activite')
         self.nombre_actions = produit_action.count()
         self.nombre_activites = sum(action.action_activite.count() for action in produit_action)
@@ -132,7 +126,6 @@ class Action(models.Model):
     nombre_activites = models.PositiveIntegerField(default=0)
 
     def calculer_couts(self):
-        """Calcul du coût total de l'action pour chaque année."""
         couts = [0.0] * self.produit.effet.plan.horizon  # Initialisation du tableau de coûts
         for activite in self.action_activite.all():
             print(activite.couts)  # Affichage des coûts de l'activité
@@ -171,11 +164,11 @@ class Activite(models.Model):
     type = models.CharField(
         max_length=50, 
         choices=[
-            ('reforme', 'Réforme'), 
-            ('investissement', 'Investissement'), 
-            ('etude', 'Étude'), 
-            ('texte', 'Texte'), 
-            ('ordinaire', 'Activité ordinaire')
+            ('Réforme', 'Réforme'), 
+            ('Investissement', 'Investissement'), 
+            ('Etude', 'Etude'), 
+            ('Texte', 'Texte'), 
+            ('Activité ordinaire', 'Activité ordinaire')
         ]
     )
     indicateur_label = models.CharField(max_length=255)
