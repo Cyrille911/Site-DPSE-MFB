@@ -30,8 +30,6 @@ def plan_action_detail(request, id):
         if types_selectionnes:
             activites = activites.filter(type__in=types_selectionnes)
 
-
-
         # Vérification si des activités correspondent aux critères
         if not activites.exists():
             return JsonResponse({'activites': [], 'message': 'Aucune activité trouvée'}, safe=False)

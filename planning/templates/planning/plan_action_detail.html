@@ -4,7 +4,55 @@
 <div class="container mt-4">
     <h2 class="text-center">{{ plan.titre }}</h2>
     <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 my-3 g-3">
-        <!-- Filtre 1 : Type d'activité -->
+        <!-- Filtre 1 : Effet -->
+        <div class="col">
+            <label class="mb-2">Filtrer par effet :</label>
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown">
+                    Sélectionner les effets
+                </button>
+                <ul class="dropdown-menu w-100 overflow-auto">
+                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="effet" id="select-all-effets"> Tout sélectionner</label></li>
+                    {% for effet in effets %}
+                        <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="effet" value="{{ effet.id }}" {% if effet.id in request.GET.effet %}checked{% endif %}> {{ effet.titre }}</label></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- Filtre 2 : Produit -->
+        <div class="col">
+            <label class="mb-2">Filtrer par produit :</label>
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown">
+                    Sélectionner les produits
+                </button>
+                <ul class="dropdown-menu w-100 overflow-auto">
+                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="produit" id="select-all-produits"> Tout sélectionner</label></li>
+                    {% for produit in produits %}
+                        <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="produit" value="{{ produit.id }}" {% if produit.id in request.GET.produit %}checked{% endif %}> {{ produit.nom }}</label></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- Filtre 3 : Action -->
+        <div class="col">
+            <label class="mb-2">Filtrer par action :</label>
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown">
+                    Sélectionner les actions
+                </button>
+                <ul class="dropdown-menu w-100 overflow-auto">
+                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="action" id="select-all-actions"> Tout sélectionner</label></li>
+                    {% for action in actions %}
+                        <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="action" value="{{ action.id }}" {% if action.id in request.GET.action %}checked{% endif %}> {{ action.nom }}</label></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- Filtre 4 : Type d'activité -->
         <div class="col">
             <label class="mb-2">Filtrer par type d'activité :</label>
             <div class="dropdown">
@@ -13,59 +61,14 @@
                 </button>
                 <ul class="dropdown-menu w-100 overflow-auto">
                     <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="types" id="select-all-types"> Tout sélectionner</label></li>
-                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="types" value="Réforme"> Réformes</label></li>
-                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="types" value="Investissement"> Investissements</label></li>
-                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="types" value="Etude"> Études</label></li>
-                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="types" value="Texte"> Texte</label></li>
-                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="types" value="Activité ordinaire"> Activités ordinaires</label></li>
+                    types_activites = Activite.objects.filter(action=action).values_list('type_activite', flat=True).distinct()
+                    {% for type in types_activites %}
+                        <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="types" value="{{ type.id }}" {% if type.id in request.GET.types %}checked{% endif %}> {{ type.nom }}</label></li>
+                    {% endfor %}
                 </ul>
             </div>
         </div>
 
-        <!-- Filtre 2 : Statut -->
-        <div class="col">
-            <label class="mb-2">Filtrer par statut :</label>
-            <div class="dropdown">
-                <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" data-group="statuts">
-                    Sélectionner les statuts
-                </button>
-                <ul class="dropdown-menu w-100 overflow-auto">
-                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="statuts" id="select-all-statuts"> Tout sélectionner</label></li>
-                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="statuts" value="En cours"> En cours</label></li>
-                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="statuts" value="Terminé"> Terminé</label></li>
-                </ul>
-            </div>
-        </div>
-
-        <!-- Filtre 3 : Responsable -->
-        <div class="col">
-            <label class="mb-2">Filtrer par responsable :</label>
-            <div class="dropdown">
-                <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" data-group="responsables">
-                    Sélectionner les responsables
-                </button>
-                <ul class="dropdown-menu w-100 overflow-auto">
-                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="responsables" id="select-all-responsables"> Tout sélectionner</label></li>
-                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="responsables" value="DPSE"> DPSE</label></li>
-                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="responsables" value="Ministère"> Ministère</label></li>
-                </ul>
-            </div>
-        </div>
-
-        <!-- Filtre 4 : Source de financement -->
-        <div class="col">
-            <label class="mb-2">Filtrer par source de financement :</label>
-            <div class="dropdown">
-                <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" data-group="financements">
-                    Sélectionner les sources
-                </button>
-                <ul class="dropdown-menu w-100 overflow-auto">
-                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="financements" id="select-all-financements"> Tout sélectionner</label></li>
-                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="financements" value="Budget État"> Budget État</label></li>
-                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="financements" value="Partenaire"> Partenaire</label></li>
-                </ul>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -275,13 +278,9 @@ tbody {
 tr > :first-child {
     position: -webkit-sticky;
     position: sticky;
-    background: white;
     left: 0;
-    box-shadow: inset 1px 0px 5px rgba(0, 0, 0, 0.1);
-}
-
-tr:nth-child(even) {
-    background-color: #f9f9f9;
+    z-index: 1;
+    background: white;
 }
 </style>
 {% endblock %}
