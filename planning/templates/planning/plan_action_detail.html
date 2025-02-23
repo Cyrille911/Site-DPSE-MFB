@@ -3,30 +3,71 @@
 {% block content %}
 <div class="container mt-4">
     <h2 class="text-center">{{ plan.titre }}</h2>
-    <div class="row my-3">
-        <!-- Première zone de filtre -->
-        <div class="col-md-3">
-            <label for="filtre-type" class="mb-2">Filtrer par type d'activité :</label>
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 my-3 g-3">
+        <!-- Filtre 1 : Type d'activité -->
+        <div class="col">
+            <label class="mb-2">Filtrer par type d'activité :</label>
             <div class="dropdown">
-                <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" data-group="types">
                     Sélectionner les types
                 </button>
-                <ul class="dropdown-menu w-100" aria-labelledby="dropdownMenuButton1">
-                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" id="select-all"> Tout sélectionner</label></li>
-                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" value="Réforme"> Réforme</label></li>
-                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" value="Investissement"> Investissement</label></li>
-                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" value="Etude"> Étude</label></li>
-                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" value="Texte"> Texte</label></li>
-                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" value="Activité ordinaire"> Activité ordinaire</label></li>
+                <ul class="dropdown-menu w-100 overflow-auto">
+                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="types" id="select-all-types"> Tout sélectionner</label></li>
+                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="types" value="Réforme"> Réformes</label></li>
+                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="types" value="Investissement"> Investissements</label></li>
+                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="types" value="Etude"> Études</label></li>
+                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="types" value="Texte"> Texte</label></li>
+                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="types" value="Activité ordinaire"> Activités ordinaires</label></li>
                 </ul>
             </div>
         </div>
 
-        <!-- Autres zones de filtre ici -->
+        <!-- Filtre 2 : Statut -->
+        <div class="col">
+            <label class="mb-2">Filtrer par statut :</label>
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" data-group="statuts">
+                    Sélectionner les statuts
+                </button>
+                <ul class="dropdown-menu w-100 overflow-auto">
+                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="statuts" id="select-all-statuts"> Tout sélectionner</label></li>
+                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="statuts" value="En cours"> En cours</label></li>
+                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="statuts" value="Terminé"> Terminé</label></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Filtre 3 : Responsable -->
+        <div class="col">
+            <label class="mb-2">Filtrer par responsable :</label>
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" data-group="responsables">
+                    Sélectionner les responsables
+                </button>
+                <ul class="dropdown-menu w-100 overflow-auto">
+                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="responsables" id="select-all-responsables"> Tout sélectionner</label></li>
+                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="responsables" value="DPSE"> DPSE</label></li>
+                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="responsables" value="Ministère"> Ministère</label></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Filtre 4 : Source de financement -->
+        <div class="col">
+            <label class="mb-2">Filtrer par source de financement :</label>
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" data-group="financements">
+                    Sélectionner les sources
+                </button>
+                <ul class="dropdown-menu w-100 overflow-auto">
+                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="financements" id="select-all-financements"> Tout sélectionner</label></li>
+                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="financements" value="Budget État"> Budget État</label></li>
+                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="financements" value="Partenaire"> Partenaire</label></li>
+                </ul>
+            </div>
+        </div>
     </div>
 </div>
-
-
 
 <div class="table-container"> 
     <div class="table-horizontal-container">
@@ -50,83 +91,102 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const checkboxes = document.querySelectorAll('.checkbox-option');
-    const selectAllCheckbox = document.getElementById('select-all');
-    
-    // Fonction pour mettre à jour le texte du bouton avec les options sélectionnées
-    function updateDropdownButton(dropdownButton) {
-        const selectedOptions = [];
-        checkboxes.forEach(checkbox => {
-            if (checkbox.checked && checkbox !== selectAllCheckbox) {
-                selectedOptions.push(checkbox.value);
-            }
-        });
-        
-        if (selectedOptions.length > 0) {
-            dropdownButton.textContent = selectedOptions.join(', ');
-        } else {
-            dropdownButton.textContent = "Sélectionner les types";
+    const filtres = ["types", "statuts", "responsables", "financements"];
+
+    filtres.forEach(filtre => {
+        const checkboxes = document.querySelectorAll(`input[data-group="${filtre}"]`);
+        const selectAllCheckbox = document.querySelector(`input[data-group="${filtre}"]#select-all-${filtre}`);
+        const button = document.querySelector(`button[data-group="${filtre}"]`);
+
+        if (!selectAllCheckbox || !button || checkboxes.length === 0) {
+            console.error(`Élément(s) manquant(s) pour le filtre "${filtre}"`);
+            return; // Sortir de la fonction si un élément nécessaire est manquant
         }
-    }
-    
-    // Fonction pour tout sélectionner ou tout désélectionner
-    selectAllCheckbox.addEventListener('change', function () {
-        const isChecked = selectAllCheckbox.checked;
-        checkboxes.forEach(checkbox => {
-            if (checkbox !== selectAllCheckbox) {
-                checkbox.checked = isChecked;
-            }
-        });
-        document.querySelectorAll('.dropdown-toggle').forEach(btn => updateDropdownButton(btn));
-        chargerTableau(); // Rafraîchit le tableau
-    });
-    
-    // Ajoute un écouteur d'événement pour chaque case à cocher
-    checkboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', function () {
-            if (this !== selectAllCheckbox) {
-                selectAllCheckbox.checked = checkboxes.length === document.querySelectorAll('.checkbox-option:checked').length;
-            }
-            document.querySelectorAll('.dropdown-toggle').forEach(btn => updateDropdownButton(btn));
-            chargerTableau(); // Rafraîchit le tableau
-        });
-    });
-    
-    // Fonction pour charger le tableau en fonction des filtres sélectionnés
-    function chargerTableau() {
-        let selectedValues = [];
-        checkboxes.forEach(checkbox => {
-            if (checkbox.checked && checkbox !== selectAllCheckbox) {
-                selectedValues.push(checkbox.value);
-            }
+
+        // Fonction pour mettre à jour le texte du bouton avec les options sélectionnées
+        function updateDropdownButton() {
+            const selectedOptions = Array.from(checkboxes)
+                .filter(checkbox => checkbox.checked && checkbox !== selectAllCheckbox)
+                .map(checkbox => checkbox.parentNode.textContent.trim());
+
+            console.log("Options sélectionnées pour", filtre, selectedOptions); // Debug
+            button.textContent = selectedOptions.length > 0 ? selectedOptions.join(', ') : `Sélectionner les ${filtre}`;
+        }
+
+        // Coche toutes les cases au chargement de la page
+        function cocherToutesLesCasesAuDemarrage() {
+            console.log("Initialisation : Coche toutes les cases"); // Debug
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = true;
+            });
+            selectAllCheckbox.checked = true;
+            updateDropdownButton();
+        }
+
+        // Gestion du "Tout sélectionner"
+        selectAllCheckbox.addEventListener('change', function () {
+            const isChecked = this.checked;
+            console.log("Changement de sélection 'Tout sélectionner' :", isChecked); // Debug
+            checkboxes.forEach(checkbox => {
+                if (checkbox !== selectAllCheckbox) {
+                    checkbox.checked = isChecked;
+                }
+            });
+            updateDropdownButton();
+            chargerTableau();
         });
 
+        // Événement sur chaque case à cocher individuelle
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function () {
+                if (this !== selectAllCheckbox) {
+                    selectAllCheckbox.checked = Array.from(checkboxes)
+                        .every(checkbox => checkbox.checked || checkbox === selectAllCheckbox);
+                }
+                console.log(`Case cochée : ${this.value}, sélectionné : ${this.checked}`); // Debug
+                updateDropdownButton();
+                chargerTableau();
+            });
+        });
+
+        // Initialisation au chargement
+        cocherToutesLesCasesAuDemarrage();
+    });
+
+        // Fonction pour charger le tableau en fonction des filtres sélectionnés
+    function chargerTableau() {
         let tableBody = document.getElementById('plan-table-body');
-        
-        // Affiche un message de chargement
+
         tableBody.innerHTML = `<tr><td colspan="6" class="text-center">Chargement...</td></tr>`;
 
-        // Effectue la requête AJAX avec les valeurs sélectionnées
-        fetch(`?types=${selectedValues.join(',')}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        let params = new URLSearchParams();
+
+        filtres.forEach(filtre => {
+            document.querySelectorAll(`input[data-group="${filtre}"]:checked`).forEach(checkbox => {
+                if (checkbox.value) {
+                    params.append(filtre, checkbox.value);
+                }
+            });
+        });
+
+        fetch(`?${params.toString()}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(response => response.json())
             .then(data => {
-                console.log('Données reçues après conversion JSON:', data);  // Debug console
+                tableBody.innerHTML = '';
 
-                tableBody.innerHTML = '';  // Vide le tableau
-                
                 if (data.activites.length === 0) {
                     tableBody.innerHTML = '<tr><td colspan="6" class="text-center">Aucune activité trouvée</td></tr>';
                 } else {
                     data.activites.forEach(activite => {
-                        let row = `<tr>
-                            <td>${activite.effet}</td>
-                            <td>${activite.produit}</td>
-                            <td>${activite.action}</td>
-                            <td>${activite.activite}</td>
-                            <td>${activite.type}</td>
-                            <td>${activite.couts}</td>
-                        </tr>`;
-                        tableBody.innerHTML += row;
+                        tableBody.innerHTML += `
+                            <tr>
+                                <td>${activite.effet}</td>
+                                <td>${activite.produit}</td>
+                                <td>${activite.action}</td>
+                                <td>${activite.activite}</td>
+                                <td>${activite.type}</td>
+                                <td>${activite.couts}</td>
+                            </tr>`;
                     });
                 }
             })
@@ -136,7 +196,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     }
 
-    // Appel initial pour charger le tableau lorsque la page est prête
+    // Charge le tableau immédiatement après la sélection automatique
     chargerTableau();
 });
 </script>
@@ -144,7 +204,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
 {% block style %}
 <style>
-
 .dropdown-menu {
     max-height: 250px;
     overflow-y: auto;
@@ -155,23 +214,22 @@ document.addEventListener('DOMContentLoaded', function () {
 
 /* Ajuster le bouton pour que le texte sélectionné s'adapte */
 .dropdown-toggle {
-    white-space: normal;  /* Permet au texte de revenir à la ligne */
-    word-wrap: break-word;  /* Permet de couper les mots si nécessaire */
-    width: auto;  /* La largeur du bouton peut augmenter si le texte dépasse */
-    min-width: 200px;  /* Définir une largeur minimale pour le bouton */
-    padding: 10px;  /* Ajouter un peu de padding pour un rendu plus esthétique */
+    white-space: normal;
+    word-wrap: break-word;
+    width: auto;
+    min-width: 200px;
+    padding: 10px;
 }
-
 
 table {
     border-collapse: collapse;
     font-family: helvetica;
     width: 100%;
-    border: 1px solid #007A3D; /* Bordure des cellules du tableau */
+    border: 1px solid #007A3D;
 }
 
 td, th {
-    border: 1px solid #007A3D; /* Bordure des cellules */
+    border: 1px solid #007A3D;
     padding: 10px;
     min-width: 150px;
     background: white;
@@ -184,11 +242,11 @@ td, th {
     position: relative;
     max-height: 500px;
     overflow: scroll;
-    border: 5px solid #007A3D; /* Bordure plus épaisse en vert ivoirien */
-    border-radius: 20px; /* Coins arrondis */
-    padding: 20px; /* Espacement entre la bordure et le tableau */
-    background-color: #fff; /* Fond blanc */
-    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2); /* Ombre douce pour un effet de profondeur */
+    border: 5px solid #007A3D;
+    border-radius: 20px;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 thead th {
@@ -196,13 +254,8 @@ thead th {
     position: sticky;
     top: 0;
     z-index: 2;
-    background: orange; /* Couleur orange du drapeau ivoirien */
+    background: orange;
     color: white;
-}
-
-thead th:first-child {
-    left: 0;
-    z-index: 3;
 }
 
 tfoot {
@@ -215,12 +268,8 @@ tfoot td {
     position: sticky;
     bottom: 0;
     z-index: 2;
-    background: green; /* Couleur verte du drapeau ivoirien */
+    background: green;
     color: white;
-}
-
-tfoot td:first-child {
-    z-index: 3;
 }
 
 tbody {
@@ -231,9 +280,9 @@ tbody {
 /* MAKE LEFT COLUMN FIXED */
 tr > :first-child {
     position: -webkit-sticky;
-    position: sticky; 
+    position: sticky;
     background: white;
-    left: 0; 
+    left: 0;
     box-shadow: inset 1px 0px 5px rgba(0, 0, 0, 0.1);
 }
 
@@ -242,4 +291,3 @@ tr:nth-child(even) {
 }
 </style>
 {% endblock %}
-

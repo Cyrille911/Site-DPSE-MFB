@@ -28,9 +28,10 @@ def plan_action_detail(request, id):
     )
 
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        type_filtre = request.GET.get('type', None)
-        if type_filtre:
-            activites = activites.filter(type=type_filtre)  # Correct
+        types_selectionnes = request.GET.getlist('types')  # Récupérer une liste des valeurs sélectionnées
+
+        # Filtrer les activités avec ces types
+        activites = Activite.objects.filter(type__in=types_selectionnes)  
 
         if not activites.exists():
             # Optionnel : ajouter un message d'erreur ou retour pour l'utilisateur
