@@ -9,34 +9,34 @@ def plan_action_list(request):
     plans = PlanAction.objects.all()
     return render(request, 'planning/plan_action_list.html', {'plans':plans})
 
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
-from .models import PlanAction
-
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, render
-from .models import PlanAction, Activite
-
 def plan_action_detail(request, id):
+    # Récupération du plan d'action
     plan = get_object_or_404(PlanAction, id=id)
 
-    # Récupération optimisée des activités
+    # Récupération optimisée des activités liées au plan
     activites = (
         Activite.objects
         .filter(action__produit__effet__plan=plan)
-        .select_related('action__produit__effet')  # Optimisation SQL
+        .select_related('action__produit__effet')  # Optimisation SQL pour les relations
     )
 
+    # Vérification si la requête est une requête AJAX
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        types_selectionnes = request.GET.getlist('types')  # Récupérer une liste des valeurs sélectionnées
+        # Récupérer les filtres depuis la requête GET
+        types_selectionnes = request.GET.getlist('types')  # Liste des types sélectionnés
+        print(types_selectionnes)
 
-        # Filtrer les activités avec ces types
-        activites = Activite.objects.filter(type__in=types_selectionnes)  
+        # Appliquer les filtres à la requête
+        if types_selectionnes:
+            activites = activites.filter(type__in=types_selectionnes)
 
+
+
+        # Vérification si des activités correspondent aux critères
         if not activites.exists():
-            # Optionnel : ajouter un message d'erreur ou retour pour l'utilisateur
-            pass
+            return JsonResponse({'activites': [], 'message': 'Aucune activité trouvée'}, safe=False)
 
+        # Sérialisation des données des activités à envoyer en réponse JSON
         data = [
             {
                 'effet': getattr(activite.action.produit.effet, 'titre', "N/A"),
@@ -49,8 +49,10 @@ def plan_action_detail(request, id):
             for activite in activites
         ]
 
+        # Retourner les données filtrées sous forme de JSON
         return JsonResponse({'activites': data}, safe=False)
 
+    # Si la requête n'est pas AJAX, rendre la page HTML classique
     return render(request, 'planning/plan_action_detail.html', {'plan': plan})
 
 def add_plan_action(request):

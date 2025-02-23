@@ -74,9 +74,6 @@
         <table class="unfixed-table">
             <thead class="thead-dark">
                 <tr>
-                    <th>Effet</th>
-                    <th>Produit</th>
-                    <th>Action</th>
                     <th>Activité</th>
                     <th>Type</th>
                     <th>Coûts</th>
@@ -180,9 +177,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     data.activites.forEach(activite => {
                         tableBody.innerHTML += `
                             <tr>
-                                <td>${activite.effet}</td>
-                                <td>${activite.produit}</td>
-                                <td>${activite.action}</td>
                                 <td>${activite.activite}</td>
                                 <td>${activite.type}</td>
                                 <td>${activite.couts}</td>
