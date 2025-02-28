@@ -1,14 +1,17 @@
 {% extends 'index.html' %}
 
 {% load static %}
-
+{% load markdown_filters %}
 {% block style %}
+<!-- Meta & Favicon -->
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="author" content="wpOceans">
+<meta name="author" content="Ministère des Finances CI">
 <link rel="shortcut icon" type="image/png" href="{% static 'assets/images/favicon.png' %}">
-<title>Bloggar - News Magazine Template</title>
+<title>Actualités - Ministère des Finances de Côte d'Ivoire</title>
+
+<!-- CSS Files -->
 <link href="{% static 'assets/css/themify-icons.css' %}" rel="stylesheet">
 <link href="{% static 'assets/css/flaticon.css' %}" rel="stylesheet">
 <link href="{% static 'assets/css/bootstrap.min.css' %}" rel="stylesheet">
@@ -24,14 +27,11 @@
 <link href="{% static 'assets/css/component.css' %}" rel="stylesheet">
 <link href="{% static 'assets/sass/style.css' %}" rel="stylesheet">
 <link href="{% static 'assets/css/responsive.css' %}" rel="stylesheet">
-
 {% endblock style %}
 
 {% block content %}
-
-<!-- start page-wrapper -->
 <div class="page-wrapper m-5">
-    <!-- start preloader -->
+    <!-- Preloader -->
     <div class="preloader">
         <div class="angular-shape">
             <div></div>
@@ -43,11 +43,9 @@
             <div class="double-bounce2"></div>
         </div>
     </div>
-    <!-- end preloader -->
-    <!-- Start header -->
+    <!-- End Preloader -->
 
-    <!-- end of header -->
-    <!-- start of wpo-blog-hero -->
+    <!-- Header Hero Area -->
     <div class="wpo-blog-hero-area">
         <div class="">
             <div class="sortable-gallery">
@@ -55,456 +53,257 @@
                 <div class="row">
                     <div class="col-lg-12">
                         <div class="wpo-blog-grids gallery-container clearfix">
+                            <!-- Hero Image 1 -->
                             <div class="grid">
                                 <div class="img-holder">
-                                    <img src="{% static 'assets/images/hero/img-1.jpg' %}" alt
+                                    <img src="{% static 'assets/images/hero/img-1.jpg' %}" alt="Budget et Réformes"
                                         class="img img-responsive">
                                     <div class="wpo-blog-content">
-                                        <div class="thumb">Fasion</div>
-                                        <h2><a href="blog-single.html">What’s In Trend In Women's Fashion
-                                                Summer?</a></h2>
-                                        <p>You can customize the view Blog posts with a simple mouse click and
-                                            immediately see the result of your changes. </p>
+                                        <div class="thumb">Budget</div>
+                                        <h2><a href="blog-single.html">Réformes Budgétaires 2025 : Vers une meilleure
+                                                transparence</a></h2>
+                                        <p>Le Ministère des Finances dévoile ses axes prioritaires pour une gestion
+                                            optimisée des ressources publiques.</p>
                                         <ul>
-                                            <li><img src="{% static 'assets/images/blog/blog-avater/img-1.jpg ' %}"
-                                                    alt=""></li>
-                                            <li>By <a href="blog-single.html">Robert</a></li>
-                                            <li>20 Nov 2022</li>
+                                            <li><img src="{% static 'assets/images/blog/blog-avater/minister-avatar.jpg' %}"
+                                                    alt="Ministère"></li>
+                                            <li>Par <a href="blog-single.html">Ministère des Finances CI</a></li>
+                                            <li>15 Février 2025</li>
                                         </ul>
                                     </div>
                                 </div>
                             </div>
+                            <!-- Hero Image 2 -->
                             <div class="grid">
                                 <div class="img-holder">
-                                    <img src="{% static 'assets/images/hero/img-2.jpg' %}" alt
+                                    <img src="{% static 'assets/images/hero/img-2.jpg' %}" alt="Investissements"
                                         class="img img-responsive">
                                     <div class="wpo-blog-content">
-                                        <div class="thumb">Travel</div>
-                                        <h2><a href="blog-single.html">Traveling Makes You More Interesting</a></h2>
+                                        <div class="thumb">Investissement</div>
+                                        <h2><a href="blog-single.html">Investissements Publics : Nouvelles
+                                                Perspectives</a></h2>
                                         <ul>
-                                            <li>By <a href="blog-single.html">Robert</a></li>
-                                            <li>20 Nov 2022</li>
+                                            <li>Par <a href="blog-single.html">Ministère</a></li>
+                                            <li>20 Février 2025</li>
                                         </ul>
                                     </div>
                                 </div>
                             </div>
+                            <!-- Combo Hero -->
                             <div class="grid s2">
                                 <div class="img-holder">
-                                    <img src="{% static 'assets/images/hero/img-3.jpg' %}" alt
+                                    <img src="{% static 'assets/images/hero/img-3.jpg' %}" alt="Digitalisation"
                                         class="img img-responsive">
                                     <div class="wpo-blog-content">
-                                        <div class="thumb">Food</div>
-                                        <h2><a href="blog-single.html">Top 10 Healthy Food</a></h2>
+                                        <div class="thumb">Digitalisation</div>
+                                        <h2><a href="blog-single.html">Modernisation du SIGOBE : Un suivi numérique
+                                                renforcé</a></h2>
                                         <ul>
-                                            <li>By <a href="blog-single.html">Robert</a></li>
-                                            <li>20 Nov 2022</li>
+                                            <li>Par <a href="blog-single.html">Ministère</a></li>
+                                            <li>20 Février 2025</li>
                                         </ul>
                                     </div>
                                 </div>
                                 <div class="img-holder">
-                                    <img src="{% static 'assets/images/hero/img-4.jpg' %}" alt
+                                    <img src="{% static 'assets/images/hero/img-4.jpg' %}" alt="Transparence"
                                         class="img img-responsive">
                                     <div class="wpo-blog-content">
-                                        <div class="thumb">Business</div>
-                                        <h2><a href="blog-single.html">What Makes a Leader?</a></h2>
+                                        <div class="thumb">Transparence</div>
+                                        <h2><a href="blog-single.html">Budget Citoyen : Impliquer les citoyens</a></h2>
                                         <ul>
-                                            <li>By <a href="blog-single.html">Robert</a></li>
-                                            <li>20 Nov 2022</li>
+                                            <li>Par <a href="blog-single.html">Ministère</a></li>
+                                            <li>20 Février 2025</li>
                                         </ul>
                                     </div>
                                 </div>
                             </div>
+                            <!-- Fin Hero -->
                         </div>
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
-    <!-- end of wpo-blog-hero -->
+    <!-- End Header Hero Area -->
 
-    <!-- start of wpo-breacking-news -->
+    <!-- Breaking News Section -->
     <div class="wpo-breacking-news section-padding">
         <div class="">
             <div class="row">
-                <div class="b-title"><span>Breaking News</span></div>
+                <div class="b-title"><span>Actualités Urgentes</span></div>
                 <div class="wpo-breacking-wrap owl-carousel">
                     <div class="wpo-breacking-item s1">
                         <div class="wpo-breacking-img">
-                            <img src="{% static 'assets/images/breaking-news/img-1.jpg' %}" alt="">
+                            <img src="{% static 'assets/images/breaking-news/img-1.jpg' %}" alt="Urgence 1">
                         </div>
                         <div class="wpo-breacking-text">
-                            <span>22 Sep 2022</span>
-                            <h3><a href="blog-single.html">5 unbelievable secret about choosing right fuirniture</a>
-                            </h3>
+                            <span>15 Février 2025</span>
+                            <h3><a href="blog-single.html">Nouvelles réformes pour la transparence budgétaire</a></h3>
                         </div>
                     </div>
                     <div class="wpo-breacking-item">
                         <div class="wpo-breacking-img">
-                            <img src="{% static 'assets/images/breaking-news/img-2.jpg' %}" alt="">
+                            <img src="{% static 'assets/images/breaking-news/img-2.jpg' %}" alt="Urgence 2">
                         </div>
                         <div class="wpo-breacking-text">
-                            <span>22 Sep 2022</span>
-                            <h3><a href="blog-single.html">Healthy rutine for your healthy lifestyle.</a></h3>
+                            <span>16 Février 2025</span>
+                            <h3><a href="blog-single.html">Lancement de la plateforme SIGOBE</a></h3>
                         </div>
                     </div>
                     <div class="wpo-breacking-item">
                         <div class="wpo-breacking-img">
-                            <img src="{% static 'assets/images/breaking-news/img-3.jpg' %}" alt="">
+                            <img src="{% static 'assets/images/breaking-news/img-3.jpg' %}" alt="Urgence 3">
                         </div>
                         <div class="wpo-breacking-text">
-                            <span>22 Sep 2022</span>
-                            <h3><a href="blog-single.html">Best tourism site all over the world.</a></h3>
+                            <span>17 Février 2025</span>
+                            <h3><a href="blog-single.html">Budget Citoyen : Impliquer les citoyens</a></h3>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <!-- end of wpo-breacking-news -->
-    <!-- start wpo-blog-highlights-section -->
+    <!-- End Breaking News Section -->
+
+    <!-- Blog Highlights Section -->
     <section class="wpo-blog-highlights-section">
         <div class="">
             <div class="wpo-section-title">
-                <h2>Today's Top Highlights</h2>
+                <h2>Les Temps Forts d'Aujourd'hui</h2>
             </div>
             <div class="row">
-                <div class="col col-lg-8 col-12">
-                    <!-- start wpo-blog-section -->
+                <div class="col-lg-9 col-12">
                     <div class="wpo-blog-highlights-wrap">
                         <div class="wpo-blog-items">
                             <div class="row">
-                                <div class="col col-lg-6 col-md-6 col-12">
+                                {% for news in news_list %}
+                                <div class="col-lg-4 col-md-6 col-12">
                                     <div class="wpo-blog-item">
                                         <div class="wpo-blog-img">
-                                            <img src="{% static 'assets/images/blog/img-1.jpg' %}" alt="">
-                                            <div class="thumb">Travel</div>
+                                            {% if news.image %}
+                                            <img src="{{ news.image.url }}" alt="{{ news.headline }}"
+                                                class="card-img-top"
+                                                style="width: 100%; height: 250px; object-fit: cover; border-radius: 5px;">
+                                            {% else %}
+                                            <img src="{% static 'assets/images/blog/default.jpg' %}"
+                                                alt="Image non disponible" class="card-img-top"
+                                                style="width: 100%; height: 250px; object-fit: cover; border-radius: 5px;">
+                                            {% endif %}
+                                            <div class="thumb">Actualité</div>
                                         </div>
                                         <div class="wpo-blog-content">
-                                            <h2><a href="blog-single.html">Traveling Makes You More Inteligent
-                                                    and More Energetic</a></h2>
+                                            <h2><a href="{% url 'news_detail' news.id %}">{{ news.headline }}</a></h2>
                                             <ul>
-                                                <li><img src="{% static 'assets/images/blog/blog-avater/img-1.jpg ' %}"
-                                                        alt="">
-                                                </li>
-                                                <li>By <a href="blog-single.html">Admin</a></li>
-                                                <li>25 Sep 2022</li>
+                                                <li><img src="{% static 'assets/images/blog/blog-avater/minister-avatar.jpg' %}"
+                                                        alt="Auteur"></li>
+                                                <li>Par <a href="#">{{ news.creator.username }}</a></li>
+                                                <li>{{ news.published_at|date:"d M Y" }}</li>
                                             </ul>
-                                            <p>You can customize the view Blog post with author simple mouse click
-                                                and immediately see the result of your changes. </p>
+                                            {{ news.resume }}
+
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col col-lg-6 col-md-6 col-12">
-                                    <div class="wpo-blog-item">
-                                        <div class="wpo-blog-img">
-                                            <img src="{% static 'assets/images/blog/img-2.jpg' %}" alt="">
-                                            <div class="thumb">Travel</div>
-                                        </div>
-                                        <div class="wpo-blog-content">
-                                            <h2><a href="blog-single.html">12 Things to See and Find Out in Bergen,
-                                                    Norway</a></h2>
-                                            <ul>
-                                                <li><img src="{% static 'assets/images/blog/blog-avater/img-2.jpg ' %}"
-                                                        alt="">
-                                                </li>
-                                                <li>By <a href="blog-single.html">Admin</a></li>
-                                                <li>25 Sep 2022</li>
-                                            </ul>
-                                            <p>You can customize the view Blog post with author simple mouse click
-                                                and immediately see the result of your changes. </p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col col-lg-6 col-md-6 col-12">
-                                    <div class="wpo-blog-item">
-                                        <div class="wpo-blog-img">
-                                            <img src="{% static 'assets/images/blog/img-3.jpg' %}" alt="">
-                                            <div class="thumb">Travel</div>
-                                        </div>
-                                        <div class="wpo-blog-content">
-                                            <h2><a href="blog-single.html">Healthy Daily Rutine For Your Healthy
-                                                    Lifestyle</a></h2>
-                                            <ul>
-                                                <li><img src="{% static 'assets/images/blog/blog-avater/img-3.jpg ' %}"
-                                                        alt="">
-                                                </li>
-                                                <li>By <a href="blog-single.html">Admin</a></li>
-                                                <li>25 Sep 2022</li>
-                                            </ul>
-                                            <p>You can customize the view Blog post with author simple mouse click
-                                                and immediately see the result of your changes. </p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col col-lg-6 col-md-6 col-12">
-                                    <div class="wpo-blog-item">
-                                        <div class="wpo-blog-img">
-                                            <img src="{% static 'assets/images/blog/img-4.jpg' %}" alt="">
-                                            <div class="thumb">Travel</div>
-                                        </div>
-                                        <div class="wpo-blog-content">
-                                            <h2><a href="blog-single.html">Perfect Photo Clicking Idea You Must
-                                                    Khow About.</a></h2>
-                                            <ul>
-                                                <li><img src="{% static 'assets/images/blog/blog-avater/img-1.jpg ' %}"
-                                                        alt="">
-                                                </li>
-                                                <li>By <a href="blog-single.html">Admin</a></li>
-                                                <li>25 Sep 2022</li>
-                                            </ul>
-                                            <p>You can customize the view Blog post with author simple mouse click
-                                                and immediately see the result of your changes. </p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col col-lg-6 col-md-6 col-12">
-                                    <div class="wpo-blog-item">
-                                        <div class="wpo-blog-img">
-                                            <img src="{% static 'assets/images/blog/img-5.jpg' %}" alt="">
-                                            <div class="thumb">Travel</div>
-                                        </div>
-                                        <div class="wpo-blog-content">
-                                            <h2><a href="blog-single.html">Traveling Makes You More Inteligent
-                                                    and More Energetic</a></h2>
-                                            <ul>
-                                                <li><img src="{% static 'assets/images/blog/blog-avater/img-2.jpg ' %}"
-                                                        alt="">
-                                                </li>
-                                                <li>By <a href="blog-single.html">Admin</a></li>
-                                                <li>25 Sep 2022</li>
-                                            </ul>
-                                            <p>You can customize the view Blog post with author simple mouse click
-                                                and immediately see the result of your changes. </p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col col-lg-6 col-md-6 col-12">
-                                    <div class="wpo-blog-item">
-                                        <div class="wpo-blog-img">
-                                            <img src="{% static 'assets/images/blog/img-6.jpg' %}" alt="">
-                                            <div class="thumb">Travel</div>
-                                        </div>
-                                        <div class="wpo-blog-content">
-                                            <h2><a href="blog-single.html">12 Things to See and Find Out in Bergen,
-                                                    Norway</a></h2>
-                                            <ul>
-                                                <li><img src="{% static 'assets/images/blog/blog-avater/img-3.jpg ' %}"
-                                                        alt="">
-                                                </li>
-                                                <li>By <a href="blog-single.html">Admin</a></li>
-                                                <li>25 Sep 2022</li>
-                                            </ul>
-                                            <p>You can customize the view Blog post with author simple mouse click
-                                                and immediately see the result of your changes. </p>
-                                        </div>
-                                    </div>
-                                </div>
+                                {% empty %}
+                                <p>Aucune actualité disponible.</p>
+                                {% endfor %}
                             </div>
                         </div>
                     </div>
-                    <!-- end wpo-blog-section -->
                 </div>
-                <div class="col col-lg-4 col-12">
+                <div class="col-lg-3 col-12">
                     <div class="blog-sidebar">
                         <div class="widget category-widget">
-                            <h3>Trending Topics</h3>
+                            <h3>Sujets Tendance</h3>
                             <ul>
-                                <li><a href="blog-single.html">Lifestyle<span>(05)</span></a></li>
-                                <li><a href="blog-single.html">Inspiration <span>(07)</span></a></li>
-                                <li><a href="blog-single.html">Fashion <span>(03)</span></a></li>
-                                <li><a href="blog-single.html">Photography <span>(06)</span></a></li>
-                                <li><a href="blog-single.html">Travel <span>(12)</span></a></li>
-                                <li><a href="blog-single.html">Business <span>(08)</span></a></li>
+                                <li><a href="blog-single.html">Budget et Réformes<span>(05)</span></a></li>
+                                <li><a href="blog-single.html">Investissements<span>(07)</span></a></li>
+                                <li><a href="blog-single.html">Transparence<span>(03)</span></a></li>
+                                <li><a href="blog-single.html">Digitalisation<span>(06)</span></a></li>
+                                <li><a href="blog-single.html">Économie<span>(12)</span></a></li>
+                                <li><a href="blog-single.html">International<span>(08)</span></a></li>
                             </ul>
                         </div>
-                        <div class="widget recent-post-widget">
-                            <h3>Popular Post</h3>
+                        <!-- <div class="widget recent-post-widget">
+                            <h3>Articles Populaires</h3>
                             <div class="posts">
                                 <div class="post">
                                     <div class="img-holder">
-                                        <img src="{% static 'assets/images/recent-posts/img-1.jpg' %}" alt>
+                                        <img src="{% static 'assets/images/recent-posts/img-1.jpg' %}" alt="Post 1">
                                     </div>
                                     <div class="details">
-                                        <span class="date">19 Jun 2022 </span>
-                                        <h4><a href="blog-single.html">Perfect Photo Clicking Idea You Must
-                                                Know.</a></h4>
+                                        <span class="date">15 Feb 2025</span>
+                                        <h4><a href="blog-single.html">Réformes Budgétaires Clés</a></h4>
                                     </div>
                                 </div>
                                 <div class="post">
                                     <div class="img-holder">
-                                        <img src="{% static 'assets/images/recent-posts/img-2.jpg' %}" alt>
+                                        <img src="{% static 'assets/images/recent-posts/img-2.jpg' %}" alt="Post 2">
                                     </div>
                                     <div class="details">
-                                        <span class="date">22 May 2022 </span>
-                                        <h4><a href="blog-single.html">Best tourism site all over the world.</a>
-                                        </h4>
+                                        <span class="date">16 Feb 2025</span>
+                                        <h4><a href="blog-single.html">Perspectives d'Investissement</a></h4>
                                     </div>
                                 </div>
                                 <div class="post">
                                     <div class="img-holder">
-                                        <img src="{% static 'assets/images/recent-posts/img-3.jpg' %}" alt>
+                                        <img src="{% static 'assets/images/recent-posts/img-3.jpg' %}" alt="Post 3">
                                     </div>
                                     <div class="details">
-                                        <span class="date">12 Apr 2022 </span>
-                                        <h4><a href="blog-single.html">Whats In Trend in Now Woman Fashion.</a></h4>
+                                        <span class="date">17 Feb 2025</span>
+                                        <h4><a href="blog-single.html">Digitalisation des Finances</a></h4>
                                     </div>
                                 </div>
                                 <div class="post">
                                     <div class="img-holder">
-                                        <img src="{% static 'assets/images/recent-posts/img-4.jpg' %}" alt>
+                                        <img src="{% static 'assets/images/recent-posts/img-4.jpg' %}" alt="Post 4">
                                     </div>
                                     <div class="details">
-                                        <span class="date">12 Apr 2022 </span>
-                                        <h4><a href="blog-single.html">Top 10 Healthy Food of Your Menu.</a></h4>
+                                        <span class="date">17 Feb 2025</span>
+                                        <h4><a href="blog-single.html">Budget Citoyen : Informer les citoyens</a></h4>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </div> -->
                         <div class="wpo-add-widget">
-                            <a href="#"><img src="{% static 'assets/images/add.jpg' %}" alt=""></a>
+                            <a href="#"><img src="{% static 'assets/images/add.jpg' %}" alt="Publicité"></a>
                         </div>
                     </div>
                 </div>
             </div>
-        </div> <!-- end container -->
+        </div>
     </section>
-    <!-- end wpo-blog-highlights-section -->
-    <!-- start wpo-blog-sponsored-section -->
-    <section class="wpo-blog-sponsored-section section-padding">
-        <div class="">
-            <div class="wpo-section-title">
-                <h2>sponsored news</h2>
-            </div>
-            <div class="row">
-                <div class="wpo-blog-sponsored-wrap">
-                    <div class="wpo-blog-items">
-                        <div class="row">
-                            <div class="col col-xl-3 col-lg-6 col-md-6 col-12">
-                                <div class="wpo-blog-item">
-                                    <div class="wpo-blog-img">
-                                        <img src="{% static 'assets/images/sponsord/img-1.jpg' %}" alt="">
-                                        <div class="thumb">Travel</div>
-                                    </div>
-                                    <div class="wpo-blog-content">
-                                        <h2><a href="blog-single.html">Top Most Beautiful Scenery in The World.</a>
-                                        </h2>
-                                        <ul>
-                                            <li><img src="{% static 'assets/images/blog/blog-avater/img-1.jpg ' %}"
-                                                    alt=""></li>
-                                            <li>By <a href="blog-single.html">Admin</a></li>
-                                            <li>25 Sep 2022</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col col-xl-3 col-lg-6 col-md-6 col-12">
-                                <div class="wpo-blog-item">
-                                    <div class="wpo-blog-img">
-                                        <img src="{% static 'assets/images/sponsord/img-2.jpg' %}" alt="">
-                                        <div class="thumb">Travel</div>
-                                    </div>
-                                    <div class="wpo-blog-content">
-                                        <h2><a href="blog-single.html">Perfect Photo Clicking Idea You Must Khow
-                                                About.</a></h2>
-                                        <ul>
-                                            <li><img src="{% static 'assets/images/blog/blog-avater/img-2.jpg ' %}"
-                                                    alt=""></li>
-                                            <li>By <a href="blog-single.html">Admin</a></li>
-                                            <li>25 Sep 2022</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col col-xl-3 col-lg-6 col-md-6 col-12">
-                                <div class="wpo-blog-item">
-                                    <div class="wpo-blog-img">
-                                        <img src="{% static 'assets/images/sponsord/img-3.jpg' %}" alt="">
-                                        <div class="thumb">Travel</div>
-                                    </div>
-                                    <div class="wpo-blog-content">
-                                        <h2><a href="blog-single.html">Top Most Beautiful Scenery in The World.</a>
-                                        </h2>
-                                        <ul>
-                                            <li><img src="{% static 'assets/images/blog/blog-avater/img-3.jpg ' %}"
-                                                    alt=""></li>
-                                            <li>By <a href="blog-single.html">Admin</a></li>
-                                            <li>25 Sep 2022</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col col-xl-3 col-lg-6 col-md-6 col-12">
-                                <div class="wpo-blog-item">
-                                    <div class="wpo-blog-img">
-                                        <img src="{% static 'assets/images/sponsord/img-4.jpg' %}" alt="">
-                                        <div class="thumb">Travel</div>
-                                    </div>
-                                    <div class="wpo-blog-content">
-                                        <h2><a href="blog-single.html">Top Most Beautiful Scenery in The World.</a>
-                                        </h2>
-                                        <ul>
-                                            <li><img src="{% static 'assets/images/blog/blog-avater/img-1.jpg ' %}"
-                                                    alt=""></li>
-                                            <li>By <a href="blog-single.html">Admin</a></li>
-                                            <li>25 Sep 2022</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div> <!-- end container -->
-    </section>
-    <!-- end wpo-blog-sponsored-section -->
-    <!-- start wpo-subscribe-section -->
+    <!-- End Blog Highlights Section -->
+
+
+
+    <!-- Subscribe Section -->
     <section class="wpo-subscribe-section section-padding">
         <div class="">
             <div class="wpo-subscribe-wrap">
                 <div class="subscribe-text">
-                    <h3>Never miss any Update!</h3>
-                    <p>Get the freshest headlines and updates sent uninterrupted to your inbox.</p>
+                    <h3>Ne manquez aucune mise à jour !</h3>
+                    <p>Recevez directement dans votre boîte mail les dernières actualités et analyses financières.</p>
                 </div>
                 <div class="subscribe-form">
                     <form action="#">
                         <div class="input-field">
-                            <input type="email" placeholder="Enter your email" required>
-                            <button type="submit">Subscribe</button>
+                            <input type="email" placeholder="Entrez votre email" required>
+                            <button type="submit">S'abonner</button>
                         </div>
                     </form>
                 </div>
             </div>
-        </div> <!-- end container -->
+        </div>
     </section>
-    <!-- end subscribe-section -->
-    <!-- start of wpo-site-footer-section -->
-
-    <!-- end of wpo-site-footer-section -->
+    <!-- End Subscribe Section -->
 </div>
 {% endblock content %}
+
 {% block script %}
-<script src="assets/js/jquery.min.js"></script>
-<script src="assets/js/bootstrap.bundle.min.js"></script>
-<!-- Plugins for this template -->
-<script src="assets/js/modernizr.custom.js"></script>
-<script src="assets/js/jquery-plugin-collection.js"></script>
-<!-- Custom script for this template -->
-<script src="assets/js/script.js"></script>
-
-
-
 <script src="{% static 'assets/js/jquery.min.js' %}"></script>
 <script src="{% static 'assets/js/bootstrap.bundle.min.js' %}"></script>
-<!-- Plugins for this template -->
 <script src="{% static 'assets/js/modernizr.custom.js' %}"></script>
 <script src="{% static 'assets/js/jquery-plugin-collection.js' %}"></script>
-<!-- Custom script for this template -->
 <script src="{% static 'assets/js/script.js' %}"></script>
-
 {% endblock script %}
-
-
-
-</html>
