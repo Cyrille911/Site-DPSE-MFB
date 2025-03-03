@@ -1,286 +1,365 @@
 {% extends "index.html" %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2 class="text-center">{{ plan.titre }}</h2>
-    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 my-3 g-3">
-        <!-- Filtre 1 : Effet -->
-        <div class="col">
-            <label class="mb-2">Filtrer par effet :</label>
-            <div class="dropdown">
-                <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown">
-                    Sélectionner les effets
-                </button>
-                <ul class="dropdown-menu w-100 overflow-auto">
-                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="effet" id="select-all-effets"> Tout sélectionner</label></li>
-                    {% for effet in effets %}
-                        <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="effet" value="{{ effet.id }}" {% if effet.id in request.GET.effet %}checked{% endif %}> {{ effet.titre }}</label></li>
-                    {% endfor %}
-                </ul>
+    <div class="container mt-4">
+        <h2 class="text-center">{{ plan.titre }}</h2>
+
+        <!-- Filtres -->
+        <div class="row my-3 g-3">
+            <div class="col-12 col-sm-6 col-md-4">
+                <label class="mb-2">Filtrer par effet :</label>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-group="effet" data-bs-toggle="dropdown">
+                        Sélectionner les effets
+                    </button>
+                    <ul class="dropdown-menu w-100 overflow-auto" id="filter-effet">
+                        <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="effet" id="select-all-effet"> Tout sélectionner</label></li>
+                        {% for effet in effets %}
+                            <li>
+                                <label class="dropdown-item">
+                                    <input type="checkbox" class="checkbox-option" data-group="effet" value="{{ effet.titre }}">
+                                    {{ effet.titre }}
+                                </label>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-md-4">
+                <label class="mb-2">Filtrer par produit :</label>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-group="produit" data-bs-toggle="dropdown">
+                        Sélectionner les produits
+                    </button>
+                    <ul class="dropdown-menu w-100 overflow-auto" id="filter-produit">
+                        <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="produit" id="select-all-produit"> Tout sélectionner</label></li>
+                        {% for produit in produits %}
+                            <li>
+                                <label class="dropdown-item">
+                                    <input type="checkbox" class="checkbox-option" data-group="produit" value="{{ produit.titre }}">
+                                    {{ produit.titre }}
+                                </label>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-md-4">
+                <label class="mb-2">Filtrer par action :</label>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-group="action" data-bs-toggle="dropdown">
+                        Sélectionner les actions
+                    </button>
+                    <ul class="dropdown-menu w-100 overflow-auto" id="filter-action">
+                        <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="action" id="select-all-action"> Tout sélectionner</label></li>
+                        {% for action in actions %}
+                            <li>
+                                <label class="dropdown-item">
+                                    <input type="checkbox" class="checkbox-option" data-group="action" value="{{ action.titre }}">
+                                    {{ action.titre }}
+                                </label>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-md-4">
+                <label class="mb-2">Filtrer par structure :</label>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-group="structure" data-bs-toggle="dropdown">
+                        Sélectionner les structures
+                    </button>
+                    <ul class="dropdown-menu w-100 overflow-auto" id="filter-structure">
+                        <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="structure" id="select-all-structure"> Tout sélectionner</label></li>
+                        {% for structure in structures %}
+                            <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="structure" value="{{ structure }}"> {{ structure }}</label></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-md-4">
+                <label class="mb-2">Filtrer par type d'activité :</label>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-group="type" data-bs-toggle="dropdown">
+                        Sélectionner les types
+                    </button>
+                    <ul class="dropdown-menu w-100 overflow-auto" id="filter-type">
+                        <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="type" id="select-all-type"> Tout sélectionner</label></li>
+                        {% for type in types %}
+                            <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="type" value="{{ type }}"> {{ type }}</label></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-md-4">
+                <label class="mb-2">Filtrer par année :</label>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-group="annee" data-bs-toggle="dropdown">
+                        Sélectionner les années
+                    </button>
+                    <ul class="dropdown-menu w-100 overflow-auto" id="filter-annee">
+                        <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="annee" id="select-all-annee"> Tout sélectionner</label></li>
+                        {% for annee in annees %}
+                            <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="annee" value="{{ annee }}"> {{ annee }}</label></li>
+                        {% endfor %}
+                    </ul>
+                </div>
             </div>
         </div>
-
-        <!-- Filtre 2 : Produit -->
-        <div class="col">
-            <label class="mb-2">Filtrer par produit :</label>
-            <div class="dropdown">
-                <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown">
-                    Sélectionner les produits
-                </button>
-                <ul class="dropdown-menu w-100 overflow-auto">
-                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="produit" id="select-all-produits"> Tout sélectionner</label></li>
-                    {% for produit in produits %}
-                        <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="produit" value="{{ produit.id }}" {% if produit.id in request.GET.produit %}checked{% endif %}> {{ produit.nom }}</label></li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
-
-        <!-- Filtre 3 : Action -->
-        <div class="col">
-            <label class="mb-2">Filtrer par action :</label>
-            <div class="dropdown">
-                <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown">
-                    Sélectionner les actions
-                </button>
-                <ul class="dropdown-menu w-100 overflow-auto">
-                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="action" id="select-all-actions"> Tout sélectionner</label></li>
-                    {% for action in actions %}
-                        <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="action" value="{{ action.id }}" {% if action.id in request.GET.action %}checked{% endif %}> {{ action.nom }}</label></li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
-
-        <!-- Filtre 4 : Type d'activité -->
-        <div class="col">
-            <label class="mb-2">Filtrer par type d'activité :</label>
-            <div class="dropdown">
-                <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" data-group="types">
-                    Sélectionner les types
-                </button>
-                <ul class="dropdown-menu w-100 overflow-auto">
-                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="types" id="select-all-types"> Tout sélectionner</label></li>
-                    types_activites = Activite.objects.filter(action=action).values_list('type_activite', flat=True).distinct()
-                    {% for type in types_activites %}
-                        <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="types" value="{{ type.id }}" {% if type.id in request.GET.types %}checked{% endif %}> {{ type.nom }}</label></li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
-
     </div>
-</div>
 
-<div class="table-container"> 
-    <div class="table-horizontal-container">
-        <table class="unfixed-table">
-            <thead class="thead-dark">
-                <tr>
-                    <th>Activité</th>
-                    <th>Type</th>
-                    <th>Coûts</th>
-                </tr>
-            </thead>
-            <tbody id="plan-table-body">
-                <!-- Les lignes de données seront insérées ici par JavaScript -->
-            </tbody>
-        </table>
+    <div class="table-container">
+        <div class="table-horizontal-container">
+            <table class="unfixed-table">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Activité</th>
+                        <th>Type</th>
+                        <th>Coûts</th>
+                    </tr>
+                </thead>
+                <tbody id="plan-table-body">
+                    <!-- Les lignes de données seront insérées ici par JavaScript -->
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const filtres = ["types", "statuts", "responsables", "financements"];
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const filtres = ["effet", "produit", "action", "structure", "type", "annee"];
+            const tableBody = document.getElementById('plan-table-body');
 
-    filtres.forEach(filtre => {
-        const checkboxes = document.querySelectorAll(`input[data-group="${filtre}"]`);
-        const selectAllCheckbox = document.querySelector(`input[data-group="${filtre}"]#select-all-${filtre}`);
-        const button = document.querySelector(`button[data-group="${filtre}"]`);
+            function updateTable(filtreModifie) {
+                let params = new URLSearchParams();
 
-        if (!selectAllCheckbox || !button || checkboxes.length === 0) {
-            console.error(`Élément(s) manquant(s) pour le filtre "${filtre}"`);
-            return; // Sortir de la fonction si un élément nécessaire est manquant
-        }
+                // Collecte uniquement les éléments cochés du filtre modifié
+                const checkboxes = document.querySelectorAll(`input[data-group="${filtreModifie}"]:checked`);
+                checkboxes.forEach(checkbox => {
+                    if (!checkbox.id.startsWith('select-all-')) {
+                        params.append(filtreModifie, checkbox.value);
+                    }
+                });
 
-        // Fonction pour mettre à jour le texte du bouton avec les options sélectionnées
-        function updateDropdownButton() {
-            const selectedOptions = Array.from(checkboxes)
-                .filter(checkbox => checkbox.checked && checkbox !== selectAllCheckbox)
-                .map(checkbox => checkbox.parentNode.textContent.trim());
+                console.log("Paramètres envoyés :", params.toString());
 
-            console.log("Options sélectionnées pour", filtre, selectedOptions); // Debug
-            button.textContent = selectedOptions.length > 0 ? selectedOptions.join(', ') : `Sélectionner les ${filtre}`;
-        }
+                fetch(`?${params.toString()}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(response => response.json())
+                    .then(data => {
+                        tableBody.innerHTML = '';
 
-        // Coche toutes les cases au chargement de la page
-        function cocherToutesLesCasesAuDemarrage() {
-            console.log("Initialisation : Coche toutes les cases"); // Debug
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = true;
-            });
-            selectAllCheckbox.checked = true;
-            updateDropdownButton();
-        }
+                        if (data.activites.length === 0) {
+                            tableBody.innerHTML = '<tr><td colspan="3" class="text-center">Aucune activité trouvée</td></tr>';
+                        } else {
+                            data.activites.forEach(activite => {
+                                tableBody.innerHTML += `
+                                    <tr>
+                                        <td>${activite.titre}</td>
+                                        <td>${activite.type}</td>
+                                        <td>${activite.couts}</td>
+                                    </tr>`;
+                            });
+                        }
 
-        // Gestion du "Tout sélectionner"
-        selectAllCheckbox.addEventListener('change', function () {
-            const isChecked = this.checked;
-            console.log("Changement de sélection 'Tout sélectionner' :", isChecked); // Debug
-            checkboxes.forEach(checkbox => {
-                if (checkbox !== selectAllCheckbox) {
-                    checkbox.checked = isChecked;
-                }
-            });
-            updateDropdownButton();
-            chargerTableau();
-        });
-
-        // Événement sur chaque case à cocher individuelle
-        checkboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', function () {
-                if (this !== selectAllCheckbox) {
-                    selectAllCheckbox.checked = Array.from(checkboxes)
-                        .every(checkbox => checkbox.checked || checkbox === selectAllCheckbox);
-                }
-                console.log(`Case cochée : ${this.value}, sélectionné : ${this.checked}`); // Debug
-                updateDropdownButton();
-                chargerTableau();
-            });
-        });
-
-        // Initialisation au chargement
-        cocherToutesLesCasesAuDemarrage();
-    });
-
-        // Fonction pour charger le tableau en fonction des filtres sélectionnés
-    function chargerTableau() {
-        let tableBody = document.getElementById('plan-table-body');
-
-        tableBody.innerHTML = `<tr><td colspan="6" class="text-center">Chargement...</td></tr>`;
-
-        let params = new URLSearchParams();
-
-        filtres.forEach(filtre => {
-            document.querySelectorAll(`input[data-group="${filtre}"]:checked`).forEach(checkbox => {
-                if (checkbox.value) {
-                    params.append(filtre, checkbox.value);
-                }
-            });
-        });
-
-        fetch(`?${params.toString()}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-            .then(response => response.json())
-            .then(data => {
-                tableBody.innerHTML = '';
-
-                if (data.activites.length === 0) {
-                    tableBody.innerHTML = '<tr><td colspan="6" class="text-center">Aucune activité trouvée</td></tr>';
-                } else {
-                    data.activites.forEach(activite => {
-                        tableBody.innerHTML += `
-                            <tr>
-                                <td>${activite.activite}</td>
-                                <td>${activite.type}</td>
-                                <td>${activite.couts}</td>
-                            </tr>`;
+                        // Mise à jour des filtres dépendants (produit et action si effet changé)
+                        updateDependentFilters("effet", data.effets);
+                        updateDependentFilters("produit", data.produits);
+                        updateDependentFilters("action", data.actions);
+                    })
+                    .catch(error => {
+                        console.error('Erreur AJAX:', error);
+                        tableBody.innerHTML = '<tr><td colspan="3" class="text-center">Erreur de chargement des données</td></tr>';
                     });
-                }
-            })
-            .catch(error => {
-                console.error('Erreur AJAX:', error);
-                tableBody.innerHTML = '<tr><td colspan="6" class="text-center">Erreur de chargement des données</td></tr>';
-            });
-    }
+            }
 
-    // Charge le tableau immédiatement après la sélection automatique
-    chargerTableau();
-});
-</script>
+            // Met à jour dynamiquement un filtre dépendant
+            function updateDependentFilters(filtre, nouvellesValeurs) {
+                const filterContainer = document.getElementById(`filter-${filtre}`); // Conteneur du filtre
+                filterContainer.innerHTML = ''; // Vide les anciennes options
+
+                // Ajouter l'option "Tout sélectionner"
+                const selectAllLi = document.createElement('li');
+                const selectAllLabel = document.createElement('label');
+                selectAllLabel.classList.add('dropdown-item');
+                const selectAllCheckboxx = document.createElement('input');
+                selectAllCheckboxx.type = 'checkbox';
+                selectAllCheckboxx.classList.add('checkbox-option');
+                selectAllCheckboxx.dataset.group = filtre;
+                selectAllCheckboxx.id = `select-all-${filtre}`;
+                selectAllCheckboxx.checked = true; // Coche "Tout sélectionner" par défaut
+                selectAllLabel.appendChild(selectAllCheckboxx);
+                selectAllLabel.appendChild(document.createTextNode(' Tout sélectionner'));
+                selectAllLi.appendChild(selectAllLabel);
+                filterContainer.appendChild(selectAllLi);
+
+                // Ajouter les nouvelles valeurs
+                nouvellesValeurs.forEach(valeur => {
+                    const li = document.createElement('li');
+                    const label = document.createElement('label');
+                    label.classList.add('dropdown-item');
+
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.classList.add('checkbox-option');
+                    checkbox.dataset.group = filtre;
+                    checkbox.value = valeur.titre;
+                    checkbox.id = `${filtre}-${valeur.id}`;
+                    checkbox.checked = true; // Coche toutes les options par défaut
+
+                    label.appendChild(checkbox);
+                    label.appendChild(document.createTextNode(` ${valeur.titre}`));
+                    li.appendChild(label);
+                    filterContainer.appendChild(li);
+                });
+
+                const checkboxes = document.querySelectorAll(`input[data-group="${filtre}"]`);
+                const selectAllCheckbox = document.querySelector(`input[data-group="${filtre}"]#select-all-${filtre}`);
+                const button = document.querySelector(`button[data-group="${filtre}"]`);
+
+                if (!selectAllCheckbox || !button || checkboxes.length === 0) {
+                    console.error(`Élément(s) manquant(s) pour le filtre "${filtre}"`);
+                    return;
+                }
+
+                function updateDropdownButton() {
+                    const selectedOptions = Array.from(checkboxes)
+                        .filter(checkbox => checkbox.checked && checkbox !== selectAllCheckbox)
+                        .map(checkbox => checkbox.parentNode.textContent.trim());
+
+                    button.textContent = selectedOptions.length > 0 ? selectedOptions.join(', ') : `Sélectionner les ${filtre}`;
+                }
+
+                function cocherToutesLesCasesAuDemarrage() {
+                    checkboxes.forEach(checkbox => {
+                        checkbox.checked = true;
+                    });
+                    selectAllCheckbox.checked = true;
+                    updateDropdownButton();
+                    updateTable(filtre);
+                }
+
+                selectAllCheckbox.addEventListener('change', function () {
+                    const isChecked = this.checked;
+                    checkboxes.forEach(checkbox => {
+                        if (checkbox !== selectAllCheckbox) {
+                            checkbox.checked = isChecked;
+                        }
+                    });
+                    updateDropdownButton();
+                    updateTable(filtre);
+                });
+
+                checkboxes.forEach(checkbox => {
+                    checkbox.addEventListener('change', function () {
+                        if (this !== selectAllCheckbox) {
+                            selectAllCheckbox.checked = Array.from(checkboxes)
+                                .every(checkbox => checkbox.checked || checkbox === selectAllCheckbox);
+                        }
+                        updateDropdownButton();
+                        updateTable(filtre);
+                    });
+                });
+
+                cocherToutesLesCasesAuDemarrage();
+            }
+
+            const checkboxes = document.querySelectorAll(`input[data-group="effet"]`);
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = true
+            });
+            updateTable("effet")
+        });
+    </script>
+
 {% endblock %}
 
 {% block style %}
-<style>
-.dropdown-menu {
-    max-height: 250px;
-    overflow-y: auto;
-}
-.checkbox-option {
-    margin-right: 10px;
-}
+    <style>
+        .dropdown-menu {
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        .checkbox-option {
+            margin-right: 10px;
+        }
 
-/* Ajuster le bouton pour que le texte sélectionné s'adapte */
-.dropdown-toggle {
-    white-space: normal;
-    word-wrap: break-word;
-    width: auto;
-    min-width: 200px;
-    padding: 10px;
-}
+        /* Ajuster le bouton pour que le texte sélectionné s'adapte */
+        .dropdown-toggle {
+            white-space: normal;
+            word-wrap: break-word;
+            width: auto;
+            min-width: 200px;
+            padding: 10px;
+        }
 
-table {
-    border-collapse: collapse;
-    font-family: helvetica;
-    width: 100%;
-    border: 1px solid #007A3D;
-}
+        table {
+            border-collapse: collapse;
+            font-family: helvetica;
+            width: 100%;
+            border: 1px solid #007A3D;
+        }
 
-td, th {
-    border: 1px solid #007A3D;
-    padding: 10px;
-    min-width: 150px;
-    background: white;
-    box-sizing: border-box;
-    text-align: left;
-}
+        td, th {
+            border: 1px solid #007A3D;
+            padding: 10px;
+            min-width: 150px;
+            background: white;
+            box-sizing: border-box;
+            text-align: left;
+        }
 
-.table-container {
-    margin: 40px;
-    position: relative;
-    max-height: 500px;
-    overflow: scroll;
-    border: 5px solid #007A3D;
-    border-radius: 20px;
-    padding: 20px;
-    background-color: #fff;
-    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
-}
+        .table-container {
+            margin: 40px;
+            position: relative;
+            max-height: 500px;
+            overflow: scroll;
+            border: 5px solid #007A3D;
+            border-radius: 20px;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+        }
 
-thead th {
-    position: -webkit-sticky;
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    background: orange;
-    color: white;
-}
+        thead th {
+            position: -webkit-sticky;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: orange;
+            color: white;
+        }
 
-tfoot {
-    position: -webkit-sticky;
-    bottom: 0;
-    z-index: 2;
-}
+        tfoot {
+            position: -webkit-sticky;
+            bottom: 0;
+            z-index: 2;
+        }
 
-tfoot td {
-    position: sticky;
-    bottom: 0;
-    z-index: 2;
-    background: green;
-    color: white;
-}
+        tfoot td {
+            position: sticky;
+            bottom: 0;
+            z-index: 2;
+            background: green;
+            color: white;
+        }
 
-tbody {
-    overflow: scroll;
-    height: 200px;
-}
+        tbody {
+            overflow: scroll;
+            height: 200px;
+        }
 
-/* MAKE LEFT COLUMN FIXED */
-tr > :first-child {
-    position: -webkit-sticky;
-    position: sticky;
-    left: 0;
-    z-index: 1;
-    background: white;
-}
-</style>
+        /* MAKE LEFT COLUMN FIXED */
+        tr > :first-child {
+            position: -webkit-sticky;
+            position: sticky;
+            left: 0;
+            z-index: 1;
+            background: white;
+        }
+    </style>
 {% endblock %}

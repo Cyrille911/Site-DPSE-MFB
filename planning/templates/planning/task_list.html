@@ -1,141 +1,330 @@
 {% extends 'index.html' %}
 
-{% block title %}Gestion des Activités{% endblock %}
+{% block title %}
+Gestion de Mes Activités
+{% endblock %}
 
 {% block content %}
-    <div class="container mt-5">
-        <!-- Titre de la page -->
-        <h1 class="mb-4 text-center">Gestion des Activités</h1>
+<div class="container mt-5">
+    <!-- Titre de la page -->
+    <h1 class="mb-4 text-center text-primary fw-bold">Gestion de Mes Activités</h1>
 
-        <!-- Bouton pour ajouter une nouvelle activité -->
-        <div class="mb-3 text-end">
-            <button class="btn btn-success" onclick="addActivity()">Ajouter une activité</button>
-        </div>
-
-        <!-- Tableau des activités -->
-        <table class="table table-bordered table-striped" id="activitiesTable">
-            <thead class="table-dark">
-                <tr>
-                    <th>#</th>
-                    <th>Nom de l'activité</th>
-                    <th>Date de début</th>
-                    <th>Date de fin</th>
-                    <th>Statut</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Exemple d'activité -->
-                <tr>
-                    <td>1</td>
-                    <td contenteditable="true">Préparer le rapport financier</td>
-                    <td contenteditable="true">01/01/2025</td>
-                    <td contenteditable="true">10/01/2025</td>
-                    <td>
-                        <select class="form-select form-select-sm" disabled>
-                            <option value="En cours" selected>En cours</option>
-                            <option value="Terminé">Terminé</option>
-                            <option value="En attente">En attente</option>
-                            <option value="Annulé">Annulé</option>
-                        </select>
-                    </td>
-                    <td>
-                        <button class="btn btn-danger btn-sm" onclick="deleteRow(this)">Supprimer</button>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-
-        <!-- Bouton Enregistrer -->
-        <div class="text-center mt-4">
-            <button class="btn btn-primary btn-lg" onclick="saveActivities()">Enregistrer</button>
-        </div>
+    <!-- Bouton pour ajouter une nouvelle activité -->
+    <div class="mb-3 text-end">
+        <button class="btn btn-success shadow-sm" onclick="addActivity()">Ajouter une activité</button>
     </div>
 
-    <script>
-        // Fonction pour ajouter une nouvelle activité
-        function addActivity() {
-            const table = document.getElementById('activitiesTable').getElementsByTagName('tbody')[0];
-            const rowCount = table.rows.length + 1;
+    <!-- Tableau des activités -->
+    <table class="table table-bordered table-striped" id="activitiesTable">
+        <thead class="table-dark">
+            <tr>
+                <th rowspan="2">#</th>
+                <th rowspan="2">Plan d'action</th>
+                <th rowspan="2">Effet</th>
+                <th rowspan="2">Produit</th>
+                <th rowspan="2">Action</th>
+                <th rowspan="2">Nom de l'activité</th>
+                <th rowspan="2">Type</th>
+                <th colspan="{{ max_horizon|add:2 }}" class="text-center">Indicateur</th>
+                <th rowspan="2">Actions</th>
+            </tr>
+            <tr>
+                <th>Libellé</th>
+                <th>Référence</th>
+                {% for i in max_horizon_range %}
+                    <th>Cible {{ annee_debut_base|add:i }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for activite in activites %}
+                <tr id="activite_{{ activite.action.produit.effet.plan.id }}.{{ activite.action.produit.effet.id }}.{{ activite.action.produit.id }}.{{ activite.action.id }}.{{ activite.id }}">
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ activite.action.produit.effet.plan.titre }}</td>
+                    <td>{{ activite.action.produit.effet.titre }}</td>
+                    <td>{{ activite.action.produit.titre }}</td>
+                    <td>{{ activite.action.titre }}</td>
+                    <td contenteditable="true">{{ activite.titre }}</td>
+                    <td>
+                        <select class="form-select form-select-sm" name="activite_type_{{ activite.action.produit.effet.plan.id }}.{{ activite.action.produit.effet.id }}.{{ activite.action.produit.id }}.{{ activite.action.id }}.{{ activite.id }}">
+                            <option value="Réforme" {% if activite.type == "Réforme" %}selected{% endif %}>Réforme</option>
+                            <option value="Investissement" {% if activite.type == "Investissement" %}selected{% endif %}>Investissement</option>
+                            <option value="Etude" {% if activite.type == "Etude" %}selected{% endif %}>Étude</option>
+                            <option value="Texte" {% if activite.type == "Texte" %}selected{% endif %}>Texte</option>
+                            <option value="Activité ordinaire" {% if activite.type == "Activité ordinaire" %}selected{% endif %}>Activité ordinaire</option>
+                        </select>
+                    </td>
+                    <td contenteditable="true">{{ activite.indicateur_label }}</td>
+                    <td contenteditable="true">{{ activite.indicateur_reference }}</td>
+                    {% with horizon=activite.action.produit.effet.plan.horizon annee_debut=activite.action.produit.effet.plan.annee_debut %}
+                        {% for i in max_horizon_range %}
+                            {% if i < horizon %}
+                                <td>
+                                    <input type="text" class="form-control shadow-sm border-primary" 
+                                           name="cible_{{ activite.action.produit.effet.plan.id }}.{{ activite.action.produit.effet.id }}.{{ activite.action.produit.id }}.{{ activite.action.id }}.{{ activite.id }}[{{ i|add:1 }}]" 
+                                           value="{{ activite.cibles|i }}" 
+                                           placeholder="Cible {{ annee_debut|add:i }}">
+                                </td>
+                            {% else %}
+                                <td>-</td>
+                            {% endif %}
+                        {% endfor %}
+                    {% endwith %}
+                    <td>
+                        <button class="btn btn-danger btn-sm shadow-sm" onclick="deleteActivity(this, '{{ activite.action.produit.effet.plan.id }}.{{ activite.action.produit.effet.id }}.{{ activite.action.produit.id }}.{{ activite.action.id }}.{{ activite.id }}')">Supprimer</button>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="{{ max_horizon|add:9 }}" class="text-center">Aucune activité assignée à vous.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
-            // Crée une nouvelle ligne
-            const newRow = table.insertRow();
+    <!-- Bouton Enregistrer -->
+    <div class="text-center mt-4">
+        <button class="btn btn-primary btn-lg shadow-sm" onclick="saveActivities()">Enregistrer</button>
+    </div>
+</div>
 
-            // Colonne ID
-            const cell1 = newRow.insertCell(0);
-            cell1.textContent = rowCount;
+<script>
+// Initialisation des compteurs
+let activityCount = {{ activites|length }};
+const maxHorizon = {{ max_horizon }};
 
-            // Colonne Nom de l'activité
-            const cell2 = newRow.insertCell(1);
-            cell2.contentEditable = "true";
-            cell2.textContent = "Nouvelle activité";
+// Liste des plans pour la création de nouvelles activités
+const plans = [
+    {% for plan in plans %}
+        {
+            id: {{ plan.id }},
+            titre: "{{ plan.titre }}",
+            annee_debut: {{ plan.annee_debut }},
+            horizon: {{ plan.horizon }},
+            actions: [
+                {% for effet in plan.plan_effet.all %}
+                    {% for produit in effet.effet_produit.all %}
+                        {% for action in produit.produit_action.all %}
+                            { id: {{ action.id }}, titre: "{{ action.titre }}" },
+                        {% endfor %}
+                    {% endfor %}
+                {% endfor %}
+            ]
+        },
+    {% endfor %}
+];
 
-            // Colonne Date de début
-            const cell3 = newRow.insertCell(2);
-            cell3.contentEditable = "true";
-            cell3.textContent = "jj/mm/aaaa";
+// Fonction pour ajouter une nouvelle activité
+function addActivity() {
+    const table = document.getElementById('activitiesTable').getElementsByTagName('tbody')[0];
+    const rowCount = table.rows.length + 1;
+    const newRow = table.insertRow();
+    newRow.id = `activite_new_${rowCount}`;
 
-            // Colonne Date de fin
-            const cell4 = newRow.insertCell(3);
-            cell4.contentEditable = "true";
-            cell4.textContent = "jj/mm/aaaa";
+    // Colonne ID
+    newRow.insertCell(0).textContent = rowCount;
 
-            // Colonne Statut
-            const cell5 = newRow.insertCell(4);
-            const select = document.createElement('select');
-            select.classList.add('form-select', 'form-select-sm');
-            select.disabled = true;
-            select.innerHTML = `
-                <option value="En cours">En cours</option>
-                <option value="Terminé">Terminé</option>
-                <option value="En attente">En attente</option>
-                <option value="Annulé">Annulé</option>
-            `;
-            cell5.appendChild(select);
+    // Colonne Plan d'action
+    const planCell = newRow.insertCell(1);
+    const planSelect = document.createElement('select');
+    planSelect.classList.add('form-select', 'form-select-sm');
+    planSelect.name = `plan_new_${rowCount}`;
+    planSelect.innerHTML = plans.map(plan => `<option value="${plan.id}">${plan.titre}</option>`).join('');
+    planSelect.onchange = () => updateActionAndCibles(newRow, rowCount);
+    planCell.appendChild(planSelect);
 
-            // Colonne Actions
-            const cell6 = newRow.insertCell(5);
-            const deleteButton = document.createElement('button');
-            deleteButton.classList.add('btn', 'btn-danger', 'btn-sm');
-            deleteButton.textContent = "Supprimer";
-            deleteButton.onclick = () => deleteRow(deleteButton);
-            cell6.appendChild(deleteButton);
+    // Colonne Effet
+    newRow.insertCell(2).textContent = "-";
+
+    // Colonne Produit
+    newRow.insertCell(3).textContent = "-";
+
+    // Colonne Action
+    const actionCell = newRow.insertCell(4);
+    const actionSelect = document.createElement('select');
+    actionSelect.classList.add('form-select', 'form-select-sm');
+    actionSelect.name = `action_new_${rowCount}`;
+    const selectedPlan = plans[0];
+    actionSelect.innerHTML = selectedPlan.actions.map(action => `<option value="${action.id}">${action.titre}</option>`).join('');
+    actionCell.appendChild(actionSelect);
+
+    // Colonne Nom
+    const nameCell = newRow.insertCell(5);
+    nameCell.contentEditable = "true";
+    nameCell.textContent = "Nouvelle activité";
+
+    // Colonne Type
+    const typeCell = newRow.insertCell(6);
+    const typeSelect = document.createElement('select');
+    typeSelect.classList.add('form-select', 'form-select-sm');
+    typeSelect.name = `activite_type_new_${rowCount}`;
+    typeSelect.innerHTML = `
+        <option value="Réforme">Réforme</option>
+        <option value="Investissement">Investissement</option>
+        <option value="Etude">Étude</option>
+        <option value="Texte">Texte</option>
+        <option value="Activité ordinaire">Activité ordinaire</option>
+    `;
+    typeCell.appendChild(typeSelect);
+
+    // Colonne Libellé
+    const libelleCell = newRow.insertCell(7);
+    libelleCell.contentEditable = "true";
+    libelleCell.textContent = "Nouvel indicateur";
+
+    // Colonne Référence
+    const referenceCell = newRow.insertCell(8);
+    referenceCell.contentEditable = "true";
+    referenceCell.textContent = "Référence";
+
+    // Colonnes Cibles (une par année)
+    const horizon = selectedPlan.horizon;
+    const anneeDepart = selectedPlan.annee_debut;
+    for (let i = 0; i < maxHorizon; i++) {
+        const cibleCell = newRow.insertCell(9 + i);
+        if (i < horizon) {
+            const cibleInput = document.createElement('input');
+            cibleInput.type = "text";
+            cibleInput.classList.add('form-control', 'shadow-sm', 'border-primary');
+            cibleInput.name = `cible_new_${rowCount}[${i + 1}]`;
+            cibleInput.placeholder = `Cible ${anneeDepart + i}`;
+            cibleCell.appendChild(cibleInput);
+        } else {
+            cibleCell.textContent = "-";
         }
+    }
 
-        // Fonction pour supprimer une ligne
-        function deleteRow(button) {
-            const row = button.closest('tr');
+    // Colonne Actions
+    const actionCell = newRow.insertCell(9 + maxHorizon);
+    const deleteButton = document.createElement('button');
+    deleteButton.classList.add('btn', 'btn-danger', 'btn-sm', 'shadow-sm');
+    deleteButton.textContent = "Supprimer";
+    deleteButton.onclick = () => deleteActivity(deleteButton, `new_${rowCount}`);
+    actionCell.appendChild(deleteButton);
+}
+
+// Mettre à jour le menu des actions et les cibles
+function updateActionAndCibles(row, rowCount) {
+    const planSelect = row.cells[1].querySelector('select');
+    const actionSelect = row.cells[4].querySelector('select');
+    const selectedPlanId = parseInt(planSelect.value);
+    const selectedPlan = plans.find(plan => plan.id === selectedPlanId);
+
+    actionSelect.innerHTML = selectedPlan.actions.map(action => `<option value="${action.id}">${action.titre}</option>`).join('');
+
+    // Mettre à jour les colonnes des cibles
+    for (let i = 0; i < maxHorizon; i++) {
+        const cibleCell = row.cells[9 + i];
+        cibleCell.innerHTML = "";
+        if (i < selectedPlan.horizon) {
+            const cibleInput = document.createElement('input');
+            cibleInput.type = "text";
+            cibleInput.classList.add('form-control', 'shadow-sm', 'border-primary');
+            cibleInput.name = `cible_new_${rowCount}[${i + 1}]`;
+            cibleInput.placeholder = `Cible ${selectedPlan.annee_debut + i}`;
+            cibleCell.appendChild(cibleInput);
+        } else {
+            cibleCell.textContent = "-";
+        }
+    }
+}
+
+// Fonction pour supprimer une activité
+function deleteActivity(button, activiteId) {
+    const confirmation = confirm("Êtes-vous sûr de vouloir supprimer cette activité ?");
+    if (confirmation) {
+        const row = button.closest('tr');
+        const isNew = activiteId.startsWith('new');
+        if (!isNew) {
+            fetch(`/gestion-activites/delete/${activiteId.split('.').pop()}/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    row.remove();
+                    reindexRows();
+                } else {
+                    alert("Erreur lors de la suppression : " + data.error);
+                }
+            })
+            .catch(error => console.error("Erreur :", error));
+        } else {
             row.remove();
+            reindexRows();
+        }
+    }
+}
 
-            // Réindexer les IDs après suppression
-            const rows = document.getElementById('activitiesTable').getElementsByTagName('tbody')[0].rows;
-            for (let i = 0; i < rows.length; i++) {
-                rows[i].cells[0].textContent = i + 1;
-            }
+// Réindexer les lignes après suppression
+function reindexRows() {
+    const rows = document.getElementById('activitiesTable').getElementsByTagName('tbody')[0].rows;
+    for (let i = 0; i < rows.length; i++) {
+        rows[i].cells[0].textContent = i + 1;
+    }
+}
+
+// Fonction pour enregistrer les activités
+function saveActivities() {
+    const table = document.getElementById('activitiesTable');
+    const rows = table.getElementsByTagName('tbody')[0].rows;
+    const activities = [];
+
+    for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const rowId = row.id.split('_')[1];
+        const isNew = rowId.startsWith('new');
+        const cells = row.cells;
+
+        const planId = isNew ? parseInt(cells[1].querySelector('select').value) : rowId.split('.')[0];
+        const selectedPlan = plans.find(plan => plan.id === parseInt(planId));
+        const horizon = selectedPlan.horizon;
+
+        const cibles = [];
+        for (let j = 0; j < horizon; j++) {
+            const cibleInput = cells[9 + j].querySelector(`input[name="${isNew ? 'cible_new_' + rowId.split('_')[1] : 'cible_' + rowId}[${j + 1}]"]`);
+            cibles.push(cibleInput ? cibleInput.value || "" : "");
         }
 
-        // Fonction pour enregistrer les activités
-        function saveActivities() {
-            const table = document.getElementById('activitiesTable');
-            const rows = table.getElementsByTagName('tbody')[0].rows;
-            const activities = [];
+        const activity = {
+            id: isNew ? null : rowId.split('.').pop(),
+            plan_id: planId,
+            action_id: isNew ? parseInt(cells[4].querySelector('select').value) : rowId.split('.')[3],
+            titre: cells[5].textContent,
+            type: cells[6].querySelector('select').value,
+            indicateur_label: cells[7].textContent,
+            indicateur_reference: cells[8].textContent,
+            cibles: cibles,
+            is_new: isNew
+        };
+        activities.push(activity);
+    }
 
-            for (let i = 0; i < rows.length; i++) {
-                const cells = rows[i].cells;
-                const activity = {
-                    id: cells[0].textContent,
-                    name: cells[1].textContent,
-                    startDate: cells[2].textContent,
-                    endDate: cells[3].textContent,
-                    status: cells[4].getElementsByTagName('select')[0].value
-                };
-                activities.push(activity);
-            }
-
-            console.log("Activités enregistrées :", activities);
-            alert("Les modifications ont été enregistrées !");
-            // Vous pouvez envoyer `activities` au backend via une requête AJAX.
+    fetch('/gestion-activites/save/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({ activities: activities })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert("Les activités ont été enregistrées avec succès !");
+            window.location.reload();
+        } else {
+            alert("Erreur lors de l'enregistrement : " + data.error);
         }
-    </script>
+    })
+    .catch(error => {
+        console.error("Erreur :", error);
+        alert("Une erreur est survenue lors de l'enregistrement.");
+    });
+}
+</script>
 
 {% endblock %}

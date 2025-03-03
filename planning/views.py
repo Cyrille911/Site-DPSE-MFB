@@ -4,54 +4,112 @@ from django.shortcuts import render, get_object_or_404, redirect
 from .models import PlanAction, Effet, Produit, Action, Activite
 from django.http import JsonResponse
 
+## Liste des activiités par struture
+from django.shortcuts import render
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+from .models import PlanAction, Activite, Action
+
 ## Plan d'Actions
 def plan_action_list(request):
     plans = PlanAction.objects.all()
     return render(request, 'planning/plan_action_list.html', {'plans':plans})
 
 def plan_action_detail(request, id):
-    # Récupération du plan d'action
+
     plan = get_object_or_404(PlanAction, id=id)
 
-    # Récupération optimisée des activités liées au plan
-    activites = (
-        Activite.objects
-        .filter(action__produit__effet__plan=plan)
-        .select_related('action__produit__effet')  # Optimisation SQL pour les relations
-    )
+    effets = Effet.objects.filter(plan=plan)
+    produits = Produit.objects.filter(effet__plan=plan).select_related('effet')
+    actions = Action.objects.filter(produit__effet__plan=plan).select_related('produit__effet')
+    activites = Activite.objects.filter(action__produit__effet__plan=plan).select_related('action__produit__effet')
 
-    # Vérification si la requête est une requête AJAX
+    print(f"Effets récupérés: {effets.count()}")
+    print(f"Produits récupérés: {produits.count()}")
+    print(f"Actions récupérées: {actions.count()}")
+    print(f"Activités récupérées: {activites.count()}")
+
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        # Récupérer les filtres depuis la requête GET
-        types_selectionnes = request.GET.getlist('types')  # Liste des types sélectionnés
-        print(types_selectionnes)
+        try:
+            effets_selectionnes = request.GET.getlist('effet')
+            produits_selectionnes = request.GET.getlist('produit')
+            actions_selectionnees = request.GET.getlist('action')
 
-        # Appliquer les filtres à la requête
-        if types_selectionnes:
-            activites = activites.filter(type__in=types_selectionnes)
+            print("Effets sélectionnés:", effets_selectionnes)
+            print("Produits sélectionnés:", produits_selectionnes)
+            print("Actions sélectionnées:", actions_selectionnees)
 
-        # Vérification si des activités correspondent aux critères
-        if not activites.exists():
-            return JsonResponse({'activites': [], 'message': 'Aucune activité trouvée'}, safe=False)
+            # Mise à jour dynamique des filtres
+            if effets_selectionnes:
+                produits = Produit.objects.filter(effet__titre__in=effets_selectionnes)
+                actions = Action.objects.filter(produit__effet__titre__in=effets_selectionnes)
+                activites = Activite.objects.filter(action__produit__effet__titre__in=effets_selectionnes)
+                print("Produits après filtrage par effets:", list(produits.values_list('titre', flat=True)))
 
-        # Sérialisation des données des activités à envoyer en réponse JSON
-        data = [
-            {
-                'effet': getattr(activite.action.produit.effet, 'titre', "N/A"),
-                'produit': getattr(activite.action.produit, 'titre', "N/A"),
-                'action': getattr(activite.action, 'titre', "N/A"),
-                'activite': activite.titre,
-                'type': activite.type,
-                'couts': activite.couts,
+            if produits_selectionnes:
+                actions = Action.objects.filter(produit__titre__in=produits_selectionnes)
+                activites = Activite.objects.filter(action__produit__titre__in=produits_selectionnes)
+                print("Actions après filtrage par produits:", list(actions.values_list('titre', flat=True)))
+
+            if actions_selectionnees:
+                activites = Activite.objects.filter(action__titre__in=actions_selectionnees)
+                print("Activités après filtrage par actions:", list(activites.values_list('titre', flat=True)))
+
+            # Gestion des types et structures
+            types = [activite.type if activite.type else "N/A" for activite in activites]
+            structures = [activite.point_focal.entity if activite.point_focal and activite.point_focal.entity else "N/A" for activite in activites]
+
+            # Calcul des années avec coût nul
+            annees = []
+            for activite in activites:
+                if hasattr(activite, 'couts') and isinstance(activite.couts, list):
+                    annee_debut = getattr(activite.action.produit.effet.plan, 'annee_debut', None)
+                    if annee_debut is not None:
+                        annees.append([annee_debut + i for i, cout in enumerate(activite.couts) if cout == 0])
+                    else:
+                        print(f"⚠️ `annee_debut` manquant pour {activite}.")
+                        annees.append([])
+                else:
+                    print(f"⚠️ `couts` manquant ou invalide pour {activite}.")
+                    annees.append([])
+
+            print("✅ Années générées pour chaque activité:", annees)
+
+            data = {
+                'effets': list(effets.values('id', 'titre')),
+                'produits': list(produits.values('id', 'titre')),
+                'actions': list(actions.values('id', 'titre')),
+                'activites': list(activites.values('id', 'titre')),
+                'types': types,
+                'structures': structures,
+                'annees': annees
             }
+
+            print("Données renvoyées:", data)
+            return JsonResponse(data, safe=False)
+
+        except Exception as e:
+            print("🚨 Erreur lors du filtrage:", str(e))
+            return JsonResponse({"error": "Erreur interne", "details": str(e)}, status=500)
+
+    return render(request, 'planning/plan_action_detail.html', {
+        "plan": plan,
+        "effets": effets,
+        "produits": produits,
+        "actions": actions,
+        "activites": activites,
+        'types': [activite.type if activite.type else "N/A" for activite in activites],
+        'structures': [activite.point_focal.entity if activite.point_focal and activite.point_focal.entity else "N/A" for activite in activites],
+        'annees': [
+            [
+                activite.action.produit.effet.plan.annee_debut + i
+                for i, cout in enumerate(activite.couts) if cout == 0
+            ]
+            if hasattr(activite, 'couts') and activite.couts else []
             for activite in activites
-        ]
-
-        # Retourner les données filtrées sous forme de JSON
-        return JsonResponse({'activites': data}, safe=False)
-
-    # Si la requête n'est pas AJAX, rendre la page HTML classique
-    return render(request, 'planning/plan_action_detail.html', {'plan': plan})
+        ],
+    })
 
 def add_plan_action(request):
     if request.method == 'POST':
@@ -131,25 +189,27 @@ def add_plan_action(request):
 
 def edit_plan_action(request, id):
     plan = get_object_or_404(PlanAction, id=id)
-
+    
     if request.method == 'POST':
-        # Mise à jour des informations du plan d'action
+        # Mise à jour des informations du plan
         plan.titre = request.POST.get('titre')
-        plan.horizon = request.POST.get('horizon')
+        plan.horizon = int(request.POST.get('horizon'))
         plan.impact = request.POST.get('impact')
-
-        # Validation du champ horizon
+        
         try:
-            plan.horizon = int(plan.horizon)
-            if plan.horizon <= 0:
+            horizon = int(plan.horizon)
+            if horizon <= 0:
                 raise ValueError("L'horizon doit être un entier positif.")
         except ValueError:
-            return render(request, 'planning/edit_plan_action.html', {'plan': plan, 'error': "L'horizon doit être un entier positif."})
+            return render(request, 'planning/edit_plan_action.html', {
+                'plan': plan,
+                'error': "L'horizon doit être un entier positif."
+            })
         
         plan.save()
 
-        # Suppression des anciennes relations
-        plan.effets.all().delete()
+        # Suppression des anciens effets pour les recréer
+        plan.plan_effet.all().delete()
 
         # Gestion des effets, produits, actions et activités
         effet_index = 1
@@ -170,19 +230,117 @@ def edit_plan_action(request, id):
                     activite_index = 1
                     while f"activite_titre_{effet_index}.{produit_index}.{action_index}.{activite_index}" in request.POST:
                         activite_titre = request.POST.get(f"activite_titre_{effet_index}.{produit_index}.{action_index}.{activite_index}")
-                        Activite.objects.create(action=action, titre=activite_titre)
+                        activite_type = request.POST.get(f"activite_type_{effet_index}.{produit_index}.{action_index}.{activite_index}")
+                        indicateur_label = request.POST.get(f"indicateur_label_{effet_index}.{produit_index}.{action_index}.{activite_index}")
+                        indicateur_reference = request.POST.get(f"indicateur_reference_{effet_index}.{produit_index}.{action_index}.{activite_index}")
+
+                        cibles = []
+                        couts = []
+                        for i in range(1, horizon + 1):
+                            cible_valeur = request.POST.get(f"cible_{effet_index}.{produit_index}.{action_index}.{activite_index}[{i}]", None)
+                            cout_valeur = request.POST.get(f"cout_{effet_index}.{produit_index}.{action_index}.{activite_index}[{i}]", '0')
+                            
+                            cibles.append(cible_valeur if cible_valeur else '')
+                            couts.append(float(cout_valeur) if cout_valeur else 0.0)
+
+                        point_focal = request.user
+                        Activite.objects.create(
+                            action=action,
+                            titre=activite_titre,
+                            type=activite_type,
+                            indicateur_label=indicateur_label,
+                            indicateur_reference=indicateur_reference,
+                            cibles=cibles,
+                            couts=couts,
+                            point_focal=point_focal
+                        )
                         activite_index += 1
-
                     action_index += 1
-
                 produit_index += 1
-
             effet_index += 1
 
-        return redirect('plan_action_list')  # Redirection après modification
+        return redirect('plan_action_list')
 
-    return render(request, 'planning/edit_plan_action.html', {'plan': plan})
+    # Pré-remplissage des données existantes pour le GET
+    context = {
+        'plan': plan,
+        'effets': plan.plan_effet.prefetch_related(
+            'effet_produit__produit_action__action_activite'
+        )
+    }
+    return render(request, 'planning/edit_plan_action.html', context)
 
-## Liste des activiités par struture
+@csrf_exempt
 def task_list(request):
-    return render(request, 'planning/task_list.html', {})
+    if not request.user.is_authenticated:
+        return JsonResponse({'success': False, 'error': 'Utilisateur non authentifié'})
+
+    if request.method == 'GET':
+        # Récupérer toutes les activités où l'utilisateur est point focal
+        activites = Activite.objects.filter(point_focal=request.user).select_related(
+            'action__produit__effet__plan'
+        )
+        plans = PlanAction.objects.all().prefetch_related('plan_effet__effet_produit__produit_action')
+        max_horizon = max(plan.horizon for plan in plans) if plans else 0
+        # Utiliser une année de référence (par exemple, l'année minimale parmi les plans)
+        annee_debut_base = min(plan.annee_debut for plan in plans) if plans else 2025
+
+        context = {
+            'activites': activites,
+            'plans': plans,
+            'max_horizon': max_horizon,
+            'max_horizon_range': range(max_horizon),
+            'annee_debut_base': annee_debut_base
+        }
+        return render(request, 'planning/task_list.html', context)
+
+    elif request.method == 'POST':
+        data = json.loads(request.body)
+        activities = data.get('activities', [])
+
+        for activity_data in activities:
+            action_id = activity_data.get('action_id')
+            activite_id = activity_data.get('id')
+            is_new = activity_data.get('is_new', False)
+
+            if is_new:
+                try:
+                    action = Action.objects.get(id=action_id)
+                    Activite.objects.create(
+                        action=action,
+                        titre=activity_data['titre'],
+                        type=activity_data['type'],
+                        indicateur_label=activity_data['indicateur_label'],
+                        indicateur_reference=activity_data['indicateur_reference'],
+                        cibles=activity_data['cibles'],
+                        couts=[0.0] * action.produit.effet.plan.horizon,  # Coûts initialisés à zéro
+                        point_focal=request.user
+                    )
+                except Action.DoesNotExist:
+                    return JsonResponse({'success': False, 'error': f"Action avec ID {action_id} non trouvée."})
+            else:
+                try:
+                    activite = Activite.objects.get(id=activite_id, point_focal=request.user)
+                    activite.titre = activity_data['titre']
+                    activite.type = activity_data['type']
+                    activite.indicateur_label = activity_data['indicateur_label']
+                    activite.indicateur_reference = activity_data['indicateur_reference']
+                    activite.cibles = activity_data['cibles']
+                    activite.save()
+                except Activite.DoesNotExist:
+                    return JsonResponse({'success': False, 'error': f"Activité avec ID {activite_id} non trouvée ou vous n'êtes pas autorisé."})
+
+        return JsonResponse({'success': True})
+
+    return JsonResponse({'success': False, 'error': 'Méthode non autorisée'})
+
+@csrf_exempt
+def delete_activite(request, activite_id):
+    if request.method == 'DELETE':
+        try:
+            activite = Activite.objects.get(id=activite_id, point_focal=request.user)
+            activite.delete()
+            return JsonResponse({'success': True})
+        except Activite.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Activité non trouvée ou vous n\'êtes pas autorisé.'})
+    return JsonResponse({'success': False, 'error': 'Méthode non autorisée'})
