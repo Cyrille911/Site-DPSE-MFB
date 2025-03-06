@@ -1,117 +1,132 @@
 {% extends 'index.html' %}
+{% load static %}
 
 {% block content %}
-<div class="container py-5 mt-0 mb-0">
-    <h1 class="text-center mb-4 text-primary fw-bold">Base documentaire</h1>
-    {% if documents %}
-    <div class="d-flex flex-column align-items-center">
-        {% for document in documents %}
-        <div class="card shadow-sm mb-4 w-75">
-            <div class="card-body p-1">
-                <h5 class="card-title mb-1">{{ document.name }}</h5>
-                <p class="card-text mb-0"><strong>Structure :</strong> {{ document.structure }}</p>
-                <p class="card-text mb-1">{{ document.description|truncatechars:100 }}</p>
-                <div class="d-flex justify-content-between mt-1">
-                    <a href="{{ document.file.url }}" class="btn btn-primary btn-sm">Télécharger</a>
-                    {% if document.uploaded_by == request.user %}
-                        <a href="{% url 'edit_document' document_type=document_type pk=document.pk %}" class="btn btn-secondary btn-sm">Modifier</a>
-                    {% endif %}
-                    <a href="{% url 'document_detail' document_type=document_type pk=document.pk %}" class="btn btn-info btn-sm">Voir plus</a>
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>{{ document_type|capfirst }} - Documents</title>
+
+    <!-- Fichiers nécessaires DearFlip -->
+    <link href="{% static 'dflip/css/dflip.min.css' %}" rel="stylesheet">
+    <link href="{% static 'dflip/css/themify-icons.min.css' %}" rel="stylesheet">
+    <style>
+        .dflip-container {
+            background: transparent !important;
+        }
+
+        .dflip-book .df-ui.df-controls {
+            background: rgba(255, 255, 255, 0.8) !important;
+            backdrop-filter: blur(5px);
+        }
+
+        .dflip-book .df-page {
+            box-shadow: none !important;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div class="container py-5">
+        <h1 class="text-center mb-4">Documents - {{ document_type|capfirst }}</h1>
+
+        <div class="pdf-gallery row g-3">
+            {% for document in documents %}
+            <div class="col-6 col-md-3 col-xl-5ths"> <!-- 6/4/5 colonnes -->
+                <div class="_df_thumb" source="{{ document.file.url }}"
+                    thumb="{% if document.cover %}{{ document.cover.url }}{% else %}{% static 'images/default-cover.jpg' %}{% endif %}">
+
+                    <div class="document-info">
+                        <small>{{ document.uploaded_at|date:"d M Y" }}</small>
+                    </div>
                 </div>
+                <h5 class="mb-2 mt-2 text-truncate">{{ document.name }}</h5>
             </div>
-            <div class="card-footer text-muted py-1">
-                <small>Ajouté le {{ document.uploaded_at|date:"d M Y H:i" }}</small>
-                {% if document.uploaded_at != document.updated_at %}
-                <br><small>Dernière modification : {{ document.updated_at|date:"d M Y H:i" }}</small>
+            {% empty %}
+            <div class="col-12 text-center">
+                <p class="text-muted">Aucun document disponible</p>
+            </div>
+            {% endfor %}
+
+            <!-- Bouton en dehors de la boucle -->
+            <div class="col-12 text-center mt-5">
+                {% if user.is_authenticated %}
+                <a href="{% url 'add_document' document_type=document_type %}"
+                    class="btn btn-success btn-lg d-inline-flex align-items-center">
+                    <span class="me-2">+</span> Ajouter un document
+                </a>
                 {% endif %}
             </div>
         </div>
-        {% endfor %}
-    </div>
-    {% else %}
-    <div class="no-news text-center">
-        <h3 class="text-warning">Aucun document disponible !</h3>
-    </div>
-    {% endif %}
 
-    <!-- Bouton d'ajout -->
-    <div class="text-center mt-5">
-        {% if is_member %}
-        <a href="{% url 'add_document' document_type=document_type %}" class="btn btn-success btn-lg d-inline-flex align-items-center">
-            <span class="me-2">+</span> Ajouter un document
-        </a>
-        {% else %}
-        <a href="{% url 'add_document' document_type=document_type %}" class="btn btn-success btn-lg d-inline-flex align-items-center">
-            <span class="me-2">+</span> Ajouter un document
-        </a>
+        <style>
+            /* Solution pour 5 colonnes sur PC */
+            @media (min-width: 1200px) {
+                .col-xl-5ths {
+                    flex: 0 0 20%;
+                    max-width: 20%;
+                }
+            }
+        </style>
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Précédent</a>
+                </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Suivant</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
         {% endif %}
     </div>
-</div>
 
-<!-- Modale pour inviter à se connecter -->
-<div class="modal fade" id="loginModal2" tabindex="-1" aria-labelledby="loginModalLabel2" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Accès restreint</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                Vous devez être membre et connecté(e) pour ajouter un document. Veuillez vous connecter ou vous inscrire.
-            </div>
-            <div class="modal-footer">
-                <a class="btn btn-secondary" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">Se connecter</a>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock %}
+    <!-- Scripts DearFlip -->
+    <script src="{% static 'dflip/js/libs/jquery.min.js' %}"></script>
+    <script src="{% static 'dflip/js/dflip.min.js' %}"></script>
 
-{% block extra_styles %}
-<style>
-    .no-news {
-        height: 50vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        color: #6c757d;
-    }
-    .text-warning {
-        color: #ff5722; /* Couleur orange pour attirer l'attention */
-        font-weight: bold;
-    }
-    .btn-success {
-        border-radius: 50px;
-        padding: 6px 14px;
-        font-size: 1.125rem;
-        font-weight: bold;
-    }
-    .btn-success span {
-        font-size: 1.5rem;
-    }
-    .btn-secondary {
-        border-radius: 50px;
-        padding: 6px 14px;
-        font-size: 1.125rem;
-        font-weight: bold;
-        background-color: #6c757d;
-        color: white;
-    }
-    .btn-secondary span {
-        font-size: 1.5rem;
-    }
-    .card {
-        margin-bottom: 1rem;
-    }
-    .card-body p {
-        margin-bottom: 0.25rem;
-    }
-    .card-footer {
-        padding: 0.25rem;
-    }
-    .card-body {
-        padding: 0.5rem;
-    }
-</style>
+    <script>
+        // Initialisation de DearFlip
+        document.addEventListener('DOMContentLoaded', function () {
+            DFlip.initialize();
+        });
+    </script>
+    <script>
+        // Configuration personnalisée
+        const dFlipOptions = {
+            transparent: true, // Active la transparence
+            backgroundColor: "transparent", // Fond transparent
+            webglShadow: false, // Désactive l'ombre 3D
+            backgroundImage: "", // Supprime l'image de fond
+            textureLoadFallback: "transparent", // Texture de fallback transparente
+            controlsPosition: DFLIP.CONTROLSPOSITION.TOP // Ajuste la position des contrôles
+        };
+
+        // Initialisation de DearFlip avec options
+        document.addEventListener('DOMContentLoaded', function () {
+            DFlip.initialize({
+                _df_book: dFlipOptions,
+                _df_thumb: dFlipOptions
+            });
+        });
+    </script>
+</body>
+
+</html>
 {% endblock %}

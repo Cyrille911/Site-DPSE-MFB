@@ -10,6 +10,7 @@ from pptx import Presentation
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.core.exceptions import ValidationError
 
 # Modules Django
 from django.shortcuts import render, redirect, get_object_or_404
@@ -147,26 +148,24 @@ def document_detail(request, document_type, pk):
         'document_type':document_type
     })
 
+# Modifications pour la vue add_document
 def add_document(request, document_type):
-
     Document = DOCUMENT_MODELS.get(document_type)
     
     if request.method == 'POST':
-        # Récupérer les données depuis le formulaire HTML
         name = request.POST.get('name')
         structure = request.POST.get('structure')
         description = request.POST.get('description')
         pans = request.POST.get('pans')
         results = request.POST.get('results')
         file = request.FILES.get('file')
+        cover = request.FILES.get('cover')  # Nouveau champ
 
         if not file:
-            # Gérer le cas où aucun fichier n'est envoyé
             return render(request, 'documents/add_document.html', {
                 'error': "Veuillez télécharger un fichier."
             })
 
-        # Créer un nouvel objet Document
         document = Document(
             name=name,
             structure=structure,
@@ -174,57 +173,78 @@ def add_document(request, document_type):
             pans=pans,
             results=results,
             file=file,
+            cover=cover,  # Ajout de la couverture
             uploaded_by=request.user
         )
 
-        # Enregistrer le document tout en appliquant la logique de sauvegarde personnalisée
-        document.save()
+        try:
+            document.full_clean()
+            document.save()
+            messages.success(request, "Document ajouté avec succès!")
+            return redirect('document_list', document_type=document_type)
+        except ValidationError as e:
+            messages.error(request, f"Erreur de validation : {e}")
 
-        return redirect('document_list', document_type=document_type)
+    return render(request, 'documents/add_document.html', {'document_type': document_type})
 
-    return render(request, 'documents/add_document.html', {'document_type':document_type})
-
+# Modifications pour la vue edit_document
 @login_required
 def edit_document(request, document_type, pk):
-
     Document = DOCUMENT_MODELS.get(document_type)
-
-    # Récupérer le document à modifier
     document = get_object_or_404(Document, pk=pk)
 
     if request.method == 'POST':
-        # Mise à jour des champs du document
         document.name = request.POST.get('name', document.name)
         document.structure = request.POST.get('structure', document.structure)
         document.description = request.POST.get('description', document.description)
         document.pans = request.POST.get('pans', document.pans)
         document.results = request.POST.get('results', document.results)
 
-        # Si un nouveau fichier est téléchargé, on le met à jour
+        # Gestion du fichier principal
         if 'file' in request.FILES:
+            if document.file:
+                os.remove(document.file.path)
             document.file = request.FILES['file']
 
-        # Sauvegarder le document après modification
-        document.save()
+        # Gestion de la couverture
+        if 'cover' in request.FILES:
+            if document.cover:
+                os.remove(document.cover.path)
+            document.cover = request.FILES['cover']
 
-        # Rediriger vers une page de détails du document après modification
-        return redirect('document_detail', document_type=document_type, pk=document.pk)
+        try:
+            document.full_clean()
+            document.save()
+            messages.success(request, "Document modifié avec succès!")
+            return redirect('document_detail', document_type=document_type, pk=document.pk)
+        except ValidationError as e:
+            messages.error(request, f"Erreur de validation : {e}")
 
-    return render(request, 'documents/edit_document.html', {'document': document,'document_type':document_type})
+    return render(request, 'documents/edit_document.html', {
+        'document': document,
+        'document_type': document_type
+    })
 
+# Modifications pour la vue delete_document
 @login_required
 def delete_document(request, document_type, pk):
-
     Document = DOCUMENT_MODELS.get(document_type)
-    
-    # Récupérer le document à supprimer
     document = get_object_or_404(Document, pk=pk)
 
     if request.method == 'POST':
-        # Supprimer le document
+        # Suppression des fichiers associés
+        if document.file:
+            if os.path.isfile(document.file.path):
+                os.remove(document.file.path)
+        if document.cover:
+            if os.path.isfile(document.cover.path):
+                os.remove(document.cover.path)
+        
         document.delete()
-        # Rediriger vers la liste des documents après la suppression
-        messages.success(request, "Le document a été supprimé avec succès.")
+        messages.success(request, "Document supprimé avec succès!")
         return redirect('document_list', document_type=document_type)
 
-    return render(request, 'documents/detail_document.html', {'document': document,'document_type':document_type})
+    return render(request, 'documents/delete_confirm.html', {
+        'document': document,
+        'document_type': document_type
+    })

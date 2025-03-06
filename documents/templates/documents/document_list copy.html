@@ -1,0 +1,117 @@
+{% extends 'index.html' %}
+
+{% block content %}
+<div class="container py-5 mt-0 mb-0">
+    <h1 class="text-center mb-4 text-primary fw-bold">Base documentaire</h1>
+    {% if documents %}
+    <div class="d-flex flex-column align-items-center">
+        {% for document in documents %}
+        <div class="card shadow-sm mb-4 w-75">
+            <div class="card-body p-1">
+                <h5 class="card-title mb-1">{{ document.name }}</h5>
+                <p class="card-text mb-0"><strong>Structure :</strong> {{ document.structure }}</p>
+                <p class="card-text mb-1">{{ document.description|truncatechars:100 }}</p>
+                <div class="d-flex justify-content-between mt-1">
+                    <a href="{{ document.file.url }}" class="btn btn-primary btn-sm">Télécharger</a>
+                    {% if document.uploaded_by == request.user %}
+                        <a href="{% url 'edit_document' document_type=document_type pk=document.pk %}" class="btn btn-secondary btn-sm">Modifier</a>
+                    {% endif %}
+                    <a href="{% url 'document_detail' document_type=document_type pk=document.pk %}" class="btn btn-info btn-sm">Voir plus</a>
+                </div>
+            </div>
+            <div class="card-footer text-muted py-1">
+                <small>Ajouté le {{ document.uploaded_at|date:"d M Y H:i" }}</small>
+                {% if document.uploaded_at != document.updated_at %}
+                <br><small>Dernière modification : {{ document.updated_at|date:"d M Y H:i" }}</small>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="no-news text-center">
+        <h3 class="text-warning">Aucun document disponible !</h3>
+    </div>
+    {% endif %}
+
+    <!-- Bouton d'ajout -->
+    <div class="text-center mt-5">
+        {% if is_member %}
+        <a href="{% url 'add_document' document_type=document_type %}" class="btn btn-success btn-lg d-inline-flex align-items-center">
+            <span class="me-2">+</span> Ajouter un document
+        </a>
+        {% else %}
+        <a href="{% url 'add_document' document_type=document_type %}" class="btn btn-success btn-lg d-inline-flex align-items-center">
+            <span class="me-2">+</span> Ajouter un document
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modale pour inviter à se connecter -->
+<div class="modal fade" id="loginModal2" tabindex="-1" aria-labelledby="loginModalLabel2" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Accès restreint</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Vous devez être membre et connecté(e) pour ajouter un document. Veuillez vous connecter ou vous inscrire.
+            </div>
+            <div class="modal-footer">
+                <a class="btn btn-secondary" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">Se connecter</a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .no-news {
+        height: 50vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: #6c757d;
+    }
+    .text-warning {
+        color: #ff5722; /* Couleur orange pour attirer l'attention */
+        font-weight: bold;
+    }
+    .btn-success {
+        border-radius: 50px;
+        padding: 6px 14px;
+        font-size: 1.125rem;
+        font-weight: bold;
+    }
+    .btn-success span {
+        font-size: 1.5rem;
+    }
+    .btn-secondary {
+        border-radius: 50px;
+        padding: 6px 14px;
+        font-size: 1.125rem;
+        font-weight: bold;
+        background-color: #6c757d;
+        color: white;
+    }
+    .btn-secondary span {
+        font-size: 1.5rem;
+    }
+    .card {
+        margin-bottom: 1rem;
+    }
+    .card-body p {
+        margin-bottom: 0.25rem;
+    }
+    .card-footer {
+        padding: 0.25rem;
+    }
+    .card-body {
+        padding: 0.5rem;
+    }
+</style>
+{% endblock %}

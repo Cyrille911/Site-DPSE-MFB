@@ -50,7 +50,8 @@
             <div class="row">
                 <div class="col-12">
                     <div class="wpo-breadcumb-wrap">
-                        <h2>{{ news.headline }}</h2>
+                        <!-- <h2>{{ news.headline }}</h2> -->
+                        <h2>Actualités du MFB</h2>
                         <ul>
                             <li><a href="#">Accueil</a></li>
                             <li><span>Actualités</span></li>
@@ -71,16 +72,19 @@
                             <!-- Entry Media -->
                             <div class="entry-media">
                                 {% if news.image %}
-                                    <img src="{{ news.image.url }}" alt="{{ news.headline }}" class="img img-responsive">
+                                <img src="{{news.image.url}}" alt="{{news.headline}}" class="img img-responsive">
                                 {% else %}
-                                    <img src="{% static 'assets/images/blog/default.jpg' %}" alt="Image non disponible" class="img img-responsive">
+                                <img src="{% static 'assets/images/blog/default.jpg' %}" alt="Image non disponible"
+                                    class="img img-responsive">
                                 {% endif %}
                             </div>
                             <!-- Entry Meta -->
                             <div class="entry-meta">
                                 <ul>
-                                    <li><i class="fi flaticon-user"></i> By <a href="#">{{ news.creator.get_full_name|default:news.creator.username }}</a></li>
-                                    <li><i class="fi flaticon-comment-white-oval-bubble"></i> Comments {{ news.comment_count }}</li>
+                                    <li><i class="fi flaticon-user"></i> By <a href="#">
+                                            {{news.creator.get_full_name|default:news.creator.username}}</a></li>
+                                    <li><i class="fi flaticon-comment-white-oval-bubble"></i> Comments
+                                        {{news.comment_count}}</li>
                                     <li><i class="fi flaticon-calendar"></i> {{ news.published_at|date:"d M Y" }}</li>
                                 </ul>
                             </div>
@@ -96,23 +100,34 @@
                             <div class="comments-section">
                                 <h3 class="comments-title">{{ news.comment_count }} Commentaires</h3>
                                 <ol class="comments">
-                                    {% for comment in news.comments.all %}
+                                    {% for comment in comments %}
                                     <li class="comment even thread-even depth-1" id="comment-{{ comment.id }}">
                                         <div id="div-comment-{{ comment.id }}">
                                             <div class="comment-theme">
                                                 <div class="comment-image">
-                                                    <img src="{% static 'assets/images/blog-details/comments-author/img-1.jpg' %}" alt="Commentateur">
+                                                    {% if comment.user.photo %}
+                                                    <img src="{{ comment.user.photo.url }}" alt="Commentateur">
+                                                    {% else %}
+                                                    <div class="rounded-circle bg-success text-white d-flex justify-content-center align-items-center"
+                                                        style="width:80px; height:80px; font-size:18px; font-weight:bold;">
+                                                        {{comment.user.first_name|default:comment.user.username|slice:":1"}}
+                                                    </div>
+                                                    {% endif %}
                                                 </div>
                                             </div>
+
                                             <div class="comment-main-area">
                                                 <div class="comment-wrapper">
                                                     <div class="comments-meta">
-                                                        <h4>{{ comment.user.get_full_name|default:comment.user.username }} <span class="comments-date">says {{ comment.created_at|date:"d M Y \\a\\t H:i" }}</span></h4>
+                                                        <h4>
+                                                            {{comment.user.get_full_name|default:comment.user.username}}
+                                                            <span class="comments-date">Date
+                                                                {{ comment.created_at|date:"d M Y \\a\\t H:i" }}</span>
+                                                        </h4>
                                                     </div>
                                                     <div class="comment-area">
                                                         <p>{{ comment.content }}</p>
                                                         <div class="comments-reply">
-                                                            <a class="comment-reply-link" href="#"><span>Reply</span></a>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -124,22 +139,26 @@
                                     {% endfor %}
                                 </ol>
                             </div>
+
+                            <!-- Formulaire pour ajouter un commentaire -->
                             <div class="comment-respond">
                                 <h3 class="comment-reply-title">Laisser un commentaire</h3>
-                                <form class="comment-form" method="post" action="#">
+                                {% if user.is_authenticated %}
+                                <form class="comment-form" method="POST" action="{% url 'add_newscomment' news.pk %}"
+                                    id="add_comment">
                                     {% csrf_token %}
-                                    <div class="form-inputs">
-                                        <input placeholder="Nom" name="name" type="text" required>
-                                        <input placeholder="Email" name="email" type="email" required>
-                                        <input placeholder="Site web" name="website" type="url">
-                                    </div>
-                                    <div class="form-textarea">
-                                        <textarea id="comment" name="comment" placeholder="Ecrivez votre commentaire..." required></textarea>
-                                    </div>
-                                    <div class="form-submit">
-                                        <input id="submit" value="Poster le commentaire" type="submit">
-                                    </div>
+                                    <textarea name="comment" rows="4" class="form-control mt-3"
+                                        placeholder="Votre commentaire ici... 😊" required></textarea>
+                                    <button type="submit" style="background-color: #ff7200;"
+                                        class="btn mt-3 w-100">Ajouter le commentaire
+                                        📝</button>
                                 </form>
+                                {% else %}
+                                <p class="text-muted text-center">
+                                    <a href="#" data-bs-toggle="modal" data-bs-target="#loginModal">Connectez-vous</a>
+                                    pour laisser un commentaire 🔒.
+                                </p>
+                                {% endif %}
                             </div>
                         </div> <!-- end comments-area -->
                     </div>
@@ -148,11 +167,28 @@
                     <div class="blog-sidebar">
                         <!-- About Widget -->
                         <div class="widget about-widget">
-                            <div class="img-holder">
-                                <img src="{% static 'assets/images/blog/about-widget.jpg' %}" alt="À propos">
+                            <div class="img-holder row">
+                                <div class="col-1 m-2"></div>
+                                <div class="col-6">
+                                    <!-- <img src="{% static 'assets/images/blog/about-widget.jpg' %}" alt="À propos"> -->
+                                    {% if comment.user.photo %}
+                                    <img src="{{ news.creator.get_full_name|default:news.creator.photo.url }}"
+                                        class="rounded-circle shadow-sm" width="50" height="50"
+                                        alt="{{ comment.user.get_full_name|default:comment.user.username }}">
+                                    {% else %}
+                                    <div class="rounded-circle m-l-5 bg-success text-white d-flex justify-content-center align-items-center shadow-sm"
+                                        style="width: 200px; height: 200px; font-size: 18px; font-weight: bold;">
+                                        {{news.creator.get_full_name|default:news.creator.first_name|default:""|slice:":1"}}
+                                        {{news.creator.get_full_name|default:news.creator.last_name|default:""|slice:":1"}}
+                                    </div>
+                                    {% endif %}
+
+                                </div>
+
                             </div>
                             <h4>{{ news.creator.get_full_name|default:news.creator.username }}</h4>
-                            <p>Découvrez les dernières actualités et analyses financières du Ministère des Finances de Côte d'Ivoire.</p>
+                            <p>Découvrez les dernières actualités et analyses financières du Ministère des Finances de
+                                Côte d'Ivoire. </p>
                             <div class="social">
                                 <ul class="clearfix">
                                     <li><a href="#"><i class="ti-facebook"></i></a></li>
@@ -186,29 +222,6 @@
                                 <li><a href="#">International<span>(08)</span></a></li>
                             </ul>
                         </div>
-                        <!-- Recent Post Widget -->
-                        <div class="widget recent-post-widget">
-                            <h3>Articles Populaires</h3>
-                            <div class="posts">
-                                {% for recent in recent_news %}
-                                <div class="post">
-                                    <div class="img-holder">
-                                        {% if recent.image %}
-                                            <img src="{{ recent.image.url }}" alt="{{ recent.headline }}">
-                                        {% else %}
-                                            <img src="{% static 'assets/images/recent-posts/img-1.jpg' %}" alt="Image par défaut">
-                                        {% endif %}
-                                    </div>
-                                    <div class="details">
-                                        <span class="date">{{ recent.published_at|date:"d M Y" }}</span>
-                                        <h4><a href="{% url 'news_detail' recent.id %}">{{ recent.headline }}</a></h4>
-                                    </div>
-                                </div>
-                                {% empty %}
-                                <p>Aucun article populaire.</p>
-                                {% endfor %}
-                            </div>
-                        </div>
                         <!-- Contact Widget -->
                         <div class="wpo-contact-widget widget">
                             <h2>Comment pouvons-nous vous aider ?</h2>
@@ -220,8 +233,24 @@
             </div>
         </div> <!-- end container -->
     </section>
-    <!-- end wpo-blog-single-section -->
+    <!-- End Blog Single Section -->
 </div>
+
+<script>
+    // JavaScript pour l'édition de commentaire (si nécessaire)
+    const editButtons = document.querySelectorAll('.edit-comment');
+    editButtons.forEach(button => {
+        button.addEventListener('click', function () {
+            const commentId = this.getAttribute('data-comment-id');
+            const formContainer = document.getElementById(`edit-comment-${commentId}`);
+            const commentText = document.getElementById(`comment-text-${commentId}`);
+            // Toggle l'affichage du formulaire d'édition
+            formContainer.style.display = formContainer.style.display === 'none' ? 'block' : 'none';
+            commentText.style.display = commentText.style.display === 'none' ? 'block' : 'none';
+        });
+    });
+</script>
+
 {% endblock content %}
 
 {% block script %}

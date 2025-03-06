@@ -29,8 +29,16 @@
             <textarea class="form-control" id="results" name="results" rows="3" required></textarea>
         </div>
         <div class="mb-3">
-            <label for="file" class="form-label">Fichier</label>
+            <label for="file" class="form-label">Fichier principal</label>
             <input type="file" class="form-control" id="file" name="file" required>
+            <small class="form-text text-muted">Formats acceptés: PDF, DOCX, XLSX, PPTX</small>
+        </div>
+        <div class="mb-3">
+            <label for="cover" class="form-label">Image de couverture</label>
+            <input type="file" class="form-control" id="cover" name="cover" accept="image/jpeg, image/png, image/jpg">
+            <small class="form-text text-muted">
+                Formats acceptés: JPG, PNG (Max 2MB)
+            </small>
         </div>
         <button type="submit" class="btn btn-success">Enregistrer</button>
     </form>
