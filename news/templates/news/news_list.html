@@ -131,7 +131,7 @@
     }
 
     .modal-header {
-        padding: 1.5rem 1.5rem 0.75rem;
+        padding: 0;
         color: var(--text-primary);
     }
 
@@ -141,7 +141,7 @@
     }
 
     .modal-content {
-        padding: 0 1.5rem 1.5rem;
+        padding: 0;
         background-color: #1e1e1e;
     }
 
@@ -415,47 +415,6 @@
                                 <li><a href="#">International<span>(08)</span></a></li>
                             </ul>
                         </div>
-                        <!-- <div class="widget recent-post-widget">
-                            <h3>Articles Populaires</h3>
-                            <div class="posts">
-                                <div class="post">
-                                    <div class="img-holder">
-                                        <img src="{% static 'assets/images/recent-posts/img-1.jpg' %}" alt="Post 1">
-                                    </div>
-                                    <div class="details">
-                                        <span class="date">15 Feb 2025</span>
-                                        <h4><a href="#">Réformes Budgétaires Clés</a></h4>
-                                    </div>
-                                </div>
-                                <div class="post">
-                                    <div class="img-holder">
-                                        <img src="{% static 'assets/images/recent-posts/img-2.jpg' %}" alt="Post 2">
-                                    </div>
-                                    <div class="details">
-                                        <span class="date">16 Feb 2025</span>
-                                        <h4><a href="#">Perspectives d'Investissement</a></h4>
-                                    </div>
-                                </div>
-                                <div class="post">
-                                    <div class="img-holder">
-                                        <img src="{% static 'assets/images/recent-posts/img-3.jpg' %}" alt="Post 3">
-                                    </div>
-                                    <div class="details">
-                                        <span class="date">17 Feb 2025</span>
-                                        <h4><a href="#">Digitalisation des Finances</a></h4>
-                                    </div>
-                                </div>
-                                <div class="post">
-                                    <div class="img-holder">
-                                        <img src="{% static 'assets/images/recent-posts/img-4.jpg' %}" alt="Post 4">
-                                    </div>
-                                    <div class="details">
-                                        <span class="date">17 Feb 2025</span>
-                                        <h4><a href="#">Budget Citoyen : Informer les citoyens</a></h4>
-                                    </div>
-                                </div>
-                            </div>
-                        </div> -->
                         <div class="wpo-add-widget">
                             <a href="#"><img src="{% static 'assets/images/add.jpg' %}" alt="Publicité"></a>
                         </div>
@@ -492,20 +451,20 @@
 <!-- Ajoutez ce code juste après l'ouverture de la balise <body> dans votre template parent -->
 <div class="modal fade video-modal" id="videoModal" tabindex="-1" role="dialog" aria-hidden="true"
     style="display: none;">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 bg-transparent">
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-            <div class="modal-body">
-                <div class="embed-responsive embed-responsive-16by9">
-                    <iframe class="embed-responsive-item"
-                        src="https://www.youtube.com/embed/nSXLMC-ZB5g?autoplay=1&mute=1&rel=0"
-                        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
-                    </iframe>
-                </div>
+    <div class="modal-content border-0 bg-transparent">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+        <div class="modal-body">
+            <div class="embed-responsive embed-responsive-16by9">
+                <iframe class="embed-responsive-item"
+                    src="https://www.youtube.com/embed/nSXLMC-ZB5g?autoplay=1&mute=1&rel=0"
+                    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
+                </iframe>
             </div>
         </div>
+        <!-- <div class="modal-dialog modal-dialog-centered">
+        </div> -->
     </div>
 </div>
 {% endblock content %}

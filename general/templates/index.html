@@ -26,11 +26,85 @@
   <!-- Main CSS File -->
   <link href="{% static 'general/css/main.css' %}" rel="stylesheet">
 
+  <style>
+    .footer-section {
+      flex: 1;
+      min-width: 250px;
+    }
+
+    .footer-section h3 {
+      margin-bottom: 15px;
+      font-size: 18px;
+    }
+
+    .footer-menu {
+      list-style: none;
+    }
+
+    .menu-item {
+      margin-bottom: 10px;
+    }
+
+    .menu-item a {
+      color: #ccc;
+      text-decoration: none;
+    }
+
+    .menu-item a:hover {
+      color: #ff7200;
+    }
+
+    .menu-title {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      color: #ccc;
+    }
+
+    .menu-title:hover {
+      color: white;
+    }
+
+    .chevron {
+      font-size: 10px;
+      margin-right: 8px;
+      transition: transform 0.3s;
+    }
+
+    .menu-item.active .chevron {
+      transform: rotate(90deg);
+    }
+
+    /* Style pour la transition fluide des sous-menus */
+    .submenu {
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      margin-left: 18px;
+      transform: translateY(-10px);
+      transition: max-height 0.3s ease, opacity 0.3s ease, transform 0.3s ease;
+    }
+
+
+    .menu-item.active .submenu {
+      max-height: 500px;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .menu-item:hover .submenu {
+      max-height: 500px;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .submenu li {
+      margin-bottom: 5px;
+    }
+  </style>
+
   {% block style %}
-
-
   {% endblock %}
-
 </head>
 
 <body class="index-page">
@@ -41,7 +115,7 @@
       <a href="{% url 'mfb_presentation' %}" class="logo d-flex align-items-center me-auto me-lg-0">
         <h1 class="sitename">La DPSE</h1>
       </a>
-  
+
       <!-- Menu de navigation -->
       <nav id="navmenu" class="navmenu">
         <ul>
@@ -60,9 +134,12 @@
               <li class="dropdown">
                 <a href="#"><span>Documents DPSE</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
                 <ul>
-                  <li><a href="{% url 'document_list' document_type='dpse_planification' %}">Prospectives et Planification</a></li>
-                  <li><a href="{% url 'document_list' document_type='dpse_suivi_evaluation' %}">Programmation et Suivi-Evaluation</a></li>
-                  <li><a href="{% url 'document_list' document_type='dpse_statistiques' %}">Etudes et Statistiques</a></li>
+                  <li><a href="{% url 'document_list' document_type='dpse_planification' %}">Prospectives et
+                      Planification</a></li>
+                  <li><a href="{% url 'document_list' document_type='dpse_suivi_evaluation' %}">Programmation et
+                      Suivi-Evaluation</a></li>
+                  <li><a href="{% url 'document_list' document_type='dpse_statistiques' %}">Etudes et Statistiques</a>
+                  </li>
                   <li><a href="{% url 'document_list' document_type='dpse_qualite' %}">Qualité et Normalisation</a></li>
                 </ul>
               </li>
@@ -99,10 +176,11 @@
           <li class="mobile-only">
             <a href="#" data-bs-toggle="modal" data-bs-target="#profileModal" class="d-flex align-items-center">
               {% if request.user.photo %}
-              <img src="{{ request.user.photo.url }}" class="rounded-circle" width="30" height="30" alt="Photo" style="margin-right: 10px;">
+              <img src="{{ request.user.photo.url }}" class="rounded-circle" width="30" height="30" alt="Photo"
+                style="margin-right: 10px;">
               {% else %}
               <div class="rounded-circle bg-success text-white d-flex justify-content-center align-items-center"
-                   style="width: 30px; height: 30px; font-size: 14px; font-weight: bold; margin-right: 10px;">
+                style="width: 30px; height: 30px; font-size: 14px; font-weight: bold; margin-right: 10px;">
                 {{ request.user.first_name|default:''|slice:":1" }}{{ request.user.last_name|default:''|slice:":1" }}
               </div>
               {% endif %}
@@ -117,7 +195,7 @@
         </ul>
         <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
       </nav>
-  
+
       <!-- Profil ou connexion (visible uniquement sur desktop) -->
       <!-- <div class="desktop-only d-flex align-items-center">
         {% if request.user.is_authenticated %}
@@ -292,55 +370,124 @@
           <div class="col-lg-2 col-md-3 footer-links">
             <h4>A propos de nous</h4>
             <ul>
-              <li><i class="bi bi-chevron-right"></i> <a href="https://finances.gouv.ci//"> Le Ministère</a></li>
-              <li><i class="bi bi-chevron-right"></i> <a href="#"> La DPSE</a></li>
-              <li><i class="bi bi-chevron-right"></i> <a href="#"> Objectif Stratégique</a></li>
-              <li><i class="bi bi-chevron-right"></i> <a href="#"> Notre vision</a></li>
-              <li><i class="bi bi-chevron-right"></i> <a href="#"> Manuel de procédure</a></li>
+              <li> <a href="https://finances.gouv.ci//"> Le Ministère</a></li>
+              <li> <a href="#"> La DPSE</a></li>
+              <li> <a href="#"> Objectif Stratégique</a></li>
+              <li> <a href="#"> Notre vision</a></li>
+              <li> <a href="#"> Manuel de procédure</a></li>
             </ul>
           </div>
 
           <div class="col-lg-2 col-md-3 footer-links">
             <h4>Nos Services</h4>
             <ul>
-              <li><i class="bi bi-chevron-right"></i> <a href="#"> Prospectives et Planification</a></li>
-              <li><i class="bi bi-chevron-right"></i> <a href="#"> Programmation et <br> Suivi-Evaluation</a></li>
-              <li><i class="bi bi-chevron-right"></i> <a href="#"> Statistiques</a></li>
-              <li><i class="bi bi-chevron-right"></i> <a href="#"> Qualité et Normalisation</a></li>
+              <li><a href="#"> Prospectives et Planification</a></li>
+              <li><a href="#"> Programmation et <br> Suivi-Evaluation</a></li>
+              <li><a href="#"> Statistiques</a></li>
+              <li><a href="#"> Qualité et Normalisation</a></li>
             </ul>
           </div>
 
-          <div class="col-lg-2 col-md-3 footer-links">
-            <h4>Cadre de référence</h4>
-            <ul>
-              <li><i class="bi bi-chevron-right"></i> <a href="#"> Feuille de Route</a></li>
-              <li><i class="bi bi-chevron-right"></i> <a
-                  href="https://www.gouv.ci/_actualite-article.php?recordID=13585&d=1#:~:text=L'objectif%20principal%20du%20PND,interm%C3%A9diaire%20de%20la%20tranche%20sup%C3%A9rieure.">
-                  Plan National de Développement</a></li>
-              <li><i class="bi bi-chevron-right"></i> <a href="https://au.int/fr/agenda2063/vue-ensemble"> Agenda
-                  2063</a></li>
-              <li><i class="bi bi-chevron-right"></i> <a
-                  href="https://documents.economie-ivoirienne.ci/index.php?p=fstream-pdf&fid=12&bid=10"> Vision 2030</a>
+          <!-- Section Cadre de référence avec flèches -->
+          <!-- Section Cadre de référence avec flèches -->
+          <div class="footer-section">
+            <h3>Cadre de référence</h3>
+            <ul class="footer-menu">
+              <li class="menu-item has-submenu">
+                <div class="menu-title">
+                  <span class="chevron"><i class="bi bi-chevron-right"></i></span>
+                  <span>Cadre national</span>
+                </div>
+                <ul class="submenu">
+                  <li><a href="https://www.gouv.ci/">Plan national de Développement</a></li>
+                  <li><a href="https://www.gouv.ci/">Feuille de Route du Gouv</a></li>
+                  <li><a href="https://www.gouv.ci/">Plan d'Action Stratégique</a></li>
+                  <li><a href="https://www.gouv.ci/">Plan d'Actions Operationnels</a></li>
+                </ul>
               </li>
-              <li><i class="bi bi-chevron-right"></i> <a
-                  href="https://www.sosve.org/objectifs-de-developpement-durable-post-2015/?gad_source=1&gclid=CjwKCAiA2cu9BhBhEiwAft6IxA2fE1QNz7JlR_1soS0ce5xEWYhKibB-uYYagi2VynAVzOF72M5pGRoC4oUQAvD_BwE">
-                  ODD</a></li>
+              <li class="menu-item">
+                <div class="menu-title">
+                  <span class="chevron"></span>
+                  <span>Vision 2030</span>
+                </div>
+              </li>
+              <li class="menu-item">
+                <div class="menu-title">
+                  <span class="chevron"></span>
+                  <span>Agenda 2063</span>
+                </div>
+              </li>
+              <li class="menu-item">
+                <div class="menu-title">
+                  <span class="chevron"></span>
+                  <span>ODD</span>
+                </div>
+              </li>
             </ul>
           </div>
 
-          <div class="col-lg-2 col-md-3 footer-links">
-            <h4>Liens utiles</h4>
-            <ul>
-              <li><i class="bi bi-chevron-right"></i> <a href="https://www.finances.gouv.ci/"> Ministère de l'Économie
-                  et des Finances</a></li>
-              <li><i class="bi bi-chevron-right"></i> <a href="https://budget.gouv.ci/"> Ministère du Budget et du
-                  Portefeuille de l'État</a></li>
-              <li><i class="bi bi-chevron-right"></i> <a href="https://www.dgi.gouv.ci/"> Direction Générale des Impôts
-                  (DGI)</a></li>
-              <li><i class="bi bi-chevron-right"></i> <a href="https://www.douanes.ci/"> Direction Générale des Douanes
-                  (DGD)</a></li>
+          <!-- Section Liens utiles -->
+          <div class="col-lg-2 col-md-3 footer-section">
+            <h3>Liens utiles</h3>
+            <ul class="footer-menu">
+              <li class="menu-item has-submenu">
+                <div class="menu-title">
+                  <span class="chevron"><i class="bi bi-chevron-right"></i></span>
+                  <span>Directions Générales</span>
+                </div>
+                <ul class="submenu">
+                  <li><a href="https://www.dgi.gouv.ci/">DGBF</a></li>
+                  <li><a href="https://www.dgi.gouv.ci/">DGI</a></li>
+                  <li><a href="https://www.douanes.ci/">DGD</a></li>
+                  <li><a href="https://www.gouv.ci/">DGMP</a></li>
+                  <li><a href="https://www.gouv.ci/">DGF</a></li>
+                </ul>
+              </li>
+              <li class="menu-item">
+                <a href="https://annuaire.gouv.ci/">ANStat</a>
+              </li>
+              <li class="menu-item">
+                <a href="https://www.gouv.ci/">DGE</a>
+              </li>
+              <li class="menu-item">
+                <a href="https://annuaire.gouv.ci/">CAIDP</a>
+              </li>
+              <li class="menu-item">
+                <a href="https://www.gouv.ci/">HABG</a>
+              </li>
             </ul>
           </div>
+          <div class="col-lg-2 col-md-3 footer-section">
+            <h3>Liens utiles</h3>
+            <ul class="footer-menu">
+              <li class="menu-item has-submenu">
+                <div class="menu-title">
+                  <span class="chevron"><i class="bi bi-chevron-right"></i></span>
+                  <span>Directions Générales</span>
+                </div>
+                <ul class="submenu">
+                  <li><a href="#dgbf">DGBF</a></li>
+                  <li><a href="#dgi">DGI</a></li>
+                  <li><a href="#dgd">DGD</a></li>
+                  <li><a href="#dgmp">DGMP</a></li>
+                  <li><a href="#dgf">DGF</a></li>
+                </ul>
+              </li>
+              <li class="menu-item">
+                <a href="#anstat">ANStat</a>
+              </li>
+              <li class="menu-item">
+                <a href="#dge">DGE</a>
+              </li>
+              <li class="menu-item">
+                <a href="#caidp">CAIDP</a>
+              </li>
+              <li class="menu-item">
+                <a href="#habg">HABG</a>
+              </li>
+            </ul>
+          </div>
+
         </div>
       </div>
     </div>
@@ -381,6 +528,19 @@
   <!-- Main JS File -->
   <script src="{% static 'general/js/main.js' %}"></script>
 
+  <script>
+    // Gestion des menus déroulants avec flèches
+    document.querySelectorAll('.menu-title').forEach(title => {
+      title.addEventListener('click', function () {
+        const menuItem = this.parentElement;
+
+        // Si l'élément a un sous-menu
+        if (menuItem.classList.contains('has-submenu')) {
+          menuItem.classList.toggle('active');
+        }
+      });
+    });
+  </script>
   {% block script %}
   {% endblock %}
 
