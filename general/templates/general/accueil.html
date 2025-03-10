@@ -4,6 +4,65 @@
 
 {% block title %}Accueil - DPSE{% endblock %}
 
+{% block style %}
+<style>
+  /* Styles pour le popup */
+  .popup {
+    display: none;
+    /* Caché par défaut */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    /* Fond semi-transparent */
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    /* Commence invisible */
+    transition: opacity 0.4s ease-in-out;
+    /* Transition fluide pour l’opacité */
+  }
+
+  .popup.active {
+    display: flex;
+    /* Affiche le popup */
+    opacity: 1;
+    /* Devient visible */
+  }
+
+  .popup-content {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transform: scale(0.8);
+    /* Commence plus petit */
+    opacity: 0;
+    /* Commence invisible */
+    transition: transform 0.4s ease-in-out, opacity 0.4s ease-in-out;
+    /* Transitions fluides */
+  }
+
+  .popup.active .popup-content {
+    transform: scale(1);
+    /* Taille normale */
+    opacity: 1;
+    /* Devient opaque */
+  }
+
+  .close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+    cursor: pointer;
+  }
+</style>
+{% endblock%}
 {% block content %}
 
 <main class="main">
@@ -546,108 +605,95 @@
 
   </section><!-- /Chaine 3PBSE -->
   <!-- Chaine 3PBSE -->
-  <section id="stats" class="stats section">
+  <section id="stats" class="services section"> <!-- ID conservé -->
 
-    <!-- Section Title -->
+    <!-- Titre de la section -->
     <div class="container section-title" data-aos="fade-up">
+      <h2 class="mb-2">Chaine PPPBSE</h2>
       <p>Prospective, Planification, Programmation, Budgétisation, Suivi et Evaluation (3PBSE)</p>
-    </div><!-- End Section Title -->
+    </div><!-- Fin du titre de la section -->
 
-    <div class="container" data-aos="fade-up" data-aos-delay="100">
+    <div class="container">
 
-      <div class="align-items-center justify-content-between">
-        <p>
-          La chaine <strong>PPPBSE</strong> est un processus de gestion stratégique qui repose sur six étapes clés :
-          <strong>Prospective</strong>, <strong>Planification</strong>, <strong>Programmation</strong>,
-          <strong>Budgétisation</strong>, <strong>Suivi</strong> et <strong>Évaluation</strong>.
-          Chaque étape est cruciale pour assurer la réussite d'un projet et garantir des résultats mesurables.
-        </p>
+      <p class="mb-4" style="color:#000000;">
+        La chaine <strong>PPPBSE</strong> est un processus de gestion stratégique qui repose sur six étapes clés :
+        <strong>Prospective</strong>, <strong>Planification</strong>, <strong>Programmation</strong>,
+        <strong>Budgétisation</strong>, <strong>Suivi</strong> et <strong>Évaluation</strong>.
+      </p>
 
-        <div class="row gy-4">
+      <div class="row gy-4" style="color:#d3d3d3;">
 
-          <div class="col-lg-6">
-            <div class="stats-item d-flex">
-              <i class="bi bi-search flex-shrink-0"></i> <!-- Icone pour Prospective -->
-              <div>
-                <h3 class="fw-bold fs-2 mb-3">Prospective</h3>
-                <p><strong>Anticipation des tendances et des scénarios futurs</strong>. La prospective permet d'analyser
-                  les évolutions possibles dans l'environnement interne et externe, en identifiant les opportunités et
-                  les menaces à venir. Cela aide à planifier à long terme et à prendre des décisions éclairées.</p>
-              </div>
+        <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
+          <div class="service-item position-relative">
+            <div class="icon">
+              <i class="bi bi-search"></i>
             </div>
-          </div><!-- End Stats Item -->
+            <h3 style="color:white;">Prospective</h3>
+            <p><strong>Anticipation des tendances et des scénarios futurs</strong>. Analyse des évolutions possibles
+              dans l'environnement interne et externe, identification des opportunités et menaces à venir.</p>
+          </div>
+        </div><!-- Fin de l'élément de service -->
 
-          <div class="col-lg-6">
-            <div class="stats-item d-flex">
-              <i class="bi bi-calendar-check flex-shrink-0"></i> <!-- Icone pour Planification -->
-              <div>
-                <h3 class="fw-bold fs-2 mb-3">Planification</h3>
-                <p><strong>Définition des objectifs clairs et des actions nécessaires</strong>. La planification
-                  consiste à établir un cadre détaillé des actions à mener pour atteindre les objectifs. Cela comprend
-                  l'identification des ressources nécessaires et la définition des priorités.</p>
-              </div>
+        <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
+          <div class="service-item position-relative">
+            <div class="icon">
+              <i class="bi bi-calendar-check"></i>
             </div>
-          </div><!-- End Stats Item -->
+            <h3 style="color:white;">Planification</h3>
+            <p><strong>Définition des objectifs et actions</strong>. Établissement d'un cadre détaillé des actions avec
+              identification des ressources nécessaires et définition des priorités.</p>
+          </div>
+        </div><!-- Fin de l'élément de service -->
 
-          <div class="col-lg-6">
-            <div class="stats-item d-flex">
-              <i class="bi bi-gear flex-shrink-0"></i> <!-- Icone pour Programmation -->
-              <div>
-                <h3 class="fw-bold fs-2 mb-3">Programmation</h3>
-                <p><strong>Organisation des actions et allocation des ressources</strong>. La programmation est l’étape
-                  où les actions définies lors de la planification sont structurées dans le temps, avec des échéances
-                  précises. Elle veille à ce que les ressources humaines et matérielles soient disponibles et
-                  correctement allouées.</p>
-              </div>
+        <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
+          <div class="service-item position-relative">
+            <div class="icon">
+              <i class="bi bi-gear"></i>
             </div>
-          </div><!-- End Stats Item -->
+            <h3 style="color:white;">Programmation</h3>
+            <p><strong>Organisation temporelle des actions</strong>. Structuration des activités avec échéances précises
+              et allocation optimale des ressources humaines/matérielles.</p>
+          </div>
+        </div><!-- Fin de l'élément de service -->
 
-          <div class="col-lg-6">
-            <div class="stats-item d-flex">
-              <i class="bi bi-wallet flex-shrink-0"></i> <!-- Icone pour Budgétisation -->
-              <div>
-                <h3 class="fw-bold fs-2 mb-3">Budgétisation</h3>
-                <p><strong>Prévision et allocation des ressources financières</strong>. La budgétisation consiste à
-                  estimer les coûts et à allouer des fonds pour chaque activité ou projet. Cela permet de s'assurer que
-                  le financement est suffisant et que les ressources sont utilisées de manière optimale.</p>
-              </div>
+        <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="400">
+          <div class="service-item position-relative">
+            <div class="icon">
+              <i class="bi bi-wallet"></i>
             </div>
-          </div><!-- End Stats Item -->
+            <h3 style="color:white;">Budgétisation</h3>
+            <p><strong>Gestion financière prévisionnelle</strong>. Estimation des coûts et allocation des fonds pour une
+              utilisation optimale des ressources financières.</p>
+          </div>
+        </div><!-- Fin de l'élément de service -->
 
-          <div class="col-lg-6">
-            <div class="stats-item d-flex">
-              <i class="bi bi-bar-chart-line flex-shrink-0"></i> <!-- Icone pour Suivi -->
-              <div>
-                <h3 class="fw-bold fs-2 mb-3">Suivi</h3>
-                <p><strong>Contrôle continu des progrès et ajustement des actions</strong>. Le suivi permet de vérifier
-                  l’avancement des actions en temps réel, d’évaluer les écarts par rapport aux objectifs et d’ajuster
-                  les actions si nécessaire pour garantir la réussite du projet.</p>
-              </div>
+        <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="500">
+          <div class="service-item position-relative">
+            <div class="icon">
+              <i class="bi bi-bar-chart-line"></i>
             </div>
-          </div><!-- End Stats Item -->
+            <h3 style="color:white;">Suivi</h3>
+            <p><strong>Contrôle continu des progrès</strong>. Surveillance en temps réel de l'avancement et ajustements
+              des actions pour respecter les objectifs.</p>
+          </div>
+        </div><!-- Fin de l'élément de service -->
 
-          <div class="col-lg-6">
-            <div class="stats-item d-flex">
-              <i class="bi bi-check-circle flex-shrink-0"></i> <!-- Icone pour Évaluation -->
-              <div>
-                <h3 class="fw-bold fs-2 mb-3">Évaluation</h3>
-                <p><strong>Mesure des résultats obtenus et analyse des impacts</strong>. L'évaluation consiste à mesurer
-                  les résultats du projet, à vérifier si les objectifs ont été atteints et à analyser les impacts sur
-                  l’organisation. Cela permet d'identifier les leçons apprises et d'apporter des améliorations pour les
-                  projets futurs.</p>
-              </div>
+        <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="600">
+          <div class="service-item position-relative">
+            <div class="icon">
+              <i class="bi bi-check-circle"></i>
             </div>
-          </div><!-- End Stats Item -->
-
-        </div>
+            <h3 style="color:white;">Évaluation</h3>
+            <p><strong>Mesure des résultats et impacts</strong>. Analyse de l'efficacité du projet et identification des
+              leçons apprises pour les futurs initiatives.</p>
+          </div>
+        </div><!-- Fin de l'élément de service -->
 
       </div>
 
     </div>
 
-  </section><!-- /Chaine 3PBSE -->
-
-
+  </section><!-- Fin de la chaine PPPBSE -->
   <!-- Letmotiv -->
 
   <div class="container section-title" data-aos="fade-up">
@@ -793,8 +839,8 @@
               </div>
 
               <div class="col-md-12 text-center">
-                <div class="loading">Chargement</div>
-                <div class="error-message"></div>
+                <!-- <div class="loading">Chargement</div>
+                <div class="error-message"></div> -->
                 <div class="sent-message">Votre message a été envoyé. Merci!</div>
 
                 <button type="submit">Envoyer</button>
@@ -809,7 +855,69 @@
     </div>
 
   </section><!-- /Contacts -->
-
+  <!-- Popup de confirmation -->
+  <div class="popup" id="popup">
+    <div class="popup-content">
+      <span class="close-btn" id="closePopup">×</span>
+      <p>Merci <span id="userName"></span> pour votre message !</p>
+    </div>
+  </div>
 </main>
 
+{% endblock %}
+{% block script %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const form = document.querySelector(".php-email-form");
+    const popup = document.getElementById("popup");
+    const closePopup = document.getElementById("closePopup");
+    const userNameSpan = document.getElementById("userName");
+
+    form.addEventListener("submit", function (event) {
+      event.preventDefault(); // Empêche l’envoi réel pour cet exemple
+
+      // Récupérer le nom saisi dans le champ "name"
+      const nameInput = form.querySelector('input[name="name"]');
+      const userName = nameInput.value.trim();
+
+      // Simuler un envoi réussi
+      setTimeout(function () {
+        // Insérer le nom dans le popup
+        userNameSpan.textContent = userName || "cher utilisateur";
+
+        // Afficher le popup avec effet fluide
+        popup.classList.add("active");
+
+        // Réinitialiser le formulaire
+        form.reset();
+
+        // Fermer automatiquement après 3 secondes
+        setTimeout(function () {
+          popup.classList.remove("active");
+          setTimeout(function () {
+            popup.style.display = "none"; // Cache après la transition
+          }, 400); // Correspond à la durée de la transition CSS
+        }, 3000); // 3 secondes
+      }, 1000); // Délai de 1 seconde pour simuler l’envoi
+    });
+
+    // Fermer manuellement avec le bouton
+    closePopup.addEventListener("click", function () {
+      popup.classList.remove("active");
+      setTimeout(function () {
+        popup.style.display = "none";
+      }, 400); // Correspond à la durée de la transition CSS
+    });
+
+    // Fermer en cliquant à l’extérieur
+    popup.addEventListener("click", function (event) {
+      if (event.target === popup) {
+        popup.classList.remove("active");
+        setTimeout(function () {
+          popup.style.display = "none";
+        }, 400); // Correspond à la durée de la transition CSS
+      }
+    });
+  });
+</script>
 {% endblock %}

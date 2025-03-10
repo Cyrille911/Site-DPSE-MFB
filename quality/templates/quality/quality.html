@@ -11,6 +11,19 @@
       margin: 0;
       padding: 0;
     }
+
+    /* Animation CSS */
+    .scroll-animation {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.6s ease-out;
+    }
+
+    .scroll-animation.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
     .section-title {
       font-size: 2rem;
       margin-top: 40px;
@@ -19,7 +32,16 @@
       font-weight: bold;
       color: #FF6A13;
       text-transform: uppercase;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.6s ease-out;
     }
+
+    .section-title.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
     .subsection-title {
       font-size: 1.5rem;
       margin-top: 30px;
@@ -27,19 +49,31 @@
       color: #FF6A13;
       font-weight: 600;
     }
+
     .container {
       margin-top: 50px;
       padding: 0 15px;
     }
+
     .card {
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       margin-bottom: 30px;
       transition: transform 0.3s ease-in-out;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.6s ease-out;
     }
+
+    .card.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
     .card:hover {
       transform: translateY(-5px);
     }
+
     .card-header {
       background-color: #FF6A13;
       color: white;
@@ -48,17 +82,20 @@
       border-top-left-radius: 12px;
       border-top-right-radius: 12px;
     }
+
     .card-body {
       padding: 20px;
       background-color: #ffffff;
       border-bottom-left-radius: 12px;
       border-bottom-right-radius: 12px;
     }
+
     .icon {
       font-size: 40px;
       color: #FF6A13;
       margin-right: 15px;
     }
+
     .row {
       margin-top: 30px;
     }
@@ -71,7 +108,7 @@
       Service Qualité et Normalisation
     </div>
 
-    <div class="card">
+    <div class="card scroll-animation">
       <div class="card-header">
         Présentation du Service
       </div>
@@ -81,12 +118,12 @@
     </div>
 
     <!-- Missions -->
-    <div class="subsection-title">
+    <div class="subsection-title scroll-animation">
       Missions du Service
     </div>
     <div class="row">
       <div class="col-md-4">
-        <div class="card">
+        <div class="card scroll-animation">
           <div class="card-header">
             Normalisation
           </div>
@@ -96,7 +133,7 @@
         </div>
       </div>
       <div class="col-md-4">
-        <div class="card">
+        <div class="card scroll-animation">
           <div class="card-header">
             Qualité
           </div>
@@ -106,7 +143,7 @@
         </div>
       </div>
       <div class="col-md-4">
-        <div class="card">
+        <div class="card scroll-animation">
           <div class="card-header">
             Conformité
           </div>
@@ -118,12 +155,12 @@
     </div>
 
     <!-- Actions -->
-    <div class="section-title">
+    <div class="section-title scroll-animation">
       Actions et Réalisations
     </div>
     <div class="row">
       <div class="col-md-6">
-        <div class="card">
+        <div class="card scroll-animation">
           <div class="card-header">
             Formation et Sensibilisation
           </div>
@@ -133,7 +170,7 @@
         </div>
       </div>
       <div class="col-md-6">
-        <div class="card">
+        <div class="card scroll-animation">
           <div class="card-header">
             Audits de Conformité
           </div>
@@ -145,10 +182,10 @@
     </div>
 
     <!-- Objectifs Futurs -->
-    <div class="section-title">
+    <div class="section-title scroll-animation">
       Objectifs Futurs
     </div>
-    <div class="card">
+    <div class="card scroll-animation">
       <div class="card-header">
         Développement de Normes Internationales
       </div>
@@ -158,10 +195,10 @@
     </div>
 
     <!-- Contacts -->
-    <div class="section-title">
+    <div class="section-title scroll-animation">
       Nous Contacter
     </div>
-    <div class="card">
+    <div class="card scroll-animation">
       <div class="card-header">
         Informations de Contact
       </div>
@@ -172,5 +209,38 @@
       </div>
     </div>
   </div>
-  
+{% endblock %}
+
+{% block script %}
+<script>
+// Animation au défilement
+document.addEventListener('DOMContentLoaded', function() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('active');
+      }
+    });
+  }, {
+    threshold: 0.5 // Déclenche l'animation quand 50% de l'élément est visible
+  });
+
+  document.querySelectorAll('.scroll-animation').forEach((element) => {
+    observer.observe(element);
+  });
+
+  // Animation pour les titres de section
+  const sectionObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('active');
+      }
+    });
+  });
+
+  document.querySelectorAll('.section-title').forEach((element) => {
+    sectionObserver.observe(element);
+  });
+});
+</script>
 {% endblock %}

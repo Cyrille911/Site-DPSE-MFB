@@ -27,6 +27,187 @@
 <link href="{% static 'assets/css/component.css' %}" rel="stylesheet">
 <link href="{% static 'assets/sass/style.css' %}" rel="stylesheet">
 <link href="{% static 'assets/css/responsive.css' %}" rel="stylesheet">
+<style>
+    /* Styles de base */
+    :root {
+        --bg-dark: #121212;
+        --bg-modal: #1e1e1e;
+        --border-color: #333;
+        --text-primary: #fff;
+        --text-secondary: #aaa;
+        --accent-color: #6366f1;
+        --transition-speed: 0.3s;
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans",
+            "Helvetica Neue", sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background-color: #f5f5f5;
+    }
+
+    body.modal-open {
+        overflow: hidden;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    h1 {
+        margin-bottom: 1rem;
+    }
+
+    p {
+        margin-bottom: 1.5rem;
+    }
+
+    /* Bouton principal */
+    .btn-primary {
+        background-color: var(--accent-color);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 9999px;
+        font-weight: 500;
+        cursor: pointer;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: all var(--transition-speed) ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+        background-color: #5254d3;
+    }
+
+    /* Modal */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(4px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 1rem;
+        opacity: 0;
+        transition: opacity var(--transition-speed) ease;
+    }
+
+    .modal-overlay.active {
+        opacity: 1;
+    }
+
+    .modal-container {
+        background-color: var(--bg-modal);
+        border-radius: 12px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        width: 100%;
+        max-width: 800px;
+        position: relative;
+        border: 1px solid var(--border-color);
+        transform: scale(0.95);
+        opacity: 0;
+        transition: all var(--transition-speed) ease;
+    }
+
+    .modal-overlay.active .modal-container {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    .modal-header {
+        padding: 1.5rem 1.5rem 0.75rem;
+        color: var(--text-primary);
+    }
+
+    .modal-header h2 {
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+
+    .modal-content {
+        padding: 0 1.5rem 1.5rem;
+        background-color: #1e1e1e;
+    }
+
+    .modal-footer {
+        padding: 0.75rem 1.5rem 1.5rem;
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+    }
+
+    .close-btn {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background-color: rgba(255, 255, 255, 0.1);
+        border: none;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all var(--transition-speed) ease;
+        z-index: 10;
+    }
+
+    .close-btn:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+        color: var(--text-primary);
+    }
+
+    .close-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    /* Styles pour le video-container */
+    .video-container {
+        position: relative;
+        padding-bottom: 56.25%;
+        /* Conserve le ratio 16:9 */
+        height: 0;
+        overflow: hidden;
+        border-radius: 0;
+        /* Supprime les coins arrondis si vous voulez que la vidéo touche les bords */
+        box-shadow: none;
+        /* Supprime la bordure ou l’ombre */
+        margin: 0;
+        /* S’assure qu’il n’y a pas de marge externe */
+    }
+
+    /* Styles pour l’iframe */
+    .video-container iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+        margin: 0;
+        /* Élimine toute marge parasite */
+        padding: 0;
+        /* Élimine tout padding parasite */
+    }
+</style>
 {% endblock style %}
 
 {% block content %}
@@ -60,14 +241,14 @@
                                         class="img img-responsive">
                                     <div class="wpo-blog-content">
                                         <div class="thumb">Budget</div>
-                                        <h2><a href="blog-single.html">Réformes Budgétaires 2025 : Vers une meilleure
+                                        <h2><a href="#">Réformes Budgétaires 2025 : Vers une meilleure
                                                 transparence</a></h2>
                                         <p>Le Ministère des Finances dévoile ses axes prioritaires pour une gestion
                                             optimisée des ressources publiques.</p>
                                         <ul>
-                                            <li><img src="{% static 'assets/images/blog/blog-avater/minister-avatar.jpg' %}"
-                                                    alt="Ministère"></li>
-                                            <li>Par <a href="blog-single.html">Ministère des Finances CI</a></li>
+                                            <!-- <li><img src="{% static 'assets/images/blog/blog-avater/minister-avatar.jpg' %}"
+                                                    alt="Ministère"></li> -->
+                                            <li>Par <a href="#">Ministère des Finances CI</a></li>
                                             <li>15 Février 2025</li>
                                         </ul>
                                     </div>
@@ -80,10 +261,10 @@
                                         class="img img-responsive">
                                     <div class="wpo-blog-content">
                                         <div class="thumb">Investissement</div>
-                                        <h2><a href="blog-single.html">Investissements Publics : Nouvelles
+                                        <h2><a href="#">Investissements Publics : Nouvelles
                                                 Perspectives</a></h2>
                                         <ul>
-                                            <li>Par <a href="blog-single.html">Ministère</a></li>
+                                            <li>Par <a href="#">Ministère</a></li>
                                             <li>20 Février 2025</li>
                                         </ul>
                                     </div>
@@ -96,10 +277,10 @@
                                         class="img img-responsive">
                                     <div class="wpo-blog-content">
                                         <div class="thumb">Digitalisation</div>
-                                        <h2><a href="blog-single.html">Modernisation du SIGOBE : Un suivi numérique
+                                        <h2><a href="#">Modernisation du SIGOBE : Un suivi numérique
                                                 renforcé</a></h2>
                                         <ul>
-                                            <li>Par <a href="blog-single.html">Ministère</a></li>
+                                            <li>Par <a href="#">Ministère</a></li>
                                             <li>20 Février 2025</li>
                                         </ul>
                                     </div>
@@ -109,9 +290,9 @@
                                         class="img img-responsive">
                                     <div class="wpo-blog-content">
                                         <div class="thumb">Transparence</div>
-                                        <h2><a href="blog-single.html">Budget Citoyen : Impliquer les citoyens</a></h2>
+                                        <h2><a href="#">Budget Citoyen : Impliquer les citoyens</a></h2>
                                         <ul>
-                                            <li>Par <a href="blog-single.html">Ministère</a></li>
+                                            <li>Par <a href="#">Ministère</a></li>
                                             <li>20 Février 2025</li>
                                         </ul>
                                     </div>
@@ -138,7 +319,7 @@
                         </div>
                         <div class="wpo-breacking-text">
                             <span>15 Février 2025</span>
-                            <h3><a href="blog-single.html">Nouvelles réformes pour la transparence budgétaire</a></h3>
+                            <h3><a href="#">Nouvelles réformes pour la transparence budgétaire</a></h3>
                         </div>
                     </div>
                     <div class="wpo-breacking-item">
@@ -147,7 +328,7 @@
                         </div>
                         <div class="wpo-breacking-text">
                             <span>16 Février 2025</span>
-                            <h3><a href="blog-single.html">Lancement de la plateforme SIGOBE</a></h3>
+                            <h3><a href="#">Lancement de la plateforme SIGOBE</a></h3>
                         </div>
                     </div>
                     <div class="wpo-breacking-item">
@@ -156,7 +337,7 @@
                         </div>
                         <div class="wpo-breacking-text">
                             <span>17 Février 2025</span>
-                            <h3><a href="blog-single.html">Budget Citoyen : Impliquer les citoyens</a></h3>
+                            <h3><a href="#">Budget Citoyen : Impliquer les citoyens</a></h3>
                         </div>
                     </div>
                 </div>
@@ -189,15 +370,25 @@
                                                 alt="Image non disponible" class="card-img-top"
                                                 style="width: 100%; height: 250px; object-fit: cover; border-radius: 5px;">
                                             {% endif %}
-                                            <div class="thumb">Actualité</div>
+                                            <div class="thumb">Actualités</div>
                                         </div>
                                         <div class="wpo-blog-content">
                                             <h2><a href="{% url 'news_detail' news.id %}">{{ news.headline }}</a></h2>
                                             <ul>
-                                                <li><img src="{% static 'assets/images/blog/blog-avater/minister-avatar.jpg' %}"
-                                                        alt="Auteur"></li>
-                                                <li>Par <a href="#">{{ news.creator.username }}</a></li>
-                                                <li>{{ news.published_at|date:"d M Y" }}</li>
+                                                <li> {% if comment.user.photo %}
+                                                    <img src="{{ news.creator.get_full_name|default:news.creator.photo.url }}"
+                                                        class="rounded-circle shadow-sm" width="50" height="50"
+                                                        alt="{{ comment.user.get_full_name|default:comment.user.username }}">
+                                                    {% else %}
+                                                    <div class="rounded-circle m-l-5 bg-success text-white d-flex justify-content-center align-items-center shadow-sm"
+                                                        style="width: 35px; height: 35px; font-size: 18px; font-weight: bold;">
+                                                        {{news.creator.get_full_name|default:news.creator.first_name|default:""|slice:":1"}}
+                                                        {{news.creator.get_full_name|default:news.creator.last_name|default:""|slice:":1"}}
+                                                    </div>
+                                                    {% endif %}
+                                                </li>
+                                                <li> <a href="#">{{ news.creator.username }}</a></li>
+                                                <li>{{ news.published_at|date:"d/m/Y" }}</li>
                                             </ul>
                                             {{ news.resume }}
 
@@ -216,12 +407,12 @@
                         <div class="widget category-widget">
                             <h3>Sujets Tendance</h3>
                             <ul>
-                                <li><a href="blog-single.html">Budget et Réformes<span>(05)</span></a></li>
-                                <li><a href="blog-single.html">Investissements<span>(07)</span></a></li>
-                                <li><a href="blog-single.html">Transparence<span>(03)</span></a></li>
-                                <li><a href="blog-single.html">Digitalisation<span>(06)</span></a></li>
-                                <li><a href="blog-single.html">Économie<span>(12)</span></a></li>
-                                <li><a href="blog-single.html">International<span>(08)</span></a></li>
+                                <li><a href="#">Budget et Réformes<span>(05)</span></a></li>
+                                <li><a href="#">Investissements<span>(07)</span></a></li>
+                                <li><a href="#">Transparence<span>(03)</span></a></li>
+                                <li><a href="#">Digitalisation<span>(06)</span></a></li>
+                                <li><a href="#">Économie<span>(12)</span></a></li>
+                                <li><a href="#">International<span>(08)</span></a></li>
                             </ul>
                         </div>
                         <!-- <div class="widget recent-post-widget">
@@ -233,7 +424,7 @@
                                     </div>
                                     <div class="details">
                                         <span class="date">15 Feb 2025</span>
-                                        <h4><a href="blog-single.html">Réformes Budgétaires Clés</a></h4>
+                                        <h4><a href="#">Réformes Budgétaires Clés</a></h4>
                                     </div>
                                 </div>
                                 <div class="post">
@@ -242,7 +433,7 @@
                                     </div>
                                     <div class="details">
                                         <span class="date">16 Feb 2025</span>
-                                        <h4><a href="blog-single.html">Perspectives d'Investissement</a></h4>
+                                        <h4><a href="#">Perspectives d'Investissement</a></h4>
                                     </div>
                                 </div>
                                 <div class="post">
@@ -251,7 +442,7 @@
                                     </div>
                                     <div class="details">
                                         <span class="date">17 Feb 2025</span>
-                                        <h4><a href="blog-single.html">Digitalisation des Finances</a></h4>
+                                        <h4><a href="#">Digitalisation des Finances</a></h4>
                                     </div>
                                 </div>
                                 <div class="post">
@@ -260,7 +451,7 @@
                                     </div>
                                     <div class="details">
                                         <span class="date">17 Feb 2025</span>
-                                        <h4><a href="blog-single.html">Budget Citoyen : Informer les citoyens</a></h4>
+                                        <h4><a href="#">Budget Citoyen : Informer les citoyens</a></h4>
                                     </div>
                                 </div>
                             </div>
@@ -298,6 +489,25 @@
     </section>
     <!-- End Subscribe Section -->
 </div>
+<!-- Ajoutez ce code juste après l'ouverture de la balise <body> dans votre template parent -->
+<div class="modal fade video-modal" id="videoModal" tabindex="-1" role="dialog" aria-hidden="true"
+    style="display: none;">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 bg-transparent">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            <div class="modal-body">
+                <div class="embed-responsive embed-responsive-16by9">
+                    <iframe class="embed-responsive-item"
+                        src="https://www.youtube.com/embed/nSXLMC-ZB5g?autoplay=1&mute=1&rel=0"
+                        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
+                    </iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock content %}
 
 {% block script %}
@@ -306,4 +516,133 @@
 <script src="{% static 'assets/js/modernizr.custom.js' %}"></script>
 <script src="{% static 'assets/js/jquery-plugin-collection.js' %}"></script>
 <script src="{% static 'assets/js/script.js' %}"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        // Créer le modal
+        function createModal() {
+            // Créer l'overlay du modal
+            const modalOverlay = document.createElement("div")
+            modalOverlay.className = "modal-overlay"
+            modalOverlay.id = "youtubeModal"
+
+            // Créer le conteneur du modal
+            const modalContainer = document.createElement("div")
+            modalContainer.className = "modal-container"
+
+            // Créer le bouton de fermeture
+            const closeBtn = document.createElement("button")
+            closeBtn.className = "close-btn"
+            closeBtn.setAttribute("aria-label", "Fermer")
+            closeBtn.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          `
+
+            // Créer l'en-tête du modal
+            const modalHeader = document.createElement("div")
+            //modalHeader.className = "modal-header"
+            const title = document.createElement("h2")
+            //title.textContent = "Abidjan in Motion (4K) - Ivory Coast / Côte d'Ivoire"
+            modalHeader.appendChild(title)
+
+            // Créer le contenu du modal
+            const modalContent = document.createElement("div")
+            modalContent.className = "modal-content"
+
+            // Créer le conteneur de la vidéo
+            const videoContainer = document.createElement("div")
+            videoContainer.className = "video-container"
+
+            // Créer l'iframe pour la vidéo YouTube
+            const iframe = document.createElement("iframe")
+            iframe.src = "https://www.youtube.com/embed/nSXLMC-ZB5g?autoplay=1&color=white"
+            iframe.title = "YouTube video player"
+            iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            iframe.allowFullscreen = true
+
+            // Créer le pied de page du modal
+            const modalFooter = document.createElement("div")
+            //modalFooter.className = "modal-footer"
+            //modalFooter.textContent = "Une vidéo de Mayeul Akpovi présentant la beauté d'Abidjan en 4K."
+
+            // Assembler les éléments
+            videoContainer.appendChild(iframe)
+            modalContent.appendChild(videoContainer)
+
+            modalContainer.appendChild(closeBtn)
+            modalContainer.appendChild(modalHeader)
+            modalContainer.appendChild(modalContent)
+            modalContainer.appendChild(modalFooter)
+
+            modalOverlay.appendChild(modalContainer)
+
+            return modalOverlay
+        }
+
+        // Fonction pour ouvrir le modal
+        function openModal() {
+            const modal = document.getElementById("youtubeModal") || createModal()
+
+            if (!document.body.contains(modal)) {
+                document.body.appendChild(modal)
+
+                // Petit délai pour permettre au DOM de se mettre à jour avant l'animation
+                setTimeout(() => {
+                    modal.classList.add("active")
+                    document.body.classList.add("modal-open")
+                }, 10)
+            }
+        }
+
+        // Fonction pour fermer le modal
+        function closeModal() {
+            const modal = document.getElementById("youtubeModal")
+
+            if (modal) {
+                modal.classList.remove("active")
+                document.body.classList.remove("modal-open")
+
+                // Attendre la fin de l'animation avant de supprimer le modal du DOM
+                setTimeout(() => {
+                    if (modal.parentNode) {
+                        modal.parentNode.removeChild(modal)
+                    }
+                }, 300) // Correspond à la durée de transition dans le CSS
+            }
+        }
+
+        // Ouvrir le modal automatiquement après un court délai
+        setTimeout(openModal, 500)
+
+        // Ajouter un écouteur d'événement au bouton d'ouverture
+        const openModalBtn = document.getElementById("openModalBtn")
+        if (openModalBtn) {
+            openModalBtn.addEventListener("click", openModal)
+        }
+
+        // Fermer le modal lorsqu'on clique sur l'overlay (en dehors du contenu du modal)
+        document.addEventListener("click", (event) => {
+            const modal = document.getElementById("youtubeModal")
+            if (modal && event.target === modal) {
+                closeModal()
+            }
+        })
+
+        // Fermer le modal lorsqu'on clique sur le bouton de fermeture
+        document.addEventListener("click", (event) => {
+            if (event.target.closest(".close-btn")) {
+                closeModal()
+            }
+        })
+
+        // Fermer le modal avec la touche Escape
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") {
+                closeModal()
+            }
+        })
+    })
+</script>
 {% endblock script %}

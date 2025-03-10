@@ -93,10 +93,22 @@
                                             <h2><a href="{% url 'blog_detail' blog.id %}">{{ blog.title }}</a></h2>
                                             <ul>
                                                 <li>
-                                                    <img src="{% static 'assets/images/blog/blog-avater/minister-avatar.jpg' %}" alt="Auteur">
+                                                    {% if comment.user.photo %}
+                                                    <img src="{{ news.creator.get_full_name|default:news.creator.photo.url }}"
+                                                        class="rounded-circle shadow-sm" width="50" height="50"
+                                                        alt="{{ comment.user.get_full_name|default:comment.user.username }}">
+                                                    {% else %}
+                                                    <div class="rounded-circle m-l-5 bg-success text-white d-flex justify-content-center align-items-center shadow-sm"
+                                                        style="width: 35px; height: 35px; font-size: 18px; font-weight: bold;">
+                                                        {{blog.author.get_full_name|default:blog.author.username|default:""|slice:":1"}}
+                                                        {{blog.author.get_full_name|default:blog.author.username|default:""|slice:":1"}}
+                                                    </div>
+                                                    {% endif %}
                                                 </li>
-                                                <li>Par <a href="#">{{ blog.author.get_full_name|default:blog.author.username }}</a></li>
-                                                <li>{{ blog.created_at|date:"d M Y" }}</li>
+                                                <li class="m-1"> <a
+                                                        href="#">{{blog.author.get_full_name|default:blog.author.username}}</a>
+                                                </li>
+                                                <li>{{ blog.created_at|date:"d/m/y" }}</li>
                                             </ul>
                                             <p>{{ blog.content|truncatechars:200|safe }}</p>
                                         </div>
@@ -106,7 +118,7 @@
                                 <p>Aucun article disponible.</p>
                                 {% endfor %}
                             </div>
-                            
+
                         </div>
                     </div>
                 </div>
