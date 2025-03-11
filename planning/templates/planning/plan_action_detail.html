@@ -1,11 +1,11 @@
 {% extends "index.html" %}
 
 {% block content %}
-    <div class="container mt-4">
-        <h2 class="text-center">{{ plan.titre }}</h2>
-
+    <div class="container mt-4 animate-container">
+        <h2 class="text-center animate-title">{{ plan.titre }}</h2>
+        
         <!-- Filtres -->
-        <div class="row my-3 g-3">
+        <div class="row my-3 g-3 mx-0 animate-section" style="animation-delay: 0.2s;">
             <div class="col-12 col-sm-6 col-md-4">
                 <label class="mb-2">Filtrer par effet :</label>
                 <div class="dropdown">
@@ -15,12 +15,7 @@
                     <ul class="dropdown-menu w-100 overflow-auto" id="filter-effet">
                         <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="effet" id="select-all-effet"> Tout sélectionner</label></li>
                         {% for effet in effets %}
-                            <li>
-                                <label class="dropdown-item">
-                                    <input type="checkbox" class="checkbox-option" data-group="effet" value="{{ effet.titre }}">
-                                    {{ effet.titre }}
-                                </label>
-                            </li>
+                            <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="effet" value="{{ effet.titre }}">{{ effet.titre }}</label></li>
                         {% endfor %}
                     </ul>
                 </div>
@@ -35,12 +30,7 @@
                     <ul class="dropdown-menu w-100 overflow-auto" id="filter-produit">
                         <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="produit" id="select-all-produit"> Tout sélectionner</label></li>
                         {% for produit in produits %}
-                            <li>
-                                <label class="dropdown-item">
-                                    <input type="checkbox" class="checkbox-option" data-group="produit" value="{{ produit.titre }}">
-                                    {{ produit.titre }}
-                                </label>
-                            </li>
+                            <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="produit" value="{{ produit.titre }}">{{ produit.titre }}</label></li>
                         {% endfor %}
                     </ul>
                 </div>
@@ -55,27 +45,7 @@
                     <ul class="dropdown-menu w-100 overflow-auto" id="filter-action">
                         <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="action" id="select-all-action"> Tout sélectionner</label></li>
                         {% for action in actions %}
-                            <li>
-                                <label class="dropdown-item">
-                                    <input type="checkbox" class="checkbox-option" data-group="action" value="{{ action.titre }}">
-                                    {{ action.titre }}
-                                </label>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-
-            <div class="col-12 col-sm-6 col-md-4">
-                <label class="mb-2">Filtrer par structure :</label>
-                <div class="dropdown">
-                    <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-group="structure" data-bs-toggle="dropdown">
-                        Sélectionner les structures
-                    </button>
-                    <ul class="dropdown-menu w-100 overflow-auto" id="filter-structure">
-                        <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="structure" id="select-all-structure"> Tout sélectionner</label></li>
-                        {% for structure in structures %}
-                            <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="structure" value="{{ structure }}"> {{ structure }}</label></li>
+                            <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="action" value="{{ action.titre }}">{{ action.titre }}</label></li>
                         {% endfor %}
                     </ul>
                 </div>
@@ -90,7 +60,22 @@
                     <ul class="dropdown-menu w-100 overflow-auto" id="filter-type">
                         <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="type" id="select-all-type"> Tout sélectionner</label></li>
                         {% for type in types %}
-                            <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="type" value="{{ type }}"> {{ type }}</label></li>
+                            <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="type" value="{{ type }}">{{ type }}</label></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-md-4">
+                <label class="mb-2">Filtrer par structure :</label>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-group="structure" data-bs-toggle="dropdown">
+                        Sélectionner les structures
+                    </button>
+                    <ul class="dropdown-menu w-100 overflow-auto" id="filter-structure">
+                        <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="structure" id="select-all-structure"> Tout sélectionner</label></li>
+                        {% for structure in structures %}
+                            <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="structure" value="{{ structure }}">{{ structure }}</label></li>
                         {% endfor %}
                     </ul>
                 </div>
@@ -105,100 +90,414 @@
                     <ul class="dropdown-menu w-100 overflow-auto" id="filter-annee">
                         <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="annee" id="select-all-annee"> Tout sélectionner</label></li>
                         {% for annee in annees %}
-                            <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="annee" value="{{ annee }}"> {{ annee }}</label></li>
+                            <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="annee" value="{{ annee }}">{{ annee }}</label></li>
                         {% endfor %}
                     </ul>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="table-container">
-        <div class="table-horizontal-container">
-            <table class="unfixed-table">
-                <thead class="thead-dark">
-                    <tr>
-                        <th>Activité</th>
-                        <th>Type</th>
-                        <th>Coûts</th>
-                    </tr>
-                </thead>
-                <tbody id="plan-table-body">
-                    <!-- Les lignes de données seront insérées ici par JavaScript -->
-                </tbody>
-            </table>
+        <div class="table-container mx-0 animate-section" style="animation-delay: 0.4s;">
+            <div class="table-wrapper">
+                <div class="table-horizontal-container">
+                    <table class="unfixed-table" id="plan-table">
+                        <thead class="thead-dark">
+                            <tr id="table-header-top">
+                                <th rowspan="2">Intitulé</th>
+                                <th rowspan="2">Type</th>
+                                <th colspan="{{ annees|length|add:2 }}">Indicateur</th>
+                                <th rowspan="2">Structure Responsable</th>
+                                <th colspan="{{ annees|length }}">Coûts (en millions)</th>
+                                <th colspan="{{ annees|length }}">Réalisation</th>
+                                <th rowspan="2">État d'avancement</th>
+                                <th rowspan="2">Commentaire</th>
+                                <th rowspan="2">Statut</th>
+                                <th rowspan="2">Programme</th>
+                            </tr>
+                            <tr id="table-header-bottom">
+                                <th>Libellé</th>
+                                <th>Référence</th>
+                                {% for annee in annees %}
+                                    <th>Cibles {{ annee }}</th>
+                                {% endfor %}
+                                {% for annee in annees %}
+                                    <th>{{ annee }}</th>
+                                {% endfor %}
+                                {% for annee in annees %}
+                                    <th>{{ annee }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody id="plan-table-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistiques et bouton download -->
+        <div class="stats-and-download-container mx-0 animate-section" style="animation-delay: 0.6s;">
+            <div class="stats-container">
+                <h3>Statistiques</h3>
+                <p>Lignes : <span id="visible-rows">0</span> visibles sur <span id="total-rows">0</span> totales</p>
+                <table id="type-stats-table" class="stats-table">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Nombre</th>
+                            <th>Proportion (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="type-stats-body"></tbody>
+                </table>
+            </div>
+            <div class="download-container">
+                <button id="download-excel-btn" class="btn btn-primary">Télécharger Excel</button>
+            </div>
+        </div>
+
+        <!-- Boutons -->
+        <div class="text-center mt-4 mb-4 animate-section" style="animation-delay: 0.8s;">
+            <a href="{% url 'pao_list' plan.id %}" class="btn btn-lg me-3" style="background-color: #ff6200; color: white;">Modifier mes activités</a>
+            <a href="{% url 'hierarchy_review' plan.id %}" class="btn btn-lg me-3" style="background-color: #007bff; color: white;">Consulter la mise en oeuvre</a>
+            <a href="{% url 'track_execution_list' plan.id %}" class="btn btn-lg" style="background-color: #28a745; color: white;">Suivre l'exécution</a>
+        </div>
+
+        <!-- Barre-loupe flottante fixe -->
+        <div id="floating-search" class="floating-search-container animate-section" style="animation-delay: 1s;">
+            <button id="toggle-search-btn" class="search-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M15.5 14H14.71L14.43 13.73C15.41 12.59 16 11.11 16 9.5C16 5.91 13.09 3 9.5 3C5.91 3 3 5.91 3 9.5C3 13.09 5.91 16 9.5 16C11.11 16 12.59 15.41 13.73 14.43L14 14.71V15.5L19 20.49L20.49 19L15.5 14ZM9.5 14C7.01 14 5 11.99 5 9.5C5 7.01 7.01 5 9.5 5C11.99 5 14 7.01 14 9.5C14 11.99 11.99 14 9.5 14Z" fill="orange"/>
+                </svg>
+            </button>
+            <div id="search-container" class="search-container">
+                <input type="text" id="search-input" class="form-control" placeholder="Rechercher..." aria-label="Rechercher">
+            </div>
         </div>
     </div>
 
+    <!-- Inclusion de SheetJS pour Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const filtres = ["effet", "produit", "action", "structure", "type", "annee"];
+            const table = document.getElementById('plan-table');
+            const tableHeaderTop = document.getElementById('table-header-top');
+            const tableHeaderBottom = document.getElementById('table-header-bottom');
             const tableBody = document.getElementById('plan-table-body');
+            const searchInput = document.getElementById('search-input');
+            const toggleSearchBtn = document.getElementById('toggle-search-btn');
+            const searchContainer = document.getElementById('search-container');
+            const floatingSearch = document.getElementById('floating-search');
+            const visibleRowsSpan = document.getElementById('visible-rows');
+            const totalRowsSpan = document.getElementById('total-rows');
+            const typeStatsBody = document.getElementById('type-stats-body');
+            const downloadBtn = document.getElementById('download-excel-btn');
+            const tableContainer = document.querySelector('.table-horizontal-container');
 
-            function updateTable(filtreModifie) {
-                let params = new URLSearchParams();
+            const planImpact = "{{ plan.impact | escapejs }}";
 
-                // Collecte uniquement les éléments cochés du filtre modifié
-                const checkboxes = document.querySelectorAll(`input[data-group="${filtreModifie}"]:checked`);
-                checkboxes.forEach(checkbox => {
-                    if (!checkbox.id.startsWith('select-all-')) {
-                        params.append(filtreModifie, checkbox.value);
-                    }
+            function updateStats() {
+                const rows = tableBody.getElementsByTagName('tr');
+                const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none' && !row.classList.contains('hierarchy-row'));
+                const totalRows = Array.from(rows).filter(row => !row.classList.contains('hierarchy-row')).length;
+                visibleRowsSpan.textContent = visibleRows.length;
+                totalRowsSpan.textContent = totalRows;
+
+                const typeStats = {};
+                visibleRows.forEach(row => {
+                    const type = row.cells[1].textContent.trim() || 'N/A';
+                    typeStats[type] = (typeStats[type] || 0) + 1;
                 });
 
-                console.log("Paramètres envoyés :", params.toString());
+                typeStatsBody.innerHTML = '';
+                Object.entries(typeStats).forEach(([type, count]) => {
+                    const percentage = totalRows > 0 ? ((count / totalRows) * 100).toFixed(1) : 0;
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td>${type}</td><td>${count}</td><td>${percentage}%</td>`;
+                    typeStatsBody.appendChild(tr);
+                });
+            }
+
+            function updateHierarchyPositions() {
+                const rows = Array.from(tableBody.getElementsByTagName('tr'));
+                const scrollTop = tableContainer.scrollTop;
+                const headerHeight = 76;
+
+                let currentEffet = null;
+                let currentProduit = null;
+                let currentAction = null;
+                let topOffset = headerHeight;
+
+                rows.forEach(row => {
+                    const firstCell = row.querySelector('td:first-child');
+                    if (!firstCell) return;
+
+                    if (row.classList.contains('impact-row')) {
+                        firstCell.style.top = `${headerHeight}px`;
+                    } else if (row.classList.contains('effet-row')) {
+                        currentEffet = row;
+                        currentProduit = null;
+                        currentAction = null;
+                        firstCell.style.top = `${topOffset}px`;
+                        firstCell.style.display = row.offsetTop - scrollTop < topOffset ? 'none' : '';
+                    } else if (row.classList.contains('produit-row')) {
+                        currentProduit = row;
+                        currentAction = null;
+                        firstCell.style.top = `${topOffset + (currentEffet ? currentEffet.offsetHeight : 0)}px`;
+                        firstCell.style.display = row.offsetTop - scrollTop < topOffset + (currentEffet ? currentEffet.offsetHeight : 0) ? 'none' : '';
+                    } else if (row.classList.contains('action-row')) {
+                        currentAction = row;
+                        firstCell.style.top = `${topOffset + (currentEffet ? currentEffet.offsetHeight : 0) + (currentProduit ? currentProduit.offsetHeight : 0)}px`;
+                        firstCell.style.display = row.offsetTop - scrollTop < topOffset + (currentEffet ? currentEffet.offsetHeight : 0) + (currentProduit ? currentProduit.offsetHeight : 0) ? 'none' : '';
+                    }
+
+                    if (currentEffet && currentEffet !== row) {
+                        currentEffet.querySelector('td:first-child').style.display = currentEffet.offsetTop - scrollTop < topOffset ? 'none' : '';
+                    }
+                    if (currentProduit && currentProduit !== row) {
+                        currentProduit.querySelector('td:first-child').style.display = currentProduit.offsetTop - scrollTop < topOffset + (currentEffet ? currentEffet.offsetHeight : 0) ? 'none' : '';
+                    }
+                });
+            }
+
+            function chargeTable(filtre) {
+                let params = new URLSearchParams();
+                const checkboxes = document.querySelectorAll(`input[data-group="${filtre}"]:checked`);
+                checkboxes.forEach(checkbox => {
+                    if (!checkbox.id.startsWith('select-all-')) {
+                        params.append(filtre, checkbox.value);
+                    }
+                });
 
                 fetch(`?${params.toString()}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                     .then(response => response.json())
                     .then(data => {
-                        tableBody.innerHTML = '';
+                        const annees = data.annees;
+                        const anneeDebut = data.annee_debut;
+                        const colspanTotal = 8 + annees.length * 3;
+                        const colspanToCibles = 2 + annees.length;
 
-                        if (data.activites.length === 0) {
-                            tableBody.innerHTML = '<tr><td colspan="3" class="text-center">Aucune activité trouvée</td></tr>';
-                        } else {
-                            data.activites.forEach(activite => {
-                                tableBody.innerHTML += `
-                                    <tr>
-                                        <td>${activite.titre}</td>
-                                        <td>${activite.type}</td>
-                                        <td>${activite.couts}</td>
-                                    </tr>`;
+                        tableBody.innerHTML = '';
+                        tableBody.innerHTML += `
+                            <tr class="hierarchy-row impact-row">
+                                <td colspan="${colspanTotal}">Impact : ${planImpact || 'Impact non défini'}</td>
+                            </tr>
+                        `;
+
+                        const effets = data.effets || [];
+                        effets.forEach((effet, i) => {
+                            let row = `
+                                <tr class="hierarchy-row effet-row">
+                                    <td colspan="${colspanToCibles}">Effet ${i + 1} : ${effet.titre}</td>
+                                    <td></td>
+                            `;
+                            annees.forEach((annee, index) => {
+                                const cout = effet.couts && index < effet.couts.length ? effet.couts[index] : 'N/A';
+                                row += `<td>${cout}</td>`;
                             });
+                            row += '<td></td>'.repeat(annees.length + 3);
+                            row += '<td class="program-cell"></td></tr>';
+                            tableBody.innerHTML += row;
+
+                            effet.produits.forEach((produit, j) => {
+                                let produitRow = `
+                                    <tr class="hierarchy-row produit-row">
+                                        <td colspan="${colspanToCibles}">Produit ${i + 1}.${j + 1} : ${produit.titre}</td>
+                                        <td></td>
+                                `;
+                                annees.forEach((annee, index) => {
+                                    const cout = produit.couts && index < produit.couts.length ? produit.couts[index] : 'N/A';
+                                    produitRow += `<td>${cout}</td>`;
+                                });
+                                produitRow += '<td></td>'.repeat(annees.length + 3);
+                                produitRow += '<td class="program-cell"></td></tr>';
+                                tableBody.innerHTML += produitRow;
+
+                                produit.actions.forEach((action, k) => {
+                                    let actionRow = `
+                                        <tr class="hierarchy-row action-row">
+                                            <td colspan="${colspanToCibles}">Action ${i + 1}.${j + 1}.${k + 1} : ${action.titre}</td>
+                                            <td></td>
+                                    `;
+                                    annees.forEach((annee, index) => {
+                                        const cout = action.couts && index < action.couts.length ? action.couts[index] : 'N/A';
+                                        actionRow += `<td>${cout}</td>`;
+                                    });
+                                    actionRow += '<td></td>'.repeat(annees.length + 3);
+                                    actionRow += '<td class="program-cell"></td></tr>';
+                                    tableBody.innerHTML += actionRow;
+
+                                    action.activites.forEach((activite, l) => {
+                                        let activiteRow = `
+                                            <tr class="${activite.status === 'Pending_SE' ? 'pending-se' : ''}">
+                                                <td>${activite.titre}</td>
+                                                <td>${activite.type || 'N/A'}</td>
+                                                <td>${activite.indicateur_label || 'N/A'}</td>
+                                                <td>${activite.indicateur_reference || 'N/A'}</td>
+                                        `;
+                                        annees.forEach(annee => {
+                                            const index = parseInt(annee) - anneeDebut;
+                                            const cible = (activite.cibles && index >= 0 && index < activite.cibles.length) ? activite.cibles[index] : 'N/A';
+                                            activiteRow += `<td>${cible}</td>`;
+                                        });
+                                        activiteRow += `<td>${activite.structure || 'N/A'}</td>`;
+                                        annees.forEach(annee => {
+                                            const index = parseInt(annee) - anneeDebut;
+                                            const cout = (activite.couts && index >= 0 && index < activite.couts.length) ? activite.couts[index] : 'N/A';
+                                            activiteRow += `<td>${cout}</td>`;
+                                        });
+                                        annees.forEach(annee => {
+                                            const index = parseInt(annee) - anneeDebut;
+                                            const real = (activite.realisation && index >= 0 && index < activite.realisation.length) ? activite.realisation[index] : 'N/A';
+                                            activiteRow += `<td>${real}</td>`;
+                                        });
+                                        activiteRow += `
+                                            <td>${activite.etat_avancement || 'N/A'}</td>
+                                            <td>${activite.commentaire || 'N/A'}</td>
+                                            <td>${activite.status || 'N/A'}</td>
+                                            <td>${activite.programme || 'N/A'}</td>
+                                        </tr>`;
+                                        tableBody.innerHTML += activiteRow;
+                                    });
+                                });
+                            });
+                        });
+
+                        if (effets.length === 0) {
+                            tableBody.innerHTML += `<tr><td colspan="${colspanTotal}" class="text-center">Aucune donnée trouvée</td></tr>`;
                         }
 
-                        // Mise à jour des filtres dépendants (produit et action si effet changé)
-                        updateDependentFilters("effet", data.effets);
-                        updateDependentFilters("produit", data.produits);
-                        updateDependentFilters("action", data.actions);
+                        updateStats();
+                        updateHierarchyPositions();
+                        
+                        if (filtre === "effet") {
+                            updateDependentFilters("produit", data.produits);
+                            updateDependentFilters("action", data.actions);
+                            updateDependentFilters("type", data.types);
+                            updateDependentFilters("structure", data.structures);
+                            updateDependentFilters("annee", data.annees);
+                        } else if (filtre === "produit") {
+                            updateDependentFilters("action", data.actions);
+                            updateDependentFilters("type", data.types);
+                            updateDependentFilters("structure", data.structures);
+                        } else if (filtre === "action") {
+                            updateDependentFilters("type", data.types);
+                            updateDependentFilters("structure", data.structures);
+                        } else if (filtre === "type") {
+                            updateDependentFilters("structure", data.structures);
+                        }
                     })
                     .catch(error => {
                         console.error('Erreur AJAX:', error);
-                        tableBody.innerHTML = '<tr><td colspan="3" class="text-center">Erreur de chargement des données</td></tr>';
+                        let totalColonnes = table.rows[0]?.cells.length || 1;
+                        tableBody.innerHTML = `
+                            <tr class="hierarchy-row impact-row"><td colspan="${totalColonnes}">Impact : ${planImpact || 'Impact non défini'}</td></tr>
+                            <tr><td colspan="${totalColonnes}" class="text-center">Erreur de chargement des données</td></tr>
+                        `;
+                        updateStats();
+                        updateHierarchyPositions();
                     });
             }
 
-            // Met à jour dynamiquement un filtre dépendant
-            function updateDependentFilters(filtre, nouvellesValeurs) {
-                const filterContainer = document.getElementById(`filter-${filtre}`); // Conteneur du filtre
-                filterContainer.innerHTML = ''; // Vide les anciennes options
+            function filterTable() {
+                const searchTerm = searchInput.value.trim();
+                const rows = tableBody.getElementsByTagName('tr');
+                let regex;
 
-                // Ajouter l'option "Tout sélectionner"
+                try {
+                    regex = new RegExp(searchTerm, 'i');
+                } catch (e) {
+                    console.error("Expression régulière invalide :", e);
+                    return;
+                }
+
+                Array.from(rows).forEach(row => {
+                    if (row.classList.contains('hierarchy-row')) {
+                        row.style.display = '';
+                    } else {
+                        const cells = row.getElementsByTagName('td');
+                        if (cells.length === 0) return;
+
+                        const rowText = Array.from(cells)
+                            .map(cell => cell.textContent.trim())
+                            .join(' ');
+
+                        if (regex.test(rowText)) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    }
+                });
+                updateStats();
+                updateHierarchyPositions();
+            }
+
+            toggleSearchBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                searchContainer.classList.toggle('active');
+                if (searchContainer.classList.contains('active')) {
+                    searchInput.focus();
+                } else {
+                    searchInput.value = '';
+                    filterTable();
+                }
+            });
+
+            document.addEventListener('click', function (e) {
+                if (!floatingSearch.contains(e.target) && searchContainer.classList.contains('active')) {
+                    searchContainer.classList.remove('active');
+                    searchInput.value = '';
+                    filterTable();
+                }
+            });
+
+            floatingSearch.addEventListener('click', function (e) {
+                e.stopPropagation();
+            });
+
+            searchInput.addEventListener('input', filterTable);
+
+            downloadBtn.addEventListener('click', function () {
+                const wb = XLSX.utils.book_new();
+                const ws_data = [];
+
+                const headersTop = Array.from(tableHeaderTop.cells).map(cell => cell.textContent);
+                ws_data.push(headersTop);
+                const headersBottom = Array.from(tableHeaderBottom.cells).map(cell => cell.textContent);
+                ws_data.push(['', '', ...headersBottom]);
+
+                Array.from(tableBody.getElementsByTagName('tr'))
+                    .filter(row => row.style.display !== 'none')
+                    .forEach(row => {
+                        const cells = Array.from(row.cells).map(cell => cell.textContent);
+                        ws_data.push(cells);
+                    });
+
+                const ws = XLSX.utils.aoa_to_sheet(ws_data);
+                XLSX.utils.book_append_sheet(wb, ws, "Plan");
+                XLSX.writeFile(wb, 'tableau_stats.xlsx');
+            });
+
+            function updateDependentFilters(filtre, nouvellesValeurs) {
+                const filterContainer = document.getElementById(`filter-${filtre}`);
+                filterContainer.innerHTML = '';
+
                 const selectAllLi = document.createElement('li');
                 const selectAllLabel = document.createElement('label');
                 selectAllLabel.classList.add('dropdown-item');
-                const selectAllCheckboxx = document.createElement('input');
-                selectAllCheckboxx.type = 'checkbox';
-                selectAllCheckboxx.classList.add('checkbox-option');
-                selectAllCheckboxx.dataset.group = filtre;
-                selectAllCheckboxx.id = `select-all-${filtre}`;
-                selectAllCheckboxx.checked = true; // Coche "Tout sélectionner" par défaut
-                selectAllLabel.appendChild(selectAllCheckboxx);
+                const selectAllCheckbox = document.createElement('input');
+                selectAllCheckbox.type = 'checkbox';
+                selectAllCheckbox.classList.add('checkbox-option');
+                selectAllCheckbox.dataset.group = filtre;
+                selectAllCheckbox.id = `select-all-${filtre}`;
+                selectAllLabel.appendChild(selectAllCheckbox);
                 selectAllLabel.appendChild(document.createTextNode(' Tout sélectionner'));
                 selectAllLi.appendChild(selectAllLabel);
                 filterContainer.appendChild(selectAllLi);
 
-                // Ajouter les nouvelles valeurs
-                nouvellesValeurs.forEach(valeur => {
+                const isObjectArray = nouvellesValeurs.length > 0 && typeof nouvellesValeurs[0] === 'object';
+                (isObjectArray ? nouvellesValeurs : nouvellesValeurs.map(v => ({ titre: String(v) }))).forEach(valeur => {
                     const li = document.createElement('li');
                     const label = document.createElement('label');
                     label.classList.add('dropdown-item');
@@ -208,8 +507,7 @@
                     checkbox.classList.add('checkbox-option');
                     checkbox.dataset.group = filtre;
                     checkbox.value = valeur.titre;
-                    checkbox.id = `${filtre}-${valeur.id}`;
-                    checkbox.checked = true; // Coche toutes les options par défaut
+                    checkbox.checked = true;
 
                     label.appendChild(checkbox);
                     label.appendChild(document.createTextNode(` ${valeur.titre}`));
@@ -218,68 +516,146 @@
                 });
 
                 const checkboxes = document.querySelectorAll(`input[data-group="${filtre}"]`);
-                const selectAllCheckbox = document.querySelector(`input[data-group="${filtre}"]#select-all-${filtre}`);
+                const selectAllCheckboxElement = document.querySelector(`input[data-group="${filtre}"]#select-all-${filtre}`);
                 const button = document.querySelector(`button[data-group="${filtre}"]`);
 
-                if (!selectAllCheckbox || !button || checkboxes.length === 0) {
+                if (!selectAllCheckboxElement || !button || checkboxes.length === 0) {
                     console.error(`Élément(s) manquant(s) pour le filtre "${filtre}"`);
                     return;
                 }
 
                 function updateDropdownButton() {
                     const selectedOptions = Array.from(checkboxes)
-                        .filter(checkbox => checkbox.checked && checkbox !== selectAllCheckbox)
+                        .filter(checkbox => checkbox.checked && checkbox !== selectAllCheckboxElement)
                         .map(checkbox => checkbox.parentNode.textContent.trim());
-
                     button.textContent = selectedOptions.length > 0 ? selectedOptions.join(', ') : `Sélectionner les ${filtre}`;
                 }
 
                 function cocherToutesLesCasesAuDemarrage() {
-                    checkboxes.forEach(checkbox => {
-                        checkbox.checked = true;
-                    });
-                    selectAllCheckbox.checked = true;
+                    const allChecked = Array.from(checkboxes).every(checkbox => checkbox.checked || checkbox === selectAllCheckboxElement);
+                    selectAllCheckboxElement.checked = allChecked;
                     updateDropdownButton();
-                    updateTable(filtre);
+                    chargeTable(filtre);
                 }
 
-                selectAllCheckbox.addEventListener('change', function () {
+                selectAllCheckboxElement.addEventListener('change', function () {
                     const isChecked = this.checked;
                     checkboxes.forEach(checkbox => {
-                        if (checkbox !== selectAllCheckbox) {
+                        if (checkbox !== selectAllCheckboxElement) {
                             checkbox.checked = isChecked;
                         }
                     });
                     updateDropdownButton();
-                    updateTable(filtre);
+                    chargeTable(filtre);
                 });
 
                 checkboxes.forEach(checkbox => {
                     checkbox.addEventListener('change', function () {
-                        if (this !== selectAllCheckbox) {
-                            selectAllCheckbox.checked = Array.from(checkboxes)
-                                .every(checkbox => checkbox.checked || checkbox === selectAllCheckbox);
+                        if (this !== selectAllCheckboxElement) {
+                            selectAllCheckboxElement.checked = Array.from(checkboxes)
+                                .every(checkbox => checkbox.checked || checkbox === selectAllCheckboxElement);
                         }
                         updateDropdownButton();
-                        updateTable(filtre);
+                        chargeTable(filtre);
                     });
                 });
 
                 cocherToutesLesCasesAuDemarrage();
             }
 
-            const checkboxes = document.querySelectorAll(`input[data-group="effet"]`);
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = true
+            const effetCheckboxes = document.querySelectorAll(`input[data-group="effet"]`);
+            const effetSelectAllCheckbox = document.querySelector(`input[data-group="effet"]#select-all-effet`);
+            const effetButton = document.querySelector(`button[data-group="effet"]`);
+
+            if (!effetSelectAllCheckbox || !effetButton || effetCheckboxes.length === 0) {
+                console.error(`Élément(s) manquant(s) pour le filtre "effet"`);
+            } else {
+                function updateEffetDropdownButton() {
+                    const selectedOptions = Array.from(effetCheckboxes)
+                        .filter(checkbox => checkbox.checked && checkbox !== effetSelectAllCheckbox)
+                        .map(checkbox => checkbox.parentNode.textContent.trim());
+                    effetButton.textContent = selectedOptions.length > 0 ? selectedOptions.join(', ') : `Sélectionner les effets`;
+                }
+
+                function cocherToutesLesCasesEffet() {
+                    effetCheckboxes.forEach(checkbox => checkbox.checked = true);
+                    effetSelectAllCheckbox.checked = true;
+                    updateEffetDropdownButton();
+                    chargeTable("effet");
+                }
+
+                effetCheckboxes.forEach(checkbox => checkbox.addEventListener('change', function () {
+                    if (this !== effetSelectAllCheckbox) {
+                        effetSelectAllCheckbox.checked = Array.from(effetCheckboxes)
+                            .every(checkbox => checkbox.checked || checkbox === effetSelectAllCheckbox);
+                    }
+                    updateEffetDropdownButton();
+                    chargeTable("effet");
+                }));
+
+                effetSelectAllCheckbox.addEventListener('change', function () {
+                    const isChecked = this.checked;
+                    effetCheckboxes.forEach(checkbox => {
+                        if (checkbox !== effetSelectAllCheckbox) {
+                            checkbox.checked = isChecked;
+                        }
+                    });
+                    updateEffetDropdownButton();
+                    chargeTable("effet");
+                });
+
+                cocherToutesLesCasesEffet();
+            }
+
+            updateStats();
+            tableContainer.addEventListener('scroll', () => {
+                updateStats();
+                updateHierarchyPositions();
             });
-            updateTable("effet")
+
+            setInterval(() => {
+                chargeTable("effet");
+            }, 5000);
         });
     </script>
-
 {% endblock %}
 
 {% block style %}
     <style>
+        .container {
+            margin-left: 0;
+            margin-right: 0;
+            padding-left: 75px;
+            padding-right: 75px;
+            width: 100%;
+            max-width: none;
+            opacity: 0;
+        }
+
+        .animate-container {
+            animation: fadeIn 0.8s ease-in-out forwards;
+        }
+
+        .animate-title {
+            animation: slideUp 0.6s ease-in-out forwards;
+        }
+
+        .animate-section {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideUp 0.6s ease-in-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .dropdown-menu {
             max-height: 250px;
             overflow-y: auto;
@@ -288,13 +664,18 @@
             margin-right: 10px;
         }
 
-        /* Ajuster le bouton pour que le texte sélectionné s'adapte */
         .dropdown-toggle {
             white-space: normal;
             word-wrap: break-word;
             width: auto;
             min-width: 200px;
             padding: 10px;
+        }
+
+        .dropdown-toggle:hover {
+            background-color: #28a745;
+            color: white;
+            border-color: #28a745;
         }
 
         table {
@@ -314,52 +695,211 @@
         }
 
         .table-container {
-            margin: 40px;
+            margin-top: 40px;
+            margin-bottom: 40px;
+            padding: 20px;
             position: relative;
-            max-height: 500px;
-            overflow: scroll;
+            max-height: 800px;
             border: 5px solid #007A3D;
             border-radius: 20px;
-            padding: 20px;
             background-color: #fff;
             box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .table-wrapper {
+            position: relative;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .table-horizontal-container {
+            max-height: 760px;
+            overflow: auto;
+            position: relative;
+            border: 1px solid #007A3D;
+            border-radius: 5px;
+        }
+
+        thead {
+            position: sticky;
+            top: 0;
+            z-index: 30;
+            background: orange !important;
         }
 
         thead th {
-            position: -webkit-sticky;
+            background: orange !important;
+            color: white !important;
+            text-align: center;
+        }
+
+        #table-header-bottom th {
             position: sticky;
-            top: 0;
-            z-index: 2;
-            background: orange;
-            color: white;
+            top: 38px;
+            z-index: 29;
+            background: orange !important;
+            color: white !important;
+            text-align: center;
         }
 
-        tfoot {
-            position: -webkit-sticky;
-            bottom: 0;
-            z-index: 2;
-        }
-
-        tfoot td {
-            position: sticky;
-            bottom: 0;
-            z-index: 2;
-            background: green;
-            color: white;
-        }
-
-        tbody {
-            overflow: scroll;
-            height: 200px;
-        }
-
-        /* MAKE LEFT COLUMN FIXED */
-        tr > :first-child {
-            position: -webkit-sticky;
+        tr > td:first-child {
             position: sticky;
             left: 0;
-            z-index: 1;
+            z-index: 10;
             background: white;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+
+        .impact-row td:first-child {
+            position: sticky;
+            top: 76px;
+            left: 0;
+            z-index: 25;
+            background-color: #d1e7dd;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+
+        .effet-row td:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 20;
+            background-color: #f8d7da;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+
+        .produit-row td:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 19;
+            background-color: #fff3cd;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+
+        .action-row td:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 18;
+            background-color: #cce5ff;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+
+        .hierarchy-row .program-cell {
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 5px,
+                rgba(0, 0, 0, 0.1) 5px,
+                rgba(0, 0, 0, 0.1) 10px
+            );
+        }
+
+        .hierarchy-row {
+            font-weight: bold;
+        }
+
+        .pending-se {
+            background-color: #fff3cd;
+        }
+
+        .stats-and-download-container {
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 10px;
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats-container {
+            margin-bottom: 20px;
+        }
+
+        .stats-container h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .stats-table {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+            border-collapse: collapse;
+        }
+
+        .stats-table th, .stats-table td {
+            border: 1px solid #ccc;
+            padding: 5px;
+            text-align: center;
+            background: white;
+        }
+
+        .stats-table th {
+            background: #e0e0e0;
+        }
+
+        .download-container {
+            text-align: center;
+        }
+
+        #download-excel-btn {
+            background-color: #007A3D;
+            border: none;
+        }
+
+        #download-excel-btn:hover {
+            background-color: #005f2e;
+        }
+
+        .floating-search-container {
+            position: fixed;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 25px;
+            padding: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            top: 85px;
+            left: 85px;
+        }
+
+        .search-icon {
+            background: none;
+            border: none;
+            padding: 5px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .search-icon:hover {
+            transform: scale(1.1);
+        }
+
+        .search-container {
+            max-width: 0;
+            overflow: hidden;
+            transition: max-width 0.3s ease-in-out;
+            margin-left: 5px;
+        }
+
+        .search-container.active {
+            max-width: 200px;
+        }
+
+        #search-input {
+            border: 2px solid #007A3D;
+            border-radius: 5px;
+            padding: 5px 10px;
+            font-size: 16px;
+            width: 100%;
+            transition: border-color 0.3s ease;
+        }
+
+        #search-input:focus {
+            outline: none;
+            border-color: orange;
+            box-shadow: 0 0 5px rgba(255, 165, 0, 0.5);
         }
     </style>
 {% endblock %}

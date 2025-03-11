@@ -1,128 +1,153 @@
 {% extends 'index.html' %}
 
+{% load static %}
+{% load markdown_filters %}
+{% block style %}
+<!-- Meta & Favicon -->
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="author" content="Ministère des Finances CI">
+<link rel="shortcut icon" type="image/png" href="{% static 'assets/images/favicon.png' %}">
+<title>Actualités - Ministère des Finances de Côte d'Ivoire</title>
+
+<!-- CSS Files -->
+<link href="{% static 'assets/css/themify-icons.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/flaticon.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/bootstrap.min.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/animate.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/owl.carousel.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/owl.theme.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/slick.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/slick-theme.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/swiper.min.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/owl.transitions.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/jquery.fancybox.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/odometer-theme-default.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/component.css' %}" rel="stylesheet">
+<link href="{% static 'assets/sass/style.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/responsive.css' %}" rel="stylesheet">
+{% endblock style %}
+
 {% block content %}
-<div class="container py-5 mt-0 mb-0">
-    <h1 class="text-center mb-2 text-primary fw-bold">Blog du MFB</h1>
-    {% if blogs %}
-        <div class="d-flex flex-column align-items-center">
-            {% for blog in blogs %}
-                <div class="card shadow-sm mb-2 w-75">
-                    <div class="card-body p-1">
-                        <h5 class="card-title mb-1">{{ blog.title }}</h5>
-                        <p class="card-text mb-0"><strong>Auteur :</strong> {{ blog.author }}</p>
-                        <p class="card-text mb-1">{{ blog.content|truncatewords:10|safe }}</p>
-                        <div class="d-flex justify-content-between mt-1">
-                            <a href="{% url 'blog_detail' blog.pk %}" class="btn btn-primary btn-sm">Lire plus</a>
-                            {% if blog.author == request.user %}
-                                <a href="{% url 'edit_blog' blog.pk %}" class="btn btn-secondary btn-sm">Modifier</a>
-                                <a href="{% url 'delete_blog' blog.pk %}" class="btn btn-danger btn-sm">Supprimer</a>
-                            {% endif %}
-                        </div>                            
-                    </div>
-                    <div class="card-footer text-muted py-1">
-                        <small>Publié le {{ blog.created_at|date:"d M Y" }}</small>
-                    </div>
-                    <!-- Afficher le nombre de commentaires -->
-                    <div class="mt-1">
-                        <span class="badge bg-secondary">
-                            {% if blog.comment_count > 1 %}
-                                {{ blog.comment_count }} commentaires
-                            {% else %}
-                                {{ blog.comment_count }} commentaire
-                            {% endif %}
-                        </span>                            
+<div class="page-wrapper">
+    <!-- Preloader -->
+    <div class="preloader">
+        <div class="angular-shape">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+        <div class="spinner">
+            <div class="double-bounce1"></div>
+            <div class="double-bounce2"></div>
+        </div>
+    </div>
+    <!-- End Preloader -->
+
+    <!-- Breadcumb Section -->
+    <div class="wpo-breadcumb-area">
+        <div>
+            <div class="row">
+                <div class="col-12">
+                    <div class="wpo-breadcumb-wrap">
+                        <!-- <h2>{{ news.headline }}</h2> -->
+                        <h2>Blog du MFB</h2>
+                        <ul>
+                            <li><a href="#">Accueil</a></li>
+                            <li><span>Actualités</span></li>
+                        </ul>
                     </div>
                 </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <div class="no-news text-center">
-            <h3 class="text-warning">Aucun article disponible pour le moment !</h3>
-        </div>
-    {% endif %}
-
-    <!-- Bouton d'ajout -->
-    <div class="text-center mt-3">
-        {% if is_member %}
-            <a href="{% url 'add_blog' %}" class="btn btn-success btn-lg d-inline-flex align-items-center">
-                <span class="me-2">+</span> Ajouter un article
-            </a>
-        {% else %}
-            <!--<a href="#" class="btn btn-success btn-lg d-inline-flex align-items-center" data-bs-toggle="modal" data-bs-target="#loginModal2">-->
-            <a href="{% url 'add_blog' %}" class="btn btn-success btn-lg d-inline-flex align-items-center">    
-                <span class="me-2">+</span> Ajouter un article
-            </a>
-        {% endif %}    
-    </div>
-</div>
-
-<!-- Modale pour inviter à se connecter -->
-<div class="modal fade" id="loginModal2" tabindex="-1" aria-labelledby="loginModalLabel2" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Accès restreint</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                Vous devez être membre et connecté(e) pour ajouter un article. Veuillez vous connecter ou vous inscrire.
-            </div>
-            <div class="modal-footer">
-                <a class="btn btn-secondary" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">Se connecter</a>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
             </div>
         </div>
     </div>
-</div>
-{% endblock %}
 
-{% block extra_styles %}
-<style>
-    .no-news {
-        height: 50vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        color: #6c757d;
-    }
-    .text-warning {
-        color: #ff5722; /* Couleur orange pour attirer l'attention */
-        font-weight: bold;
-    }
-    .btn-success {
-        border-radius: 50px;
-        padding: 6px 14px;
-        font-size: 1.125rem;
-        font-weight: bold;
-    }
-    .btn-success span {
-        font-size: 1.5rem;
-    }
-    .btn-secondary {
-        border-radius: 50px;
-        padding: 6px 14px;
-        font-size: 1.125rem;
-        font-weight: bold;
-        background-color: #6c757d;
-        color: white;
-    }
-    .btn-secondary span {
-        font-size: 1.5rem;
-    }
-    .card {
-        margin-bottom: 1rem;
-    }
-    .card-body p {
-        margin-bottom: 0.25rem;
-    }
-    .card-footer {
-        padding: 0.25rem;
-    }
-    .card-body {
-        padding: 0.5rem;
-    }
-    .badge {
-        font-size: 0.875rem;
-    }
-</style>
-{% endblock %}
+    <!-- Blog Highlights Section -->
+    <section class="wpo-blog-highlights-section  m-5">
+        <div class="">
+            <div class="wpo-section-title">
+                <h2>Notre blog</h2>
+            </div>
+            <div class="row">
+                <div class="col-lg-9 col-12">
+                    <div class="wpo-blog-highlights-wrap">
+                        <div class="wpo-blog-items">
+                            <div class="row">
+                                {% for blog in blogs %}
+                                <div class="col-lg-4 col-md-6 col-12">
+                                    <div class="wpo-blog-item">
+                                        <div class="wpo-blog-img">
+                                            {% if blog.cover_image %}
+                                            <img src="{{ blog.cover_image.url }}" alt="{{ blog.title }}"
+                                                class="card-img-top"
+                                                style="width: 100%; height: 250px; object-fit: cover; border-radius: 5px;">
+                                            {% else %}
+                                            <img src="{% static 'assets/images/blog/default.jpg' %}"
+                                                alt="Image non disponible" class="card-img-top"
+                                                style="width: 100%; height: 250px; object-fit: cover; border-radius: 5px;">
+                                            {% endif %}
+                                            <div class="thumb">Blog</div>
+                                        </div>
+                                        <div class="wpo-blog-content">
+                                            <h2><a href="{% url 'blog_detail' blog.id %}">{{ blog.title }}</a></h2>
+                                            <ul>
+                                                <li>
+                                                    {% if comment.user.photo %}
+                                                    <img src="{{ news.creator.get_full_name|default:news.creator.photo.url }}"
+                                                        class="rounded-circle shadow-sm" width="50" height="50"
+                                                        alt="{{ comment.user.get_full_name|default:comment.user.username }}">
+                                                    {% else %}
+                                                    <div class="rounded-circle m-l-5 bg-success text-white d-flex justify-content-center align-items-center shadow-sm"
+                                                        style="width: 35px; height: 35px; font-size: 18px; font-weight: bold;">
+                                                        {{blog.author.get_full_name|default:blog.author.username|default:""|slice:":1"}}
+                                                        {{blog.author.get_full_name|default:blog.author.username|default:""|slice:":1"}}
+                                                    </div>
+                                                    {% endif %}
+                                                </li>
+                                                <li class="m-1"> <a
+                                                        href="#">{{blog.author.get_full_name|default:blog.author.username}}</a>
+                                                </li>
+                                                <li>{{ blog.created_at|date:"d/m/y" }}</li>
+                                            </ul>
+                                            <p>{{ blog.content|truncatechars:200|safe }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <p>Aucun article disponible.</p>
+                                {% endfor %}
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-12">
+                    <div class="blog-sidebar">
+                        <div class="widget category-widget">
+                            <h3>Sujets Tendance</h3>
+                            <ul>
+                                <li><a href="blog-single.html">Budget et Réformes<span>(05)</span></a></li>
+                                <li><a href="blog-single.html">Investissements<span>(07)</span></a></li>
+                                <li><a href="blog-single.html">Transparence<span>(03)</span></a></li>
+                                <li><a href="blog-single.html">Digitalisation<span>(06)</span></a></li>
+                                <li><a href="blog-single.html">Économie<span>(12)</span></a></li>
+                                <li><a href="blog-single.html">International<span>(08)</span></a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- End Blog Highlights Section -->
+</div>
+{% endblock content %}
+
+{% block script %}
+<script src="{% static 'assets/js/jquery.min.js' %}"></script>
+<script src="{% static 'assets/js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'assets/js/modernizr.custom.js' %}"></script>
+<script src="{% static 'assets/js/jquery-plugin-collection.js' %}"></script>
+<script src="{% static 'assets/js/script.js' %}"></script>
+{% endblock script %}

@@ -1,249 +1,607 @@
 {% extends 'index.html' %}
 
-{% block content %}
-<div class="container py-5 mt-0 mb-0">
-    <h1 class="text-center mb-4 text-primary fw-bold">Actualité du MFB</h1>
-    
-    {% if news %}
-    <div class="row">
-        {% for news in news %}
-            <div class="col-12 mb-4">
-                <div class="card shadow-lg border-0">
-                    <!-- Corps de la carte -->
-                    <div class="card-body">
-                        <!-- Conteneur Flex pour aligner les éléments -->
-                        <div class="d-flex justify-content-between align-items-center">
-                            
-                            <!-- Image de l'actualité -->
-                            <div>
-                                {% if news.image %}
-                                    <img 
-                                        src="{{ news.image.url }}" 
-                                        class="card-img-top" 
-                                        alt="{{ news.headline }}" 
-                                        style="width: 150px; height: auto; object-fit: cover; border-radius: 5px;"
-                                    >
-                                {% endif %}
-                            </div>
-    
-                            <!-- Texte principal -->
-                            <div>
-                                <h5 class="card-title">{{ news.headline }}</h5>
-                                <p class="card-text">{{ news.content|truncatechars:15|safe }}</p>
-                            </div>
-    
-                            <!-- Boutons -->
-                            <div class="d-flex flex-column align-items-end">
-                                <!-- Bouton Lire plus -->
-                                <a href="{% url 'news_detail' news.id %}" class="btn btn-primary mb-2 w-100">Lire plus</a>
-                                 
-                                <!-- Lien externe -->
-                                {% if news.external_link %}
-                                    <a href="{{ news.external_link }}" class="btn btn-primary mb-2 w-100">Lien externe</a>
-                                {% endif %}
-                                 
-                                <!-- Bouton Supprimer (visible uniquement pour l'auteur) -->
-                                {% if news.creator == request.user %}
-                                    <a href="{% url 'delete_news' news.id %}" class="btn btn-danger mb-1 w-100">Supprimer</a>
-                                {% endif %}
-                            </div>
-    
-                        </div>
-                    </div>
-    
-                    <!-- Pied de la carte -->
-                    <div class="card-footer text-muted py-1">
-                        <!-- Dates de publication et de mise à jour -->
-                        <small>
-                            Publié par {{ news.creator.first_name }} {{ news.creator.last_name }} le {{ news.published_at|date:"d M Y" }}
-                        </small>
-                        {% if news.updated_at and news.updated_at != news.published_at %}
-                            <br>
-                            <small>Mis à jour le {{ news.updated_at|date:"d M Y" }}</small>
-                        {% endif %}
-                    </div>
-    
-                    <!-- Nombre de commentaires -->
-                    <div class="mt-1">
-                        <span class="badge bg-secondary">
-                            {% if news.comment_count > 1 %}
-                                {{ news.comment_count }} commentaires
-                            {% else %}
-                                {{ news.comment_count }} commentaire
-                            {% endif %}
-                        </span>
-                    </div>
-                </div>
-            </div>
-        {% endfor %}
-    </div>    
-    {% else %}
-        <div class="no-news text-center">
-            <h3 class="text-warning">Aucune info disponible !</h3>
-        </div>
-    {% endif %}
+{% load static %}
+{% load markdown_filters %}
+{% block style %}
+<!-- Meta & Favicon -->
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="author" content="Ministère des Finances CI">
+<link rel="shortcut icon" type="image/png" href="{% static 'assets/images/favicon.png' %}">
+<title>Actualités - Ministère des Finances de Côte d'Ivoire</title>
 
-    <!-- Bouton d'ajout -->
-    <div class="text-center mt-5">
-        {% if is_member %}
-            <a href="{% url 'add_news' %}" class="btn btn-success btn-lg d-inline-flex align-items-center">
-                <span class="me-2">+</span> Ajouter du contenu
-            </a>
-        {% else %}
-            <a href="{% url 'add_news' %}" class="btn btn-success btn-lg d-inline-flex align-items-center">
-                <span class="me-2">+</span> Ajouter du contenu
-            </a>
-        {% endif %}
-    </div>
-</div>
-
-<!-- Modale pour inviter à se connecter -->
-<div class="modal fade" id="loginModal2" tabindex="-1" aria-labelledby="loginModalLabel2" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Accès restreint</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                Vous devez être membre et connecté(e) pour ajouter du contenu. Veuillez vous connecter ou vous inscrire.
-            </div>
-            <div class="modal-footer">
-                <a class="btn btn-secondary" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">Se connecter</a>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-{% endblock %}
-
-{% block extra_styles %}
+<!-- CSS Files -->
+<link href="{% static 'assets/css/themify-icons.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/flaticon.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/bootstrap.min.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/animate.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/owl.carousel.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/owl.theme.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/slick.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/slick-theme.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/swiper.min.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/owl.transitions.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/jquery.fancybox.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/odometer-theme-default.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/component.css' %}" rel="stylesheet">
+<link href="{% static 'assets/sass/style.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/responsive.css' %}" rel="stylesheet">
 <style>
-    /* Réduction des marges sur le body, html et container */
-    body, html {
+    /* Styles de base */
+    :root {
+        --bg-dark: #121212;
+        --bg-modal: #1e1e1e;
+        --border-color: #333;
+        --text-primary: #fff;
+        --text-secondary: #aaa;
+        --accent-color: #6366f1;
+        --transition-speed: 0.3s;
+    }
+
+    * {
         margin: 0;
         padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans",
+            "Helvetica Neue", sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background-color: #f5f5f5;
+    }
+
+    body.modal-open {
+        overflow: hidden;
     }
 
     .container {
-        margin-top: 0;
-        margin-bottom: 0;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
     }
 
-    .no-news {
-        height: 50vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        color: #6c757d;
-    }
-    
-    .text-warning {
-        color: #ff5722; /* Couleur orange pour attirer l'attention */
-        font-weight: bold;
+    h1 {
+        margin-bottom: 1rem;
     }
 
-    .btn-success {
-        border-radius: 50px;
-        padding: 12px 25px;
-        font-size: 1.25rem;
-        font-weight: bold;
-        background-color: #28a745;
-        transition: background-color 0.3s;
+    p {
+        margin-bottom: 1.5rem;
     }
 
-    .btn-success:hover {
-        background-color: #218838;
-    }
-
-    .btn-success span {
-        font-size: 1.5rem;
-    }
-
-    .btn-secondary {
-        border-radius: 50px;
-        padding: 12px 25px;
-        font-size: 1.25rem;
-        font-weight: bold;
-        background-color: #6c757d;
+    /* Bouton principal */
+    .btn-primary {
+        background-color: var(--accent-color);
         color: white;
-        transition: background-color 0.3s;
-    }
-
-    .btn-secondary:hover {
-        background-color: #5a6268;
-    }
-
-    .btn-danger {
-        border-radius: 50px;
-        padding: 12px 25px;
-        font-size: 1.25rem;
-        font-weight: bold;
-        background-color: #dc3545;
-        transition: background-color 0.3s;
-    }
-
-    .btn-danger:hover {
-        background-color: #c82333;
-    }
-
-    .card {
         border: none;
-        border-radius: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        transition: box-shadow 0.3s;
-        max-height: 400px; /* Ajustez la hauteur */
-        overflow: hidden; /* Cache tout ce qui déborde */
-        margin-bottom: 20px;
+        padding: 0.75rem 1.5rem;
+        border-radius: 9999px;
+        font-weight: 500;
+        cursor: pointer;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: all var(--transition-speed) ease;
     }
 
-    .card:hover {
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+        background-color: #5254d3;
     }
 
-    .card-img-top {
-        border-radius: 10px 10px 0 0;
-        object-fit: cover;
-        height: 200px; /* Hauteur fixe des images */
-        width: 100%; /* Ajuste l'image à la largeur du conteneur */
-    }
-
-    .card-body {
-        padding: 15px; /* Réduit le padding */
-    }
-
-    .card-title {
-        font-size: 1.2rem;
-        font-weight: bold;
-    }
-
-    .card-text {
-        color: #495057;
-    }
-
-    .d-flex {
+    /* Modal */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(4px);
         display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 1rem;
+        opacity: 0;
+        transition: opacity var(--transition-speed) ease;
     }
 
-    .me-2 {
-        margin-right: 0.5rem;
+    .modal-overlay.active {
+        opacity: 1;
     }
 
-    .mb-2 {
-        margin-bottom: 0.5rem;
+    .modal-container {
+        background-color: var(--bg-modal);
+        border-radius: 12px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        width: 100%;
+        max-width: 800px;
+        position: relative;
+        border: 1px solid var(--border-color);
+        transform: scale(0.95);
+        opacity: 0;
+        transition: all var(--transition-speed) ease;
     }
 
-    .mt-2 {
-        margin-top: 0.5rem;
+    .modal-overlay.active .modal-container {
+        transform: scale(1);
+        opacity: 1;
     }
 
-    .mt-3 {
-        margin-top: 1rem;
+    .modal-header {
+        padding: 0;
+        color: var(--text-primary);
     }
 
-    .mt-5 {
-        margin-top: 3rem;
+    .modal-header h2 {
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+
+    .modal-content {
+        padding: 0;
+        background-color: #1e1e1e;
+    }
+
+    .modal-footer {
+        padding: 0.75rem 1.5rem 1.5rem;
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+    }
+
+    .close-btn {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background-color: rgba(255, 255, 255, 0.1);
+        border: none;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all var(--transition-speed) ease;
+        z-index: 10;
+    }
+
+    .close-btn:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+        color: var(--text-primary);
+    }
+
+    .close-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    /* Styles pour le video-container */
+    .video-container {
+        position: relative;
+        padding-bottom: 56.25%;
+        /* Conserve le ratio 16:9 */
+        height: 0;
+        overflow: hidden;
+        border-radius: 0;
+        /* Supprime les coins arrondis si vous voulez que la vidéo touche les bords */
+        box-shadow: none;
+        /* Supprime la bordure ou l’ombre */
+        margin: 0;
+        /* S’assure qu’il n’y a pas de marge externe */
+    }
+
+    /* Styles pour l’iframe */
+    .video-container iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+        margin: 0;
+        /* Élimine toute marge parasite */
+        padding: 0;
+        /* Élimine tout padding parasite */
     }
 </style>
-{% endblock %}
+{% endblock style %}
+
+{% block content %}
+<div class="page-wrapper m-5">
+    <!-- Preloader -->
+    <div class="preloader">
+        <div class="angular-shape">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+        <div class="spinner">
+            <div class="double-bounce1"></div>
+            <div class="double-bounce2"></div>
+        </div>
+    </div>
+    <!-- End Preloader -->
+
+    <!-- Header Hero Area -->
+    <div class="wpo-blog-hero-area">
+        <div class="">
+            <div class="sortable-gallery">
+                <div class="gallery-filters"></div>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="wpo-blog-grids gallery-container clearfix">
+                            <!-- Hero Image 1 -->
+                            <div class="grid">
+                                <div class="img-holder">
+                                    <img src="{% static 'assets/images/hero/img-1.jpg' %}" alt="Budget et Réformes"
+                                        class="img img-responsive">
+                                    <div class="wpo-blog-content">
+                                        <div class="thumb">Budget</div>
+                                        <h2><a href="#">Réformes Budgétaires 2025 : Vers une meilleure
+                                                transparence</a></h2>
+                                        <p>Le Ministère des Finances dévoile ses axes prioritaires pour une gestion
+                                            optimisée des ressources publiques.</p>
+                                        <ul>
+                                            <!-- <li><img src="{% static 'assets/images/blog/blog-avater/minister-avatar.jpg' %}"
+                                                    alt="Ministère"></li> -->
+                                            <li>Par <a href="#">Ministère des Finances CI</a></li>
+                                            <li>15 Février 2025</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Hero Image 2 -->
+                            <div class="grid">
+                                <div class="img-holder">
+                                    <img src="{% static 'assets/images/hero/img-2.jpg' %}" alt="Investissements"
+                                        class="img img-responsive">
+                                    <div class="wpo-blog-content">
+                                        <div class="thumb">Investissement</div>
+                                        <h2><a href="#">Investissements Publics : Nouvelles
+                                                Perspectives</a></h2>
+                                        <ul>
+                                            <li>Par <a href="#">Ministère</a></li>
+                                            <li>20 Février 2025</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Combo Hero -->
+                            <div class="grid s2">
+                                <div class="img-holder">
+                                    <img src="{% static 'assets/images/hero/img-3.jpg' %}" alt="Digitalisation"
+                                        class="img img-responsive">
+                                    <div class="wpo-blog-content">
+                                        <div class="thumb">Digitalisation</div>
+                                        <h2><a href="#">Modernisation du SIGOBE : Un suivi numérique
+                                                renforcé</a></h2>
+                                        <ul>
+                                            <li>Par <a href="#">Ministère</a></li>
+                                            <li>20 Février 2025</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="img-holder">
+                                    <img src="{% static 'assets/images/hero/img-4.jpg' %}" alt="Transparence"
+                                        class="img img-responsive">
+                                    <div class="wpo-blog-content">
+                                        <div class="thumb">Transparence</div>
+                                        <h2><a href="#">Budget Citoyen : Impliquer les citoyens</a></h2>
+                                        <ul>
+                                            <li>Par <a href="#">Ministère</a></li>
+                                            <li>20 Février 2025</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Fin Hero -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End Header Hero Area -->
+
+    <!-- Breaking News Section -->
+    <div class="wpo-breacking-news section-padding">
+        <div class="">
+            <div class="row">
+                <div class="b-title"><span>Actualités Urgentes</span></div>
+                <div class="wpo-breacking-wrap owl-carousel">
+                    <div class="wpo-breacking-item s1">
+                        <div class="wpo-breacking-img">
+                            <img src="{% static 'assets/images/breaking-news/img-1.jpg' %}" alt="Urgence 1">
+                        </div>
+                        <div class="wpo-breacking-text">
+                            <span>15 Février 2025</span>
+                            <h3><a href="#">Nouvelles réformes pour la transparence budgétaire</a></h3>
+                        </div>
+                    </div>
+                    <div class="wpo-breacking-item">
+                        <div class="wpo-breacking-img">
+                            <img src="{% static 'assets/images/breaking-news/img-2.jpg' %}" alt="Urgence 2">
+                        </div>
+                        <div class="wpo-breacking-text">
+                            <span>16 Février 2025</span>
+                            <h3><a href="#">Lancement de la plateforme SIGOBE</a></h3>
+                        </div>
+                    </div>
+                    <div class="wpo-breacking-item">
+                        <div class="wpo-breacking-img">
+                            <img src="{% static 'assets/images/breaking-news/img-3.jpg' %}" alt="Urgence 3">
+                        </div>
+                        <div class="wpo-breacking-text">
+                            <span>17 Février 2025</span>
+                            <h3><a href="#">Budget Citoyen : Impliquer les citoyens</a></h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End Breaking News Section -->
+
+    <!-- Blog Highlights Section -->
+    <section class="wpo-blog-highlights-section">
+        <div class="">
+            <div class="wpo-section-title">
+                <h2>Les Temps Forts d'Aujourd'hui</h2>
+            </div>
+            <div class="row">
+                <div class="col-lg-9 col-12">
+                    <div class="wpo-blog-highlights-wrap">
+                        <div class="wpo-blog-items">
+                            <div class="row">
+                                {% for news in news_list %}
+                                <div class="col-lg-4 col-md-6 col-12">
+                                    <div class="wpo-blog-item">
+                                        <div class="wpo-blog-img">
+                                            {% if news.image %}
+                                            <img src="{{ news.image.url }}" alt="{{ news.headline }}"
+                                                class="card-img-top"
+                                                style="width: 100%; height: 250px; object-fit: cover; border-radius: 5px;">
+                                            {% else %}
+                                            <img src="{% static 'assets/images/blog/default.jpg' %}"
+                                                alt="Image non disponible" class="card-img-top"
+                                                style="width: 100%; height: 250px; object-fit: cover; border-radius: 5px;">
+                                            {% endif %}
+                                            <div class="thumb">Actualités</div>
+                                        </div>
+                                        <div class="wpo-blog-content">
+                                            <h2><a href="{% url 'news_detail' news.id %}">{{ news.headline }}</a></h2>
+                                            <ul>
+                                                <li> {% if comment.user.photo %}
+                                                    <img src="{{ news.creator.get_full_name|default:news.creator.photo.url }}"
+                                                        class="rounded-circle shadow-sm" width="50" height="50"
+                                                        alt="{{ comment.user.get_full_name|default:comment.user.username }}">
+                                                    {% else %}
+                                                    <div class="rounded-circle m-l-5 bg-success text-white d-flex justify-content-center align-items-center shadow-sm"
+                                                        style="width: 35px; height: 35px; font-size: 18px; font-weight: bold;">
+                                                        {{news.creator.get_full_name|default:news.creator.first_name|default:""|slice:":1"}}
+                                                        {{news.creator.get_full_name|default:news.creator.last_name|default:""|slice:":1"}}
+                                                    </div>
+                                                    {% endif %}
+                                                </li>
+                                                <li> <a href="#">{{ news.creator.username }}</a></li>
+                                                <li>{{ news.published_at|date:"d/m/Y" }}</li>
+                                            </ul>
+                                            {{ news.resume }}
+
+                                        </div>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <p>Aucune actualité disponible.</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-12">
+                    <div class="blog-sidebar">
+                        <div class="widget category-widget">
+                            <h3>Sujets Tendance</h3>
+                            <ul>
+                                <li><a href="#">Budget et Réformes<span>(05)</span></a></li>
+                                <li><a href="#">Investissements<span>(07)</span></a></li>
+                                <li><a href="#">Transparence<span>(03)</span></a></li>
+                                <li><a href="#">Digitalisation<span>(06)</span></a></li>
+                                <li><a href="#">Économie<span>(12)</span></a></li>
+                                <li><a href="#">International<span>(08)</span></a></li>
+                            </ul>
+                        </div>
+                        <div class="wpo-add-widget">
+                            <a href="#"><img src="{% static 'assets/images/add.jpg' %}" alt="Publicité"></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- End Blog Highlights Section -->
+
+
+
+    <!-- Subscribe Section -->
+    <section class="wpo-subscribe-section section-padding">
+        <div class="">
+            <div class="wpo-subscribe-wrap">
+                <div class="subscribe-text">
+                    <h3>Ne manquez aucune mise à jour !</h3>
+                    <p>Recevez directement dans votre boîte mail les dernières actualités et analyses financières.</p>
+                </div>
+                <div class="subscribe-form">
+                    <form action="#">
+                        <div class="input-field">
+                            <input type="email" placeholder="Entrez votre email" required>
+                            <button type="submit">S'abonner</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- End Subscribe Section -->
+</div>
+<!-- Ajoutez ce code juste après l'ouverture de la balise <body> dans votre template parent -->
+<div class="modal fade video-modal" id="videoModal" tabindex="-1" role="dialog" aria-hidden="true"
+    style="display: none;">
+    <div class="modal-content border-0 bg-transparent">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+        <div class="modal-body">
+            <div class="embed-responsive embed-responsive-16by9">
+                <iframe class="embed-responsive-item"
+                    src="https://www.youtube.com/embed/nSXLMC-ZB5g?autoplay=1&mute=1&rel=0"
+                    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
+                </iframe>
+            </div>
+        </div>
+        <!-- <div class="modal-dialog modal-dialog-centered">
+        </div> -->
+    </div>
+</div>
+{% endblock content %}
+
+{% block script %}
+<script src="{% static 'assets/js/jquery.min.js' %}"></script>
+<script src="{% static 'assets/js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'assets/js/modernizr.custom.js' %}"></script>
+<script src="{% static 'assets/js/jquery-plugin-collection.js' %}"></script>
+<script src="{% static 'assets/js/script.js' %}"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        // Créer le modal
+        function createModal() {
+            // Créer l'overlay du modal
+            const modalOverlay = document.createElement("div")
+            modalOverlay.className = "modal-overlay"
+            modalOverlay.id = "youtubeModal"
+
+            // Créer le conteneur du modal
+            const modalContainer = document.createElement("div")
+            modalContainer.className = "modal-container"
+
+            // Créer le bouton de fermeture
+            const closeBtn = document.createElement("button")
+            closeBtn.className = "close-btn"
+            closeBtn.setAttribute("aria-label", "Fermer")
+            closeBtn.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          `
+
+            // Créer l'en-tête du modal
+            const modalHeader = document.createElement("div")
+            //modalHeader.className = "modal-header"
+            const title = document.createElement("h2")
+            //title.textContent = "Abidjan in Motion (4K) - Ivory Coast / Côte d'Ivoire"
+            modalHeader.appendChild(title)
+
+            // Créer le contenu du modal
+            const modalContent = document.createElement("div")
+            modalContent.className = "modal-content"
+
+            // Créer le conteneur de la vidéo
+            const videoContainer = document.createElement("div")
+            videoContainer.className = "video-container"
+
+            // Créer l'iframe pour la vidéo YouTube
+            const iframe = document.createElement("iframe")
+            iframe.src = "https://www.youtube.com/embed/nSXLMC-ZB5g?autoplay=1&color=white"
+            iframe.title = "YouTube video player"
+            iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            iframe.allowFullscreen = true
+
+            // Créer le pied de page du modal
+            const modalFooter = document.createElement("div")
+            //modalFooter.className = "modal-footer"
+            //modalFooter.textContent = "Une vidéo de Mayeul Akpovi présentant la beauté d'Abidjan en 4K."
+
+            // Assembler les éléments
+            videoContainer.appendChild(iframe)
+            modalContent.appendChild(videoContainer)
+
+            modalContainer.appendChild(closeBtn)
+            modalContainer.appendChild(modalHeader)
+            modalContainer.appendChild(modalContent)
+            modalContainer.appendChild(modalFooter)
+
+            modalOverlay.appendChild(modalContainer)
+
+            return modalOverlay
+        }
+
+        // Fonction pour ouvrir le modal
+        function openModal() {
+            const modal = document.getElementById("youtubeModal") || createModal()
+
+            if (!document.body.contains(modal)) {
+                document.body.appendChild(modal)
+
+                // Petit délai pour permettre au DOM de se mettre à jour avant l'animation
+                setTimeout(() => {
+                    modal.classList.add("active")
+                    document.body.classList.add("modal-open")
+                }, 10)
+            }
+        }
+
+        // Fonction pour fermer le modal
+        function closeModal() {
+            const modal = document.getElementById("youtubeModal")
+
+            if (modal) {
+                modal.classList.remove("active")
+                document.body.classList.remove("modal-open")
+
+                // Attendre la fin de l'animation avant de supprimer le modal du DOM
+                setTimeout(() => {
+                    if (modal.parentNode) {
+                        modal.parentNode.removeChild(modal)
+                    }
+                }, 300) // Correspond à la durée de transition dans le CSS
+            }
+        }
+
+        // Ouvrir le modal automatiquement après un court délai
+        setTimeout(openModal, 500)
+
+        // Ajouter un écouteur d'événement au bouton d'ouverture
+        const openModalBtn = document.getElementById("openModalBtn")
+        if (openModalBtn) {
+            openModalBtn.addEventListener("click", openModal)
+        }
+
+        // Fermer le modal lorsqu'on clique sur l'overlay (en dehors du contenu du modal)
+        document.addEventListener("click", (event) => {
+            const modal = document.getElementById("youtubeModal")
+            if (modal && event.target === modal) {
+                closeModal()
+            }
+        })
+
+        // Fermer le modal lorsqu'on clique sur le bouton de fermeture
+        document.addEventListener("click", (event) => {
+            if (event.target.closest(".close-btn")) {
+                closeModal()
+            }
+        })
+
+        // Fermer le modal avec la touche Escape
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") {
+                closeModal()
+            }
+        })
+    })
+</script>
+{% endblock script %}

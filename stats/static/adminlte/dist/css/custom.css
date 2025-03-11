@@ -1,0 +1,4 @@
+.unit {
+    font-size: 0.2em; /* Plus petit que le texte du h3 */
+    vertical-align: middle; /* Alignement avec le chiffre */
+}

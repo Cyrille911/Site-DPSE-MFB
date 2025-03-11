@@ -21,10 +21,16 @@ from .models import News, NewsComment
 ## Actualité
 def news_list(request):
     # Récupérer toutes les actualités (vous pouvez aussi filtrer selon un critère si nécessaire)
-    news = News.objects.all()
+    news_list  = News.objects.all()
 
     # Passer les actualités au template
-    return render(request, 'news/news_list.html', {'news': news})
+    return render(request, 'news/news_list.html', {'news_list': news_list })
+# def news_list(request):
+#     # Récupérer toutes les actualités (vous pouvez aussi filtrer selon un critère si nécessaire)
+#     news = News.objects.all()
+
+#     # Passer les actualités au template
+#     return render(request, 'news/news_list.html', {'news': news})
 
 def news_detail(request, pk):
     """ Affiche les détails d'une actualité spécifique avec gestion des commentaires """
@@ -62,6 +68,7 @@ def add_news(request):
         image = request.FILES.get('image')
         is_featured = 'is_featured' in request.POST
         external_link = request.POST.get('external_link')
+        resume = request.POST.get('resume')  # Récupération du résumé
 
         if headline and content:
             news = News(
@@ -70,15 +77,16 @@ def add_news(request):
                 image=image,
                 is_featured=is_featured,
                 external_link=external_link,
-                creator=request.user  # L'actualite est créée par l'utilisateur connecté
+                resume=resume,  # Ajout du résumé
+                creator=request.user
             )
             news.save()
             messages.success(request, "L'actualité a été ajoutée avec succès.")
-            return redirect('news_list')  # Rediriger vers la liste des actualités (à ajuster selon votre vue de liste)
+            return redirect('news_list')
         else:
             messages.error(request, "Le titre et le contenu sont obligatoires.")
+    
     return render(request, 'news/add_news.html')
-
 # Vue pour modifier une actualité
 @login_required
 def edit_news(request, pk):

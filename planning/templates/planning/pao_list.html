@@ -1,0 +1,177 @@
+{% extends 'index.html' %}
+{% load planning_filters %}
+
+{% block title %}
+Liste des Plans d'Actions Opérationnels (PAO) - {{ plan.titre }}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-5 text-orange fw-bold animate-fade-in">Plans d'Actions Opérationnels (PAO)</br></span><span class="text-success">- {{ plan.titre }} -</span></h1>
+
+    <!-- Liste des PAO -->
+    <div id="pao-list" class="row justify-content-center">
+        {% for pao in paos %}
+            <div class="col-md-4 col-sm-6 mb-4 animate-slide-up" style="animation-delay: {{ forloop.counter0|mul:0.1 }}s;">
+                <a href="{% if pao.statut == 'En cours' %}{% url 'manage_activities' plan.id entity %}?annee={{ pao.annee }}{% elif pao.statut == 'Achevé' %}{% url 'operational_plan_matrix' plan.id pao.annee %}{% else %}#{% endif %}" class="card-link">
+                    <div class="card shadow-lg border-orange rounded-4 pao-card h-100" data-statut="{{ pao.statut }}">
+                        <div class="card-header bg-orange text-white text-center py-3">
+                            <h4 class="card-title mb-0">PAO {{ pao.annee }}</h4>
+                        </div>
+                        <div class="card-body d-flex flex-column justify-content-center">
+                            <p class="text-muted mb-0 text-center">
+                                <span class="fw-bold">Statut :</span> 
+                                <span class="{% if pao.statut == 'En cours' %}text-success{% elif pao.statut == 'Achevé' %}text-primary{% else %}text-warning{% endif %}">
+                                    {{ pao.statut }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        {% empty %}
+            <div class="no-news text-center py-5 animate-fade-in">
+                <h3 class="text-warning fw-bold">Aucun PAO pour ce PAS !</h3>
+                <p class="text-muted">Revenez plus tard ou ajoutez un nouveau PAO.</p>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Bouton de retour -->
+    <div class="text-center mt-5 animate-fade-in">
+        <a href="{% url 'plan_action_detail' plan.id %}" class="btn btn-secondary btn-lg px-5 py-3 fw-bold">Retour au PAS</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block style %}
+<style>
+    /* Couleurs personnalisées */
+    .text-orange { color: #ff6200 !important; } /* Orange pour le titre */
+    .border-orange { border: 2px solid #ff6200 !important; } /* Contour orange */
+    .bg-orange { background: #ff6200 !important; } /* En-tête orange */
+    .text-success { color: #28a745 !important; }
+    .text-primary { color: #007bff !important; }
+    .text-warning { color: #ffc107 !important; }
+    .fw-bold { font-weight: bold; }
+
+    /* Style des cartes */
+    .pao-card {
+        position: relative;
+        background: #ffffff;
+        transition: background 0.5s ease; /* Transition fluide pour le survol */
+        overflow: hidden;
+        cursor: pointer;
+    }
+
+    /* Changement de couleur au survol */
+    .pao-card:hover {
+        background: #fff3e6; /* Orange clair pour tous au survol */
+    }
+
+    /* Lien enveloppant la carte */
+    .card-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+    .card-link:hover {
+        text-decoration: none;
+    }
+
+    /* Pseudo-élément pour le texte au survol */
+    .pao-card::after {
+        content: attr(data-statut);
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        font-weight: bold;
+        text-align: center;
+        opacity: 0;
+        transition: opacity 0.5s ease; /* Transition fluide pour le texte */
+        pointer-events: none;
+    }
+    .pao-card:hover::after {
+        opacity: 1;
+    }
+
+    /* Texte personnalisé selon le statut */
+    .pao-card[data-statut="En cours"]::after {
+        content: "Consulter / Modifier";
+    }
+    .pao-card[data-statut="Achevé"]::after {
+        content: "Consulter";
+    }
+    .pao-card[data-statut="Non entamé"]::after {
+        content: "Non disponible";
+    }
+
+    /* Bouton de retour */
+    .btn-secondary {
+        border-radius: 50px;
+        padding: 10px 30px;
+        font-size: 1.25rem;
+        font-weight: bold;
+        background: #6c757d;
+        color: white;
+        border: none;
+        transition: background 0.5s ease; /* Transition fluide pour le bouton */
+    }
+    .btn-secondary:hover {
+        background: #5a6268;
+    }
+
+    /* Style pour le cas vide */
+    .no-news {
+        height: 50vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        color: #6c757d;
+        background: #f8f9fa;
+        border-radius: 15px;
+    }
+
+    /* Animations pour l'ouverture de la page */
+    .animate-fade-in {
+        animation: fadeIn 1s ease-in-out forwards;
+    }
+    .animate-slide-up {
+        animation: slideUp 0.8s ease-in-out forwards;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .pao-card {
+            margin: 0 auto;
+            max-width: 90%;
+        }
+        .btn-secondary {
+            font-size: 1rem;
+            padding: 8px 20px;
+        }
+        .pao-card::after {
+            font-size: 1rem;
+        }
+    }
+</style>
+{% endblock %}

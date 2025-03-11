@@ -1,0 +1,715 @@
+{% extends "index.html" %}
+{% load planning_filters %}
+{% load static %}
+
+{% block title %}
+Matrice Opérationnelle - {{ plan.titre }} - {{ annee }}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center mb-5 text-orange fw-bold animate-fade-in">Matrice Opérationnelle - {{ plan.titre }} - {{ annee }}</h2>
+
+    <!-- Filtres -->
+    <div class="row my-3 g-3 mx-0 animate-slide-up">
+        <div class="col-12 col-sm-6 col-md-4">
+            <label class="mb-2 fw-bold text-orange">Filtrer par effet :</label>
+            <div class="dropdown">
+                <button class="btn btn-outline-orange dropdown-toggle w-100" type="button" data-group="effet" data-bs-toggle="dropdown">
+                    Sélectionner les effets
+                </button>
+                <ul class="dropdown-menu w-100 overflow-auto" id="filter-effet">
+                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="effet" id="select-all-effet"> Tout sélectionner</label></li>
+                    {% for effet in effet_list %}
+                        <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="effet" value="{{ effet.titre }}">{{ effet.titre }}</label></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-md-4">
+            <label class="mb-2 fw-bold text-orange">Filtrer par produit :</label>
+            <div class="dropdown">
+                <button class="btn btn-outline-orange dropdown-toggle w-100" type="button" data-group="produit" data-bs-toggle="dropdown">
+                    Sélectionner les produits
+                </button>
+                <ul class="dropdown-menu w-100 overflow-auto" id="filter-produit">
+                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="produit" id="select-all-produit"> Tout sélectionner</label></li>
+                    {% for produit in produit_list %}
+                        <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="produit" value="{{ produit.titre }}">{{ produit.titre }}</label></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-md-4">
+            <label class="mb-2 fw-bold text-orange">Filtrer par action :</label>
+            <div class="dropdown">
+                <button class="btn btn-outline-orange dropdown-toggle w-100" type="button" data-group="action" data-bs-toggle="dropdown">
+                    Sélectionner les actions
+                </button>
+                <ul class="dropdown-menu w-100 overflow-auto" id="filter-action">
+                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="action" id="select-all-action"> Tout sélectionner</label></li>
+                    {% for action in action_list %}
+                        <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="action" value="{{ action.titre }}">{{ action.titre }}</label></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-md-4">
+            <label class="mb-2 fw-bold text-orange">Filtrer par type :</label>
+            <div class="dropdown">
+                <button class="btn btn-outline-orange dropdown-toggle w-100" type="button" data-group="type" data-bs-toggle="dropdown">
+                    Sélectionner les types
+                </button>
+                <ul class="dropdown-menu w-100 overflow-auto" id="filter-type">
+                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="type" id="select-all-type"> Tout sélectionner</label></li>
+                    {% for type in types %}
+                        <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="type" value="{{ type }}">{{ type }}</label></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-md-4">
+            <label class="mb-2 fw-bold text-orange">Filtrer par structure :</label>
+            <div class="dropdown">
+                <button class="btn btn-outline-orange dropdown-toggle w-100" type="button" data-group="structure" data-bs-toggle="dropdown">
+                    Sélectionner les structures
+                </button>
+                <ul class="dropdown-menu w-100 overflow-auto" id="filter-structure">
+                    <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="structure" id="select-all-structure"> Tout sélectionner</label></li>
+                    {% for structure in structures %}
+                        <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="structure" value="{{ structure }}">{{ structure }}</label></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tableau -->
+    <div class="table-container mx-0 animate-slide-up" style="animation-delay: 0.4s;">
+        <div class="table-wrapper">
+            <div class="table-horizontal-container">
+                <table class="unfixed-table" id="matrix-table">
+                    <thead class="thead-dark">
+                        <tr id="table-header-top">
+                            <th rowspan="2">Intitulé</th>
+                            <th rowspan="2">Type</th>
+                            <th colspan="{{ annees|length|add:2 }}">Indicateur</th>
+                            <th rowspan="2">Structure</th>
+                            <th colspan="{{ annees|length }}">Coûts (en millions)</th>
+                            <th colspan="{{ annees|length }}">Réalisation</th>
+                            <th rowspan="2">État d’avancement</th>
+                            <th rowspan="2">Commentaire</th>
+                            <th rowspan="2">Commentaire SE</th>
+                            <th rowspan="2">Statut</th>
+                            <th rowspan="2">Programme</th>
+                        </tr>
+                        <tr id="table-header-bottom">
+                            <th>Libellé</th>
+                            <th>Référence</th>
+                            {% for annee in annees %}
+                                <th>Cibles {{ annee }}</th>
+                            {% endfor %}
+                            {% for annee in annees %}
+                                <th>{{ annee }}</th>
+                            {% endfor %}
+                            {% for annee in annees %}
+                                <th>{{ annee }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody id="matrix-table-body">
+                        <!-- Impact -->
+                        <tr class="hierarchy-row impact-row">
+                            <td colspan="{{ annees|length|add:annees|length|add:annees|length|add:8 }}">Impact : {{ impact|default:'Impact non défini' }}</td>
+                        </tr>
+                        {% for effet in effets %}
+                            <tr class="hierarchy-row effet-row">
+                                <td colspan="{{ annees|length|add:3 }}">Effet : {{ effet.titre }}</td>
+                                <td></td>
+                                {% for cout in effet.couts %}
+                                    <td>{{ cout|default:'N/A' }}</td>
+                                {% endfor %}
+                                <td colspan="{{ annees|length|add:4 }}"></td>
+                            </tr>
+                            {% for produit in effet.produits %}
+                                <tr class="hierarchy-row produit-row">
+                                    <td colspan="{{ annees|length|add:3 }}">Produit : {{ produit.titre }}</td>
+                                    <td></td>
+                                    {% for cout in produit.couts %}
+                                        <td>{{ cout|default:'N/A' }}</td>
+                                    {% endfor %}
+                                    <td colspan="{{ annees|length|add:4 }}"></td>
+                                </tr>
+                                {% for action in produit.actions %}
+                                    <tr class="hierarchy-row action-row">
+                                        <td colspan="{{ annees|length|add:3 }}">Action : {{ action.titre }}</td>
+                                        <td></td>
+                                        {% for cout in action.couts %}
+                                            <td>{{ cout|default:'N/A' }}</td>
+                                        {% endfor %}
+                                        <td colspan="{{ annees|length|add:4 }}"></td>
+                                    </tr>
+                                    {% for activite in action.activites %}
+                                        <tr class="activity-row" data-last-modified="{{ activite.last_modified_matrix_status }}">
+                                            <td>{{ activite.titre }}</td>
+                                            <td>{{ activite.type|default:'N/A' }}</td>
+                                            <td>{{ activite.indicateur_label|default:'N/A' }}</td>
+                                            <td>{{ activite.indicateur_reference|default:'N/A' }}</td>
+                                            {% for cible in activite.cibles %}
+                                                <td>{{ cible|default:'N/A' }}</td>
+                                            {% endfor %}
+                                            <td>{{ activite.structure }}</td>
+                                            {% for cout in activite.couts %}
+                                                <td>{{ cout|default:'0.0' }}</td>
+                                            {% endfor %}
+                                            {% for real in activite.realisation %}
+                                                <td>{{ real|default:'' }}</td>
+                                            {% endfor %}
+                                            <td>{{ activite.etat_avancement|default:'' }}</td>
+                                            <td>{{ activite.commentaire|default:'' }}</td>
+                                            <td>{{ activite.commentaire_se|default:'' }}</td>
+                                            <td>{{ activite.status }}</td>
+                                            <td>{{ plan.titre }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                {% endfor %}
+                            {% endfor %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="stats-and-download-container mx-0 animate-fade-in">
+        <div class="stats-container">
+            <h3>Statistiques</h3>
+            <p>Lignes : <span id="visible-rows">0</span> visibles sur <span id="total-rows">0</span> totales</p>
+            <table id="type-stats-table" class="stats-table">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Nombre</th>
+                        <th>Proportion (%)</th>
+                    </tr>
+                </thead>
+                <tbody id="type-stats-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Boutons -->
+    <div class="text-center mt-4 mb-4 animate-fade-in">
+        <button id="download-excel-btn" class="btn btn-orange btn-lg px-5 py-2 fw-bold">Télécharger Excel</button>
+        <a href="{% url 'hierarchy_review' plan.id %}" class="btn btn-orange btn-lg px-5 py-2 fw-bold me-3">Liste des PAO (H)</a>
+        <a href="{% url 'track_execution_list' plan.id %}" class="btn btn-orange btn-lg px-5 py-2 fw-bold me-3">Liste des PAO (SE)</a>
+    </div>
+
+    <!-- Barre-loupe flottante fixe -->
+    <div id="floating-search" class="floating-search-container">
+        <button id="toggle-search-btn" class="search-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M15.5 14H14.71L14.43 13.73C15.41 12.59 16 11.11 16 9.5C16 5.91 13.09 3 9.5 3C5.91 3 3 5.91 3 9.5C3 13.09 5.91 16 9.5 16C11.11 16 12.59 15.41 13.73 14.43L14 14.71V15.5L19 20.49L20.49 19L15.5 14ZM9.5 14C7.01 14 5 11.99 5 9.5C5 7.01 7.01 5 9.5 5C11.99 5 14 7.01 14 9.5C14 11.99 11.99 14 9.5 14Z" fill="#ff6200"/>
+            </svg>
+        </button>
+        <div id="search-container" class="search-container">
+            <input type="text" id="search-input" class="form-control" placeholder="Rechercher..." aria-label="Rechercher">
+        </div>
+    </div>
+</div>
+
+<!-- Inclusion de SheetJS pour Excel -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const table = document.getElementById('matrix-table');
+    const tableBody = document.getElementById('matrix-table-body');
+    const searchInput = document.getElementById('search-input');
+    const toggleSearchBtn = document.getElementById('toggle-search-btn');
+    const searchContainer = document.getElementById('search-container');
+    const floatingSearch = document.getElementById('floating-search');
+    const tableContainer = document.querySelector('.table-horizontal-container');
+    const downloadBtn = document.getElementById('download-excel-btn');
+    const visibleRowsSpan = document.getElementById('visible-rows');
+    const totalRowsSpan = document.getElementById('total-rows');
+    const typeStatsBody = document.getElementById('type-stats-body');
+
+    // Filtrer avec regex
+    function filterTable() {
+        const searchTerm = searchInput.value.trim();
+        const rows = tableBody.getElementsByTagName('tr');
+        let regex;
+
+        try {
+            regex = new RegExp(searchTerm, 'i');
+        } catch (e) {
+            console.error("Expression régulière invalide :", e);
+            return;
+        }
+
+        Array.from(rows).forEach(row => {
+            if (row.classList.contains('hierarchy-row')) {
+                row.style.display = '';
+            } else {
+                const rowText = Array.from(row.cells).map(cell => cell.textContent.trim()).join(' ');
+                row.style.display = regex.test(rowText) ? '' : 'none';
+            }
+        });
+        updateStats();
+    }
+
+    // Mettre à jour les statistiques
+    function updateStats() {
+        const rows = tableBody.getElementsByTagName('tr');
+        const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none' && !row.classList.contains('hierarchy-row'));
+        const totalRows = Array.from(rows).filter(row => !row.classList.contains('hierarchy-row')).length;
+        visibleRowsSpan.textContent = visibleRows.length;
+        totalRowsSpan.textContent = totalRows;
+
+        const typeStats = {};
+        visibleRows.forEach(row => {
+            const type = row.cells[1].textContent.trim() || 'N/A';
+            typeStats[type] = (typeStats[type] || 0) + 1;
+        });
+
+        typeStatsBody.innerHTML = '';
+        Object.entries(typeStats).forEach(([type, count]) => {
+            const percentage = totalRows > 0 ? ((count / totalRows) * 100).toFixed(1) : 0;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${type}</td><td>${count}</td><td>${percentage}%</td>`;
+            typeStatsBody.appendChild(tr);
+        });
+    }
+
+    // Gestion affichage/masquage barre de recherche
+    toggleSearchBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        searchContainer.classList.toggle('active');
+        if (searchContainer.classList.contains('active')) {
+            searchInput.focus();
+        } else {
+            searchInput.value = '';
+            filterTable();
+        }
+    });
+
+    document.addEventListener('click', function (e) {
+        if (!floatingSearch.contains(e.target) && searchContainer.classList.contains('active')) {
+            searchContainer.classList.remove('active');
+            searchInput.value = '';
+            filterTable();
+        }
+    });
+
+    floatingSearch.addEventListener('click', function (e) {
+        e.stopPropagation();
+    });
+
+    searchInput.addEventListener('input', filterTable);
+
+    // Télécharger Excel avec gestion d'erreur
+    downloadBtn.addEventListener('click', function () {
+        try {
+            if (typeof XLSX === 'undefined') {
+                throw new Error('La bibliothèque SheetJS n’est pas chargée.');
+            }
+
+            const wb = XLSX.utils.book_new();
+            const ws_data = [];
+
+            const headerTop = Array.from(document.querySelectorAll('#table-header-top th')).map(th => th.textContent.trim());
+            ws_data.push(headerTop);
+            const headerBottom = Array.from(document.querySelectorAll('#table-header-bottom th')).map(th => th.textContent.trim());
+            ws_data.push(['', '', ...headerBottom]);
+
+            const visibleRows = Array.from(tableBody.getElementsByTagName('tr')).filter(row => row.style.display !== 'none');
+            if (visibleRows.length === 0) {
+                alert('Aucune donnée visible à exporter.');
+                return;
+            }
+
+            visibleRows.forEach(row => {
+                const cells = Array.from(row.cells).map(cell => cell.textContent.trim());
+                ws_data.push(cells);
+            });
+
+            const ws = XLSX.utils.aoa_to_sheet(ws_data);
+            XLSX.utils.book_append_sheet(wb, ws, "Matrice");
+            XLSX.writeFile(wb, `matrice_${"{{ plan.titre|escapejs }}"}}_${"{{ annee }}"}.xlsx`);
+        } catch (error) {
+            console.error('Erreur lors de l’exportation Excel :', error);
+            alert('Erreur lors du téléchargement. Vérifiez la console.');
+        }
+    });
+
+    // Gestion des filtres avec checkboxes
+    function chargeTable(filtre) {
+        let params = new URLSearchParams();
+        const groups = ['effet', 'produit', 'action', 'type', 'structure'];
+        groups.forEach(group => {
+            const checkboxes = document.querySelectorAll(`input[data-group="${group}"]:checked`);
+            checkboxes.forEach(checkbox => {
+                if (!checkbox.id.startsWith('select-all-')) {
+                    params.append(group, checkbox.value);
+                }
+            });
+        });
+
+        fetch(`{% url 'operational_plan_matrix' plan.id annee %}?${params.toString()}`, { 
+            headers: { 'X-Requested-With': 'XMLHttpRequest' } 
+        })
+        .then(response => response.json())
+        .then(data => {
+            const annees = data.annees;
+            const colspanTotal = 8 + annees.length * 3;
+
+            tableBody.innerHTML = '';
+            tableBody.innerHTML += `
+                <tr class="hierarchy-row impact-row">
+                    <td colspan="${colspanTotal}">Impact : ${data.impact || 'Impact non défini'}</td>
+                </tr>
+            `;
+
+            data.effets.forEach(effet => {
+                let effetRow = `
+                    <tr class="hierarchy-row effet-row">
+                        <td colspan="${annees.length + 3}">Effet : ${effet.titre}</td>
+                        <td></td>
+                `;
+                annees.forEach((_, index) => effetRow += `<td>${effet.couts[index] || 'N/A'}</td>`);
+                effetRow += '<td colspan="' + (annees.length + 4) + '"></td></tr>';
+                tableBody.innerHTML += effetRow;
+
+                effet.produits.forEach(produit => {
+                    let produitRow = `
+                        <tr class="hierarchy-row produit-row">
+                            <td colspan="${annees.length + 3}">Produit : ${produit.titre}</td>
+                            <td></td>
+                    `;
+                    annees.forEach((_, index) => produitRow += `<td>${produit.couts[index] || 'N/A'}</td>`);
+                    produitRow += '<td colspan="' + (annees.length + 4) + '"></td></tr>';
+                    tableBody.innerHTML += produitRow;
+
+                    produit.actions.forEach(action => {
+                        let actionRow = `
+                            <tr class="hierarchy-row action-row">
+                                <td colspan="${annees.length + 3}">Action : ${action.titre}</td>
+                                <td></td>
+                        `;
+                        annees.forEach((_, index) => actionRow += `<td>${action.couts[index] || 'N/A'}</td>`);
+                        actionRow += '<td colspan="' + (annees.length + 4) + '"></td></tr>';
+                        tableBody.innerHTML += actionRow;
+
+                        action.activites.forEach(activite => {
+                            let activiteRow = `
+                                <tr class="activity-row" data-last-modified="${activite.last_modified_matrix_status}">
+                                    <td>${activite.titre}</td>
+                                    <td>${activite.type || 'N/A'}</td>
+                                    <td>${activite.indicateur_label || 'N/A'}</td>
+                                    <td>${activite.indicateur_reference || 'N/A'}</td>
+                            `;
+                            annees.forEach((annee, index) => {
+                                const cible = activite.cibles[index] || 'N/A';
+                                activiteRow += `<td>${cible}</td>`;
+                            });
+                            activiteRow += `<td>${activite.structure || 'N/A'}</td>`;
+                            annees.forEach((annee, index) => {
+                                const cout = activite.couts[index] || '0.0';
+                                activiteRow += `<td>${cout}</td>`;
+                            });
+                            annees.forEach((annee, index) => {
+                                const real = activite.realisation[index] || '';
+                                activiteRow += `<td>${real}</td>`;
+                            });
+                            activiteRow += `
+                                <td>${activite.etat_avancement || ''}</td>
+                                <td>${activite.commentaire || ''}</td>
+                                <td>${activite.commentaire_se || ''}</td>
+                                <td>${activite.status}</td>
+                                <td>${data.plan_titre || 'N/A'}</td>
+                            </tr>`;
+                            tableBody.innerHTML += activiteRow;
+                        });
+                    });
+                });
+            });
+
+            if (data.effets.length === 0) {
+                tableBody.innerHTML += `<tr><td colspan="${colspanTotal}" class="text-center">Aucune donnée trouvée</td></tr>`;
+            }
+
+            filterTable();
+            updateStats();
+
+            // Ré-attacher les événements pour les tooltips après mise à jour dynamique
+            attachTooltipEvents();
+        })
+        .catch(error => {
+            console.error('Erreur AJAX:', error);
+            tableBody.innerHTML = `<tr><td colspan="${table.rows[0].cells.length}" class="text-center">Erreur de chargement des données</td></tr>`;
+            updateStats();
+        });
+    }
+
+    // Gestion des filtres avec checkboxes
+    ['effet', 'produit', 'action', 'type', 'structure'].forEach(group => {
+        const checkboxes = document.querySelectorAll(`input[data-group="${group}"]`);
+        const selectAllCheckbox = document.querySelector(`#select-all-${group}`);
+        const button = document.querySelector(`button[data-group="${group}"]`);
+
+        function updateButton() {
+            const selected = Array.from(checkboxes)
+                .filter(cb => cb.checked && cb !== selectAllCheckbox)
+                .map(cb => cb.value);
+            button.textContent = selected.length > 0 ? selected.join(', ') : `Sélectionner les ${group}s`;
+        }
+
+        selectAllCheckbox.addEventListener('change', function () {
+            checkboxes.forEach(cb => cb.checked = this.checked);
+            updateButton();
+            chargeTable(group);
+        });
+
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', function () {
+                if (this !== selectAllCheckbox) {
+                    selectAllCheckbox.checked = Array.from(checkboxes).every(c => c.checked || c === selectAllCheckbox);
+                }
+                updateButton();
+                chargeTable(group);
+            });
+        });
+
+        checkboxes.forEach(cb => cb.checked = true);
+        updateButton();
+        if (group === 'effet') chargeTable(group);
+    });
+
+    // Tooltip pour dernière modification de matrix_status
+    const tooltip = document.createElement('div');
+    tooltip.id = 'matrix-tooltip';
+    tooltip.style.position = 'absolute';
+    tooltip.style.background = '#333';
+    tooltip.style.color = '#fff';
+    tooltip.style.padding = '5px 10px';
+    tooltip.style.borderRadius = '5px';
+    tooltip.style.fontSize = '12px';
+    tooltip.style.zIndex = '1000';
+    tooltip.style.display = 'none';
+    tooltip.style.pointerEvents = 'none';
+    document.body.appendChild(tooltip);
+
+    function attachTooltipEvents() {
+        document.querySelectorAll('.activity-row').forEach(row => {
+            row.addEventListener('mouseover', function (e) {
+                const lastModified = this.getAttribute('data-last-modified');
+                if (lastModified && lastModified !== 'Non défini') {
+                    tooltip.textContent = `Dernière modif. matrix_status : ${lastModified}`;
+                    tooltip.style.display = 'block';
+                    tooltip.style.left = `${e.pageX + 10}px`;
+                    tooltip.style.top = `${e.pageY + 10}px`;
+                }
+            });
+
+            row.addEventListener('mousemove', function (e) {
+                const lastModified = this.getAttribute('data-last-modified');
+                if (lastModified && lastModified !== 'Non défini') {
+                    tooltip.style.left = `${e.pageX + 10}px`;
+                    tooltip.style.top = `${e.pageY + 10}px`;
+                }
+            });
+
+            row.addEventListener('mouseout', function () {
+                tooltip.style.display = 'none';
+            });
+        });
+    }
+
+    // Attacher les événements au chargement initial
+    attachTooltipEvents();
+
+    tableContainer.addEventListener('scroll', filterTable);
+});
+</script>
+{% endblock %}
+
+{% block style %}
+<style>
+    .text-orange { color: #ff6200 !important; }
+    .bg-orange { background: #ff6200 !important; }
+    .fw-bold { font-weight: bold; }
+
+    .container { padding-left: 75px; padding-right: 75px; width: 100%; max-width: none; }
+
+    .dropdown-menu { max-height: 250px; overflow-y: auto; }
+    .checkbox-option { margin-right: 10px; }
+    .btn-outline-orange { 
+        border-color: #ff6200; 
+        color: #ff6200; 
+        padding: 10px; 
+    }
+    .btn-outline-orange:hover { 
+        background-color: #ff6200; 
+        color: white; 
+    }
+
+    .table-container { 
+        border-radius: 15px; 
+        overflow: hidden; 
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); 
+        background: #fff; 
+        margin-top: 40px; 
+        margin-bottom: 40px; 
+        padding: 20px; 
+        max-height: 800px; 
+        border: 5px solid #ff6200; 
+    }
+    .table-wrapper { 
+        position: relative; 
+        height: 100%; 
+        width: 100%; 
+        overflow: hidden; 
+    }
+    .table-horizontal-container { 
+        max-height: 760px; 
+        overflow: auto; 
+        border: 1px solid #ff6200; 
+        border-radius: 5px; 
+    }
+    .unfixed-table { 
+        width: 100%; 
+        border-collapse: collapse; 
+        border: 1px solid #ff6200; 
+    }
+    th, td { 
+        border: 1px solid #ff6200; 
+        padding: 10px; 
+        min-width: 150px; 
+        text-align: left; 
+    }
+    thead th { 
+        position: sticky; 
+        top: 0; 
+        z-index: 30; 
+        background: #ff6200 !important; 
+        color: white !important; 
+        text-align: center; 
+    }
+    #table-header-bottom th { 
+        position: sticky; 
+        top: 38px; 
+        z-index: 29; 
+        background: #ff6200 !important; 
+        color: white !important; 
+    }
+    tr > td:first-child { 
+        position: sticky; 
+        left: 0; 
+        z-index: 10; 
+        background: white; 
+        box-shadow: 2px 0 5px rgba(0,0,0,0.1); 
+    }
+    .impact-row td:first-child { 
+        top: 76px; 
+        z-index: 25; 
+        background-color: #d1e7dd; 
+    }
+    .effet-row td:first-child { 
+        z-index: 20; 
+        background-color: #f8d7da; 
+    }
+    .produit-row td:first-child { 
+        z-index: 19; 
+        background-color: #fff3cd; 
+    }
+    .action-row td:first-child { 
+        z-index: 18; 
+        background-color: #cce5ff; 
+    }
+    .hierarchy-row { font-weight: bold; }
+
+    .stats-and-download-container {
+        padding: 20px;
+        background: #f9f9f9;
+        border-radius: 10px;
+        box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    .stats-container {
+        margin-bottom: 20px;
+    }
+    .stats-container h3 {
+        font-size: 18px;
+        margin-bottom: 10px;
+        text-align: center;
+    }
+    .stats-table {
+        width: 100%;
+        max-width: 400px;
+        margin: 0 auto;
+        border-collapse: collapse;
+    }
+    .stats-table th, .stats-table td {
+        border: 1px solid #ccc;
+        padding: 5px;
+        text-align: center;
+        background: white;
+    }
+    .stats-table th {
+        background: #e0e0e0;
+    }
+
+    .btn-orange { background: #ff6200; color: white; border: none; border-radius: 25px; padding: 6px 15px; }
+    .btn-secondary { background: #6c757d; border: none; border-radius: 25px; padding: 10px 30px; font-size: 1.25rem; }
+    .btn:hover { opacity: 0.9; transform: scale(1.05); transition: all 0.3s ease; }
+
+    .floating-search-container { 
+        position: fixed; 
+        z-index: 1000; 
+        display: flex; 
+        align-items: center; 
+        background: rgba(255, 255, 255, 0.5); 
+        border-radius: 25px; 
+        padding: 5px; 
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); 
+        top: 85px; 
+        left: 85px; 
+    }
+    .search-icon { 
+        background: none; 
+        border: none; 
+        padding: 5px; 
+        cursor: pointer; 
+        transition: transform 0.2s ease; 
+    }
+    .search-icon:hover { transform: scale(1.1); }
+    .search-container { 
+        max-width: 0; 
+        overflow: hidden; 
+        transition: max-width 0.3s ease-in-out; 
+        margin-left: 5px; 
+    }
+    .search-container.active { max-width: 200px; }
+    #search-input { 
+        border: 2px solid #ff6200; 
+        border-radius: 5px; 
+        padding: 5px 10px; 
+        font-size: 16px; 
+        width: 100%; 
+    }
+    #search-input:focus { 
+        outline: none; 
+        border-color: #ff6200; 
+        box-shadow: 0 0 5px rgba(255, 98, 0, 0.5); 
+    }
+
+    .animate-fade-in { animation: fadeIn 1s ease-in-out forwards; }
+    .animate-slide-up { animation: slideUp 0.8s ease-in-out forwards; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+{% endblock %}

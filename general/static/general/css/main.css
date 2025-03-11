@@ -456,6 +456,14 @@ h6 {
   .mobile-nav-active .navmenu>ul {
     display: block;
   }
+
+  /* Style spécifique pour le username sur mobile */
+  .mobile-only a {
+    padding: 15px 20px; /* Plus d'espace pour le username */
+    font-size: 18px;
+    font-weight: 600;
+    color: #ffffff; /* Contraste avec le fond */
+  }
 }
 
 /*--------------------------------------------------------------

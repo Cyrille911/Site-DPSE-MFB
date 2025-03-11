@@ -3,14 +3,21 @@
 {% block content %}
 <div class="container py-5">
   <h1 class="text-center mb-4 text-primary">Ajouter une actualité</h1>
-  
+
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    
+
     <!-- Titre de l'actualité -->
     <div class="mb-4">
       <label for="headline" class="form-label">Titre de l'actualité :</label>
       <input type="text" name="headline" id="headline" class="form-control" required>
+    </div>
+
+    <!-- Résumé de l'actualité -->
+    <div class="mb-4">
+      <label for="resume" class="form-label">Résumé :</label>
+      <textarea name="resume" id="resume" class="form-control" maxlength="500"
+        placeholder="Résumé de l'actualité (200-500 caractères)"></textarea>
     </div>
 
     <!-- Contenu de l'actualité avec Quill.js -->
@@ -55,7 +62,7 @@
     modules: {
       toolbar: [
         [{ 'header': '1' }, { 'header': '2' }, { 'font': [] }],
-        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
         [{ 'align': [] }],
         ['bold', 'italic', 'underline'],
         ['link'],
@@ -65,9 +72,14 @@
   });
 
   // Lors de la soumission du formulaire, récupérer le contenu de Quill et le placer dans le champ caché
-  document.querySelector('form').onsubmit = function() {
+  document.querySelector('form').onsubmit = function () {
     var content = document.querySelector('#content-input');
     content.value = quill.root.innerHTML;
+
+    var resume = document.querySelector('#resume');
+    if (!resume.value.trim()) {
+      resume.value = quill.getText().slice(0, 200) + "..."; // Générer un résumé auto si vide
+    }
   };
 </script>
 

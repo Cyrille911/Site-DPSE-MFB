@@ -58,19 +58,5 @@ class InscriptionVisiteurForm(forms.ModelForm):
         return cleaned_data
 
 class ConnexionForm(forms.Form):
-    username = forms.EmailField(
-        label="Entrez votre email",  # Texte personnalisé pour le champ email
-        widget=forms.EmailInput(attrs={
-            'class': 'form-control', 
-            'placeholder': 'Votre adresse email'  # Texte dans le champ
-        }),
-        required=True
-    )
-    password = forms.CharField(
-        label="Entrez votre mot de passe",  # Texte personnalisé pour le champ mot de passe
-        widget=forms.PasswordInput(attrs={
-            'class': 'form-control', 
-            'placeholder': 'Votre mot de passe'  # Texte dans le champ
-        }),
-        required=True
-    )
+    email = forms.EmailField(label="Email")
+    password = forms.CharField(label="Mot de passe", widget=forms.PasswordInput)

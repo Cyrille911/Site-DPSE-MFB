@@ -1,0 +1,11 @@
+{% extends "index.html" %}
+
+{% load planning_filters %}
+
+{% block content %}
+<div class="container mt-5 text-center">
+    <h2 style="color: #ff6200;">Accès Refusé</h2>
+    <p>Vous n'avez pas les autorisations nécessaires pour accéder à cette page.</p>
+    <a href="{% url 'plan_action_detail' plan.id %}" class="btn btn-lg mt-3" style="background-color: #007A3D; color: white;">Retour</a>
+</div>
+{% endblock %}

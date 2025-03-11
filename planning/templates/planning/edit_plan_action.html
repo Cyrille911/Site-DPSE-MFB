@@ -5,142 +5,142 @@ Modification du Plan d'Action
 {% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h1 class="text-center mb-4 text-primary fw-bold">Modification du Plan d'Action : {{ plan.titre }}</h1>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4 text-primary fw-bold">Modification du Plan d'Action : {{ plan.titre }}</h1>
 
-    {% if error %}
-        <div class="alert alert-danger">{{ error }}</div>
-    {% endif %}
+        {% if error %}
+            <div class="alert alert-danger">{{ error }}</div>
+        {% endif %}
 
-    <form action="{% url 'edit_plan_action' plan.id %}" method="POST" id="edit-plan-action">
-        {% csrf_token %}
-        <!-- Informations du Plan -->
-        <div class="card shadow-lg p-5 mb-5 bg-gradient rounded-4 border border-primary">
-            <h3 class="text-primary mb-4">Informations du Plan d'Action</h3>
-            <div class="row">
-                <div class="col-md-4 mb-3">
-                    <label for="titre" class="form-label">Titre</label>
-                    <input type="text" class="form-control shadow-sm border-primary" id="titre" name="titre" value="{{ plan.titre }}" required>
-                </div>
-                <div class="col-md-4 mb-3">
-                    <label for="annee_depart" class="form-label">Année de Départ</label>
-                    <input type="number" class="form-control shadow-sm border-primary" id="annee_depart" name="annee_depart" value="{{ plan.annee_debut }}" required min="2010">
-                </div>
-                <div class="col-md-4 mb-3">
-                    <label for="horizon" class="form-label">Horizon</label>
-                    <input type="number" class="form-control shadow-sm border-primary" id="horizon" name="horizon" value="{{ plan.horizon }}" required min="1">
-                </div>
-            </div>
-            <div class="mb-3">
-                <label for="impact" class="form-label">Impact</label>
-                <textarea class="form-control shadow-sm border-primary" id="impact" name="impact" rows="3" required>{{ plan.impact }}</textarea>
-            </div>
-            <div class="d-flex justify-content-center">
-                <button type="button" class="btn btn-outline-warning me-3 shadow-sm" onclick="ajouterEffet()">Ajouter un effet</button>
-                <button type="submit" class="btn btn-success shadow-sm">Mettre à jour le plan</button>
-            </div>
-        </div>
-
-        <!-- Zone des effets -->
-        <div id="effets" class="mb-4">
-            {% for effet in effets %}
-                <div class="card shadow-lg p-4 mb-4 border border-success rounded-3 bg-light" id="effet_{{ forloop.counter }}">
-                    <h4 class="text-success" id="effet_id_{{ forloop.counter }}">Effet {{ forloop.counter }}</h4>
-                    <div class="mb-3">
-                        <label for="effet_titre_{{ forloop.counter }}" class="form-label" id="effet_label_{{ forloop.counter }}">Intitulé de l'effet {{ forloop.counter }}</label>
-                        <input type="text" class="form-control shadow-sm border-success" id="effet_titre_{{ forloop.counter }}" name="effet_titre_{{ forloop.counter }}" value="{{ effet.titre }}" required>
+        <form action="{% url 'edit_plan_action' plan.id %}" method="POST" id="edit-plan-action">
+            {% csrf_token %}
+            <!-- Informations du Plan -->
+            <div class="card shadow-lg p-5 mb-5 bg-gradient rounded-4 border border-primary">
+                <h3 class="text-primary mb-4">Informations du Plan d'Action</h3>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="titre" class="form-label">Titre</label>
+                        <input type="text" class="form-control shadow-sm border-primary" id="titre" name="titre" value="{{ plan.titre }}" required>
                     </div>
-                    <div id="produits_effet_{{ forloop.counter }}" class="ps-4">
-                        {% for produit in effet.effet_produit.all %}
-                            <div class="card shadow-lg p-4 mb-4 border border-warning rounded-3 bg-light" id="produit_{{ forloop.parentloop.counter }}.{{ forloop.counter }}">
-                                <h5 class="text-warning" id="produit_id_{{ forloop.parentloop.counter }}.{{ forloop.counter }}">Produit {{ forloop.parentloop.counter }}.{{ forloop.counter }}</h5>
-                                <div class="mb-3">
-                                    <label for="produit_titre_{{ forloop.parentloop.counter }}.{{ forloop.counter }}" class="form-label" id="produit_label_{{ forloop.parentloop.counter }}.{{ forloop.counter }}">Intitulé du produit</label>
-                                    <input type="text" class="form-control shadow-sm border-warning" id="produit_titre_{{ forloop.parentloop.counter }}.{{ forloop.counter }}" name="produit_titre_{{ forloop.parentloop.counter }}.{{ forloop.counter }}" value="{{ produit.titre }}" required>
-                                </div>
-                                <div id="actions_produit_{{ forloop.parentloop.counter }}.{{ forloop.counter }}" class="ps-4">
-                                    {% for action in produit.produit_action.all %}
-                                        <div class="card shadow-lg p-4 mb-4 border border-info rounded-3 bg-light" id="action_{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}">
-                                            <h6 class="text-info" id="action_id_{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}">Action {{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}</h6>
-                                            <div class="mb-3">
-                                                <label for="action_titre_{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" class="form-label" id="action_label_{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}">Intitulé de l'action</label>
-                                                <input type="text" class="form-control shadow-sm border-info" id="action_titre_{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" name="action_titre_{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" value="{{ action.titre }}" required>
-                                            </div>
-                                            <div id="activites_action_{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" class="ps-4">
-                                                {% for activite in action.action_activite.all %}
-                                                    <div class="card shadow-lg p-3 mb-2 border border-primary rounded-3 bg-light activite-container" id="activite_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}">
-                                                        <h6 class="text-primary" id="activite_id_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}">Activité {{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}</h6>
-                                                        <div class="mb-3">
-                                                            <label for="activite_titre_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" class="form-label">Intitulé</label>
-                                                            <input type="text" class="form-control shadow-sm border-primary" id="activite_titre_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" name="activite_titre_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" value="{{ activite.titre }}" required>
-                                                        </div>
-                                                        <div class="mb-3">
-                                                            <label for="activite_type_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" class="form-label">Type</label>
-                                                            <select class="form-control shadow-sm border-primary" id="activite_type_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" name="activite_type_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" required>
-                                                                <option value="Réforme" {% if activite.type == "Réforme" %}selected{% endif %}>Réforme</option>
-                                                                <option value="Investissement" {% if activite.type == "Investissement" %}selected{% endif %}>Investissement</option>
-                                                                <option value="Etude" {% if activite.type == "Etude" %}selected{% endif %}>Étude</option>
-                                                                <option value="Texte" {% if activite.type == "Texte" %}selected{% endif %}>Texte</option>
-                                                                <option value="Activité ordinaire" {% if activite.type == "Activité ordinaire" %}selected{% endif %}>Activité ordinaire</option>
-                                                            </select>
-                                                        </div>
-                                                        <div class="mb-3">
-                                                            <label for="indicateur_label_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" class="form-label">Libellé indicateur</label>
-                                                            <input type="text" class="form-control shadow-sm border-primary" id="indicateur_label_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" name="indicateur_label_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" value="{{ activite.indicateur_label }}" required>
-                                                        </div>
-                                                        <div class="mb-3">
-                                                            <label for="indicateur_reference_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" class="form-label">Référence indicateur</label>
-                                                            <input type="text" class="form-control shadow-sm border-primary" id="indicateur_reference_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" name="indicateur_reference_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" value="{{ activite.indicateur_reference }}" required>
-                                                        </div>
-                                                        <div class="mb-3">
-                                                            <label class="form-label">Cibles</label>
-                                                            <div id="cibles_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}">
-                                                                {% for cible in activite.cibles %}
-                                                                    <input type="text" class="form-control shadow-sm border-primary mb-2" name="cible_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}[{{ forloop.counter }}]" value="{{ cible }}" placeholder="Cible {{ plan.annee_debut|add:forloop.counter0 }}">
-                                                                {% endfor %}
+                    <div class="col-md-4 mb-3">
+                        <label for="annee_depart" class="form-label">Année de Départ</label>
+                        <input type="number" class="form-control shadow-sm border-primary" id="annee_depart" name="annee_depart" value="{{ plan.annee_debut }}" required min="2010">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="horizon" class="form-label">Horizon</label>
+                        <input type="number" class="form-control shadow-sm border-primary" id="horizon" name="horizon" value="{{ plan.horizon }}" required min="1">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="impact" class="form-label">Impact</label>
+                    <textarea class="form-control shadow-sm border-primary" id="impact" name="impact" rows="3" required>{{ plan.impact }}</textarea>
+                </div>
+                <div class="d-flex justify-content-center">
+                    <button type="button" class="btn btn-outline-warning me-3 shadow-sm" onclick="ajouterEffet()">Ajouter un effet</button>
+                    <button type="submit" class="btn btn-success shadow-sm">Mettre à jour le plan</button>
+                </div>
+            </div>
+
+            <!-- Zone des effets -->
+            <div id="effets" class="mb-4">
+                {% for effet in effets %}
+                    <div class="card shadow-lg p-4 mb-4 border border-success rounded-3 bg-light" id="effet_{{ forloop.counter }}">
+                        <h4 class="text-success" id="effet_id_{{ forloop.counter }}">Effet {{ forloop.counter }}</h4>
+                        <div class="mb-3">
+                            <label for="effet_titre_{{ forloop.counter }}" class="form-label" id="effet_label_{{ forloop.counter }}">Intitulé de l'effet {{ forloop.counter }}</label>
+                            <input type="text" class="form-control shadow-sm border-success" id="effet_titre_{{ forloop.counter }}" name="effet_titre_{{ forloop.counter }}" value="{{ effet.titre }}" required>
+                        </div>
+                        <div id="produits_effet_{{ forloop.counter }}" class="ps-4">
+                            {% for produit in effet.effet_produit.all %}
+                                <div class="card shadow-lg p-4 mb-4 border border-warning rounded-3 bg-light" id="produit_{{ forloop.parentloop.counter }}.{{ forloop.counter }}">
+                                    <h5 class="text-warning" id="produit_id_{{ forloop.parentloop.counter }}.{{ forloop.counter }}">Produit {{ forloop.parentloop.counter }}.{{ forloop.counter }}</h5>
+                                    <div class="mb-3">
+                                        <label for="produit_titre_{{ forloop.parentloop.counter }}.{{ forloop.counter }}" class="form-label" id="produit_label_{{ forloop.parentloop.counter }}.{{ forloop.counter }}">Intitulé du produit</label>
+                                        <input type="text" class="form-control shadow-sm border-warning" id="produit_titre_{{ forloop.parentloop.counter }}.{{ forloop.counter }}" name="produit_titre_{{ forloop.parentloop.counter }}.{{ forloop.counter }}" value="{{ produit.titre }}" required>
+                                    </div>
+                                    <div id="actions_produit_{{ forloop.parentloop.counter }}.{{ forloop.counter }}" class="ps-4">
+                                        {% for action in produit.produit_action.all %}
+                                            <div class="card shadow-lg p-4 mb-4 border border-info rounded-3 bg-light" id="action_{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}">
+                                                <h6 class="text-info" id="action_id_{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}">Action {{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}</h6>
+                                                <div class="mb-3">
+                                                    <label for="action_titre_{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" class="form-label" id="action_label_{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}">Intitulé de l'action</label>
+                                                    <input type="text" class="form-control shadow-sm border-info" id="action_titre_{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" name="action_titre_{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" value="{{ action.titre }}" required>
+                                                </div>
+                                                <div id="activites_action_{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" class="ps-4">
+                                                    {% for activite in action.action_activite.all %}
+                                                        <div class="card shadow-lg p-3 mb-2 border border-primary rounded-3 bg-light activite-container" id="activite_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}">
+                                                            <h6 class="text-primary" id="activite_id_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}">Activité {{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}</h6>
+                                                            <div class="mb-3">
+                                                                <label for="activite_titre_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" class="form-label">Intitulé</label>
+                                                                <input type="text" class="form-control shadow-sm border-primary" id="activite_titre_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" name="activite_titre_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" value="{{ activite.titre }}" required>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label for="activite_type_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" class="form-label">Type</label>
+                                                                <select class="form-control shadow-sm border-primary" id="activite_type_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" name="activite_type_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" required>
+                                                                    <option value="Réforme" {% if activite.type == "Réforme" %}selected{% endif %}>Réforme</option>
+                                                                    <option value="Investissement" {% if activite.type == "Investissement" %}selected{% endif %}>Investissement</option>
+                                                                    <option value="Etude" {% if activite.type == "Etude" %}selected{% endif %}>Étude</option>
+                                                                    <option value="Texte" {% if activite.type == "Texte" %}selected{% endif %}>Texte</option>
+                                                                    <option value="Activité ordinaire" {% if activite.type == "Activité ordinaire" %}selected{% endif %}>Activité ordinaire</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label for="indicateur_label_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" class="form-label">Libellé indicateur</label>
+                                                                <input type="text" class="form-control shadow-sm border-primary" id="indicateur_label_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" name="indicateur_label_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" value="{{ activite.indicateur_label }}" required>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label for="indicateur_reference_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" class="form-label">Référence indicateur</label>
+                                                                <input type="text" class="form-control shadow-sm border-primary" id="indicateur_reference_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" name="indicateur_reference_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" value="{{ activite.indicateur_reference }}" required>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Cibles</label>
+                                                                <div id="cibles_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}">
+                                                                    {% for cible in activite.cibles %}
+                                                                        <input type="text" class="form-control shadow-sm border-primary mb-2" name="cible_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}[{{ forloop.counter }}]" value="{{ cible }}" placeholder="Cible {{ plan.annee_debut|add:forloop.counter0 }}">
+                                                                    {% endfor %}
+                                                                </div>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Coûts</label>
+                                                                <div id="couts_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}">
+                                                                    {% for cout in activite.couts %}
+                                                                        <input type="number" class="form-control shadow-sm border-primary mb-2" name="cout_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}[{{ forloop.counter }}]" value="{{ cout }}" placeholder="Coût {{ plan.annee_debut|add:forloop.counter0 }}">
+                                                                    {% endfor %}
+                                                                </div>
+                                                            </div>
+                                                            <div class="d-flex justify-content-end">
+                                                                <button type="button" class="btn btn-outline-danger mt-2 shadow-sm" id="supprimer_activite_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" onclick="supprimerActivite({{ forloop.parentloop.parentloop.parentloop.counter }}, {{ forloop.parentloop.parentloop.counter }}, {{ forloop.parentloop.counter }}, {{ forloop.counter }})">Supprimer</button>
                                                             </div>
                                                         </div>
-                                                        <div class="mb-3">
-                                                            <label class="form-label">Coûts</label>
-                                                            <div id="couts_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}">
-                                                                {% for cout in activite.couts %}
-                                                                    <input type="number" class="form-control shadow-sm border-primary mb-2" name="cout_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}[{{ forloop.counter }}]" value="{{ cout }}" placeholder="Coût {{ plan.annee_debut|add:forloop.counter0 }}">
-                                                                {% endfor %}
-                                                            </div>
-                                                        </div>
-                                                        <div class="d-flex justify-content-end">
-                                                            <button type="button" class="btn btn-outline-danger mt-2 shadow-sm" id="supprimer_activite_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" onclick="supprimerActivite({{ forloop.parentloop.parentloop.parentloop.counter }}, {{ forloop.parentloop.parentloop.counter }}, {{ forloop.parentloop.counter }}, {{ forloop.counter }})">Supprimer</button>
-                                                        </div>
-                                                    </div>
-                                                {% endfor %}
+                                                    {% endfor %}
+                                                </div>
+                                                <div class="d-flex justify-content-end">
+                                                    <button type="button" class="btn btn-outline-info me-2 shadow-sm" id="ajouter_activite_{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" onclick="ajouterActivite({{ forloop.parentloop.parentloop.counter }}, {{ forloop.parentloop.counter }}, {{ forloop.counter }})">Ajouter une activité</button>
+                                                    <button type="button" class="btn btn-outline-danger shadow-sm" id="supprimer_action_{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" onclick="supprimerAction({{ forloop.parentloop.parentloop.counter }}, {{ forloop.parentloop.counter }}, {{ forloop.counter }})">Supprimer</button>
+                                                </div>
                                             </div>
-                                            <div class="d-flex justify-content-end">
-                                                <button type="button" class="btn btn-outline-info me-2 shadow-sm" id="ajouter_activite_{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" onclick="ajouterActivite({{ forloop.parentloop.parentloop.counter }}, {{ forloop.parentloop.counter }}, {{ forloop.counter }})">Ajouter une activité</button>
-                                                <button type="button" class="btn btn-outline-danger shadow-sm" id="supprimer_action_{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" onclick="supprimerAction({{ forloop.parentloop.parentloop.counter }}, {{ forloop.parentloop.counter }}, {{ forloop.counter }})">Supprimer</button>
-                                            </div>
-                                        </div>
-                                    {% endfor %}
+                                        {% endfor %}
+                                    </div>
+                                    <div class="d-flex justify-content-end">
+                                        <button type="button" class="btn btn-outline-info me-2 shadow-sm" id="ajouter_action_{{ forloop.parentloop.counter }}.{{ forloop.counter }}" onclick="ajouterAction({{ forloop.parentloop.counter }}, {{ forloop.counter }})">Ajouter une action</button>
+                                        <button type="button" class="btn btn-outline-danger shadow-sm" id="supprimer_produit_{{ forloop.parentloop.counter }}.{{ forloop.counter }}" onclick="supprimerProduit({{ forloop.parentloop.counter }}, {{ forloop.counter }})">Supprimer</button>
+                                    </div>
                                 </div>
-                                <div class="d-flex justify-content-end">
-                                    <button type="button" class="btn btn-outline-info me-2 shadow-sm" id="ajouter_action_{{ forloop.parentloop.counter }}.{{ forloop.counter }}" onclick="ajouterAction({{ forloop.parentloop.counter }}, {{ forloop.counter }})">Ajouter une action</button>
-                                    <button type="button" class="btn btn-outline-danger shadow-sm" id="supprimer_produit_{{ forloop.parentloop.counter }}.{{ forloop.counter }}" onclick="supprimerProduit({{ forloop.parentloop.counter }}, {{ forloop.counter }})">Supprimer</button>
-                                </div>
-                            </div>
-                        {% endfor %}
+                            {% endfor %}
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="button" class="btn btn-outline-success me-2 shadow-sm" id="ajouter_produit_{{ forloop.counter }}" onclick="ajouterProduit({{ forloop.counter }})">Ajouter un produit</button>
+                            <button type="button" class="btn btn-outline-danger shadow-sm" id="supprimer_effet_{{ forloop.counter }}" onclick="supprimerEffet({{ forloop.counter }})">Supprimer</button>
+                        </div>
                     </div>
-                    <div class="d-flex justify-content-end">
-                        <button type="button" class="btn btn-outline-success me-2 shadow-sm" id="ajouter_produit_{{ forloop.counter }}" onclick="ajouterProduit({{ forloop.counter }})">Ajouter un produit</button>
-                        <button type="button" class="btn btn-outline-danger shadow-sm" id="supprimer_effet_{{ forloop.counter }}" onclick="supprimerEffet({{ forloop.counter }})">Supprimer</button>
-                    </div>
-                </div>
-            {% endfor %}
-        </div>
-    </form>
-</div>
+                {% endfor %}
+            </div>
+        </form>
+    </div>
 
     <script>
         // Réutilisation des mêmes fonctions JavaScript que dans add_plan_action.html
-        // Copiez ici tout le script de add_plan_action.html (les fonctions ajouterEffet, supprimerEffet, etc.)
+        // Copiez ici tout le script de add_plan_action.html (les fonctions ajouterEffet, supprimerEffet, etc...)
 
         // Initialisation des compteurs avec les données existantes
         let effetCount = {{ effets.count }};

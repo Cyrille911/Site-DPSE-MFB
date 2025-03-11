@@ -31,10 +31,13 @@ def inscription_membre(request):
 
     if request.method == 'POST' and form.is_valid():
         user = form.save(commit=False)
-        user.role = 'membre'  # Attribuer le rôle 'Membre'
-        group, _ = Group.objects.get_or_create(name='Membres')
-        user.is_active = False  # Désactiver le compte jusqu'à confirmation par email
+        user.role = 'membre'
+        user.is_active = False
         user.save()
+
+        # Ajouter l'utilisateur au groupe Membres
+        group, _ = Group.objects.get_or_create(name='Membres')
+        user.groups.add(group)  # Ajout explicite au groupe
 
         # Envoyer un email de confirmation
         current_site = get_current_site(request)
@@ -49,7 +52,7 @@ def inscription_membre(request):
         send_mail(subject, plain_message, settings.DEFAULT_FROM_EMAIL, [user.email], html_message=message)
 
         messages.success(request, 'Un email de confirmation vous a été envoyé.')
-        return redirect('connexion_membre')  # Redirection après succès
+        return redirect('connexion_membre')
 
     context['form'] = form
     return render(request, 'users/formulaire.html', context)
@@ -109,24 +112,24 @@ def activer_nouveau_membre(request, uidb64, token):
     else:
         messages.error(request, 'Le lien d\'activation est invalide ou a expiré.')
         return redirect('accueil')  # Remplacez par la page vers laquelle vous voulez rediriger
+
 def connexion_membre(request):
     context = {'message': "Bienvenue sur la page de connexion pour les membres !"}
     form = ConnexionForm(request.POST or None)
 
-    if request.method == 'POST' and form.is_valid():
-        # Récupérer les données du formulaire
-        form = ConnexionForm(request.POST)
+    if request.method == 'POST':
         if form.is_valid():
-            username = form.cleaned_data['username']
+            email = form.cleaned_data['username']
             password = form.cleaned_data['password']
             
-            # Authentification de l'utilisateur
-            user = authenticate(request, username=username, password=password)
-            
-            if user is not None and request.user.groups.filter(name="Membres").exists():
-                login(request, user)
-                messages.success(request, f"Bienvenue, {user.first_name} !")
-                return redirect('accueil')  # Redirection après connexion
+            user = authenticate(request, username=email, password=password)
+            if user is not None:
+                if user.groups.filter(name="Membres").exists():  # Vérifiez sur 'user', pas 'request.user'
+                    login(request, user)
+                    messages.success(request, f"Bienvenue, {user.first_name} !")
+                    return redirect('accueil')
+                else:
+                    messages.error(request, "Vous n'êtes pas autorisé dans le groupe Membres.")
             else:
                 messages.error(request, "Adresse email ou mot de passe incorrect.")
 
@@ -140,10 +143,13 @@ def inscription_visiteur(request):
 
     if request.method == 'POST' and form.is_valid():
         user = form.save(commit=False)
-        user.role = 'visiteur'  # Attribuer le rôle 'visiteur'
-        group, _ = Group.objects.get_or_create(name='Visiteurs')
-        user.is_active = False  # Désactiver le compte jusqu'à confirmation par email
+        user.role = 'visiteur'
+        user.is_active = False
         user.save()
+
+        # Ajouter l'utilisateur au groupe Visiteurs
+        group, _ = Group.objects.get_or_create(name='Visiteurs')
+        user.groups.add(group)  # Ajout explicite au groupe
 
         # Envoyer un email de confirmation
         current_site = get_current_site(request)
@@ -158,7 +164,7 @@ def inscription_visiteur(request):
         send_mail(subject, plain_message, settings.DEFAULT_FROM_EMAIL, [user.email], html_message=message)
 
         messages.success(request, 'Un email de confirmation vous a été envoyé.')
-        return redirect('connexion_visiteur')  # Redirection après succès
+        return redirect('connexion_visiteur')
 
     context['form'] = form
     return render(request, 'users/formulaire.html', context)
@@ -187,23 +193,23 @@ def connexion_visiteur(request):
     context = {'message': "Bienvenue sur la page de connexion pour les visiteurs !"}
     form = ConnexionForm(request.POST or None)
 
-    if request.method == 'POST' and form.is_valid():
-        # Récupérer les données du formulaire
-        form = ConnexionForm(request.POST)
+    if request.method == 'POST':
         if form.is_valid():
-            username = form.cleaned_data['username']
+            email = form.cleaned_data['email']
             password = form.cleaned_data['password']
+            print(email)
             
-            # Authentification de l'utilisateur
-            user = authenticate(request, username=username, password=password)
-            print(user)           
-            if user is not None and request.user.groups.filter(name="Visiteurs").exists():
-                login(request, user)
-                messages.success(request, f"Bienvenue, {user.first_name} !")
-                return redirect('accueil')  # Redirection après connexion
+            user = authenticate(request, email=email, password=password)
+            if user is not None:
+                if user.groups.filter(name="Visiteurs").exists():  # Vérifiez sur 'user', pas 'request.user'
+                    login(request, user)
+                    messages.success(request, f"Bienvenue, {user.first_name} !")
+                    return redirect('accueil')
+                else:
+                    messages.error(request, "Vous n'êtes pas autorisé dans le groupe Visiteurs.")
             else:
                 messages.error(request, "Adresse email ou mot de passe incorrect.")
-
+    
     context['form'] = form
     return render(request, 'users/formulaire.html', context)
 

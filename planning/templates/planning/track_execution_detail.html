@@ -1,0 +1,236 @@
+{% extends "index.html" %}
+{% load planning_filters %}
+
+{% block title %}
+Suivi de l'exécution - {{ plan.titre }} - {{ annee }}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-5 text-orange fw-bold animate-fade-in">Suivi de l'exécution - {{ plan.titre }} - {{ annee }}</h2>
+
+    {% if messages %}
+        <div class="mt-3 animate-fade-in">
+            {% for message in messages %}
+                <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %}" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% if form %}
+        <div class="mb-5 animate-slide-up">
+            <h4 class="text-orange fw-bold mb-3">Statut du PAO {{ annee }}</h4>
+            <form method="post" class="shadow-lg p-4 rounded bg-light">
+                {% csrf_token %}
+                <div class="mb-3">
+                    {{ form.statut.label_tag }}
+                    {{ form.statut }}
+                </div>
+                <button type="submit" name="update_pao_status" class="btn btn-orange fw-bold">Mettre à jour le statut</button>
+            </form>
+        </div>
+    {% endif %}
+
+    {% for entity, activites in activites_by_entity.items %}
+        <h3 class="text-orange fw-bold mb-3 animate-slide-up">Entité : {{ entity }}</h3>
+        <div class="table-container shadow-lg rounded animate-slide-up" style="animation-delay: 0.2s;">
+            <div class="scrollable-table">
+                <table class="table table-bordered table-striped">
+                    <thead class="bg-orange text-white">
+                        <tr>
+                            <th>Titre</th>
+                            <th>Type</th>
+                            <th>État d'avancement</th>
+                            <th>Réalisation {{ annee }}</th>
+                            <th>Coût {{ annee }}</th>
+                            <th>Cible {{ annee }}</th>
+                            <th>Commentaire</th>
+                            <th>Commentaire SE</th>
+                            <th>Statut</th>
+                            <th>Matrix Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for activite in activites %}
+                            <tr data-id="{{ activite.id }}" class="animate-slide-up" style="animation-delay: {{ forloop.counter0|mul:0.1 }}s;">
+                                <td>{{ activite.titre }}</td>
+                                <td>{{ activite.type|default:'N/A' }}</td>
+                                <td>{{ activite.etat_avancement|default:'' }}</td>
+                                <td>{{ activite.realisation|default:'' }}</td>
+                                <td>{{ activite.cout|default:'0.0' }}</td>
+                                <td>{{ activite.cible|default:'N/A' }}</td>
+                                <td>{{ activite.commentaire|default:'' }}</td>
+                                <td>
+                                    <textarea class="form-control" name="commentaire_se">{{ activite.commentaire_se|default:'' }}</textarea>
+                                </td>
+                                <td>
+                                    <select class="form-control" name="status">
+                                        {% for choice in status_choices %}
+                                            <option value="{{ choice.0 }}" {% if activite.status == choice.0 %}selected{% endif %}>{{ choice.1 }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td>{{ activite.matrix_status }}</td>
+                                <td class="text-end">
+                                    <span class="action-emoji submit-back-btn" title="Soumettre au Responsable">↩️</span>
+                                    {% if activite.can_submit_to_matrix %}
+                                        <span class="action-emoji validate-to-matrix-btn" title="Soumettre à la matrice">✅</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% empty %}
+        <div class="text-center py-5 animate-fade-in">
+            <h3 class="text-warning fw-bold">Aucune activité soumise pour {{ annee }} !</h3>
+        </div>
+    {% endfor %}
+
+    <div class="text-center mt-4 animate-fade-in">
+        <a href="{% url 'track_execution_list' plan.id %}" class="btn btn-secondary btn-lg px-5 py-2 fw-bold">Retour à la liste</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    function sendRequest(data, callback) {
+        fetch('{% url "track_execution_detail" plan.id %}?annee={{ annee }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+            body: new URLSearchParams(data)
+        })
+        .then(response => response.json())
+        .then(callback)
+        .catch(error => console.error('Erreur:', error));
+    }
+
+    document.querySelectorAll('.submit-back-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const row = this.closest('tr');
+            const activiteId = row.dataset.id;
+            sendRequest({
+                activite_id: activiteId,
+                submit_back: true
+            }, data => {
+                alert(data.message);
+                if (data.success) row.remove();
+            });
+        });
+    });
+
+    document.querySelectorAll('.validate-to-matrix-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const row = this.closest('tr');
+            const activiteId = row.dataset.id;
+            sendRequest({
+                activite_id: activiteId,
+                commentaire_se: row.querySelector('[name="commentaire_se"]').value,
+                status: row.querySelector('[name="status"]').value,
+                validate_to_matrix: true
+            }, data => {
+                alert(data.message);
+                if (data.success) row.remove();
+            });
+        });
+    });
+});
+</script>
+{% endblock %}
+
+{% block style %}
+<style>
+    .text-orange { color: #ff6200 !important; }
+    .bg-orange { background: #ff6200 !important; }
+    .text-success { color: #28a745 !important; }
+    .text-warning { color: #ffc107 !important; }
+    .fw-bold { font-weight: bold; }
+
+    .table-container { 
+        border-radius: 15px; 
+        overflow: hidden; 
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); 
+        background: #fff; 
+    }
+    .scrollable-table {
+        max-height: 500px;
+        overflow-y: auto;
+        overflow-x: auto;
+        display: block;
+    }
+    .table { 
+        margin-bottom: 0; 
+        width: 100%; 
+        border-collapse: collapse; 
+    }
+    .table th, .table td { 
+        vertical-align: middle; 
+        border: 1px solid #ff6200; 
+        padding: 10px; 
+        min-width: 120px; 
+    }
+    .table thead th { 
+        text-align: center; 
+        position: sticky; 
+        top: 0; 
+        z-index: 10; 
+        background: #ff6200; 
+        color: white; 
+    }
+    .table-striped tbody tr:nth-of-type(odd) { background-color: #fff3e6; }
+    .form-control { min-width: 100px; }
+    textarea.form-control { min-height: 80px; resize: vertical; }
+    select.form-control { padding: 6px; }
+
+    .btn-orange { background: #ff6200; color: white; border: none; border-radius: 25px; padding: 6px 15px; }
+    .btn-secondary { background: #6c757d; border: none; border-radius: 25px; padding: 10px 30px; font-size: 1.25rem; }
+    .btn:hover { opacity: 0.9; transform: scale(1.05); transition: all 0.3s ease; }
+
+    .action-emoji {
+        font-size: 1.5rem;
+        cursor: pointer;
+        margin-left: 10px;
+        transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+    .action-emoji:hover {
+        transform: scale(1.2);
+        opacity: 0.8;
+    }
+    .action-emoji[title]:hover:after {
+        content: attr(title);
+        position: absolute;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 0.9rem;
+        white-space: nowrap;
+        z-index: 1000;
+        transform: translateY(-100%) translateX(-50%);
+        left: 50%;
+        top: -5px;
+    }
+
+    .animate-fade-in { animation: fadeIn 1s ease-in-out forwards; }
+    .animate-slide-up { animation: slideUp 0.8s ease-in-out forwards; }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 768px) {
+        .scrollable-table { max-height: 300px; }
+        .table th, .table td { min-width: 100px; }
+        .action-emoji { font-size: 1.2rem; margin-left: 5px; }
+    }
+</style>
+{% endblock %}

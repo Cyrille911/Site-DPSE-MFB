@@ -1,0 +1,979 @@
+
+{% load static %}
+{% load table_tags %}
+<link rel="stylesheet" href="{% static 'adminlte/plugins/fontawesome-free/css/all.min.css' %}">
+<!doctype html>
+<html lang="en">
+  <!--begin::Head-->
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Dashboard TOFE </title>
+    <!--begin::Primary Meta Tags-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="title" content="AdminLTE v4 | Dashboard" />
+    <meta name="author" content="ColorlibHQ" />
+    <meta
+      name="description"
+      content="AdminLTE is a Free Bootstrap 5 Admin Dashboard, 30 example pages using Vanilla JS."
+    />
+    <meta
+      name="keywords"
+      content="bootstrap 5, bootstrap, bootstrap 5 admin dashboard, bootstrap 5 dashboard, bootstrap 5 charts, bootstrap 5 calendar, bootstrap 5 datepicker, bootstrap 5 tables, bootstrap 5 datatable, vanilla js datatable, colorlibhq, colorlibhq dashboard, colorlibhq admin dashboard"
+    />
+    <!--end::Primary Meta Tags-->
+    <!--begin::Fonts-->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@fontsource/source-sans-3@5.0.12/index.css"
+      integrity="sha256-tXJfXfp6Ewt1ilPzLDtQnJV4hclT9XuaZUKyUvmyr+Q="
+      crossorigin="anonymous"
+    />
+    <!--end::Fonts-->
+    <!--begin::Third Party Plugin(OverlayScrollbars)-->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.10.1/styles/overlayscrollbars.min.css"
+      integrity="sha256-tZHrRjVqNSRyWg2wbppGnT833E/Ys0DHWGwT04GiqQg="
+      crossorigin="anonymous"
+    />
+    <!--end::Third Party Plugin(OverlayScrollbars)-->
+    <!--begin::Third Party Plugin(Bootstrap Icons)-->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+      integrity="sha256-9kPW/n5nn53j4WMRYAxe9c1rCY96Oogo/MKSVdKzPmI="
+      crossorigin="anonymous"
+    />
+    <!--end::Third Party Plugin(Bootstrap Icons)-->
+    <!--begin::Required Plugin(AdminLTE)-->
+    <link rel="stylesheet" href="{% static 'adminlte/dist/css/adminlte.css' %}" />
+    <link rel="stylesheet" href="{% static 'adminlte/custom.css' %}">
+    <!--end::Required Plugin(AdminLTE)-->
+    <!-- apexcharts -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/apexcharts@3.37.1/dist/apexcharts.css"
+      integrity="sha256-4MX+61mt9NVvvuPjUWdUdyfZfxSB1/Rf9WtqRHgG5S0="
+      crossorigin="anonymous"
+    />
+    <!-- jsvectormap -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/jsvectormap@1.5.3/dist/css/jsvectormap.min.css"
+      integrity="sha256-+uGLJmmTKOqBr+2E6KDYs/NRsHxSkONXFHUL0fy2O/4="
+      crossorigin="anonymous"
+    />
+    <style>
+      #evolution-chart .apexcharts-line-series path {
+          stroke-width: 5px !important;
+          opacity: 1 !important;
+      }
+      #pie-chart, #bar-chart {
+          max-height: 300px;
+      }
+      #dataTable th {
+          cursor: pointer;
+          position: sticky;
+          top: 0;
+          background: #f9ecd1;
+          z-index: 1;
+      }
+      #dataTable th.asc::after {
+          content: ' ↑';
+      }
+      .table-responsive {
+          max-height: 400px;
+          overflow-y: auto;
+      }
+      /* Style des cartes KPI */
+      .card {
+          border: none;
+          border-radius: 8px;
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+      .card-body {
+          padding: 1rem;
+      }
+      .card-title {
+          font-size: 1.1rem;
+          margin-bottom: 0.5rem;
+      }
+      .card-text {
+          font-size: 1.5rem;
+          font-weight: bold;
+          margin-bottom: 0.25rem;
+      }
+      .card small {
+          font-size: 0.9rem;
+      }
+      /* Style du tableau */
+    #dataTable {
+        border-collapse: separate;
+        border-spacing: 0;
+        background-color: #FFFFFF; /* Fond blanc */
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    #dataTable th {
+        cursor: pointer;
+        position: sticky;
+        top: 0;
+        background-color: #FF6200; /* Orange pour en-têtes */
+        color: #FFFFFF;
+        border-bottom: 2px solid #FFFFFF; /* Séparation blanche */
+        padding: 10px;
+    }
+    #dataTable th.asc::after {
+        content: ' ↑';
+    }
+    #dataTable td {
+        padding: 8px;
+        border-bottom: 1px solid #F5F5F5; /* Gris clair subtil */
+    }
+    #dataTable tr:hover {
+        background-color: #FFF5E6; /* Nuance orange pâle au survol */
+    }
+    #dataTable tbody tr:nth-child(even) {
+        background-color: #F9FCF9; /* Nuance verte très pâle pour alternance */
+    }
+    .table-responsive {
+        max-height: 400px;
+        overflow-y: auto;
+        border: 1px solid #009A49; /* Bordure verte */
+        border-radius: 4px;
+    }
+    /* Style de la sidebar */
+    .app-sidebar {
+    background: #ff6200db; /* Dégradé vert */
+    color: #FFFFFF !important;
+    transition: all 0.3s ease; /* Transition fluide pour les changements */
+    }
+    .app-sidebar .sidebar-brand .brand-link {
+    color: #FFFFFF !important; /* Blanc pour le texte du brand */
+    }
+
+    .app-sidebar .sidebar-brand .brand-link span.brand-text {
+    color: #FFFFFF !important; /* Cible spécifiquement le span */
+    }
+
+    .app-sidebar .nav-link {
+    color: #FFFFFF !important; /* Blanc pour les liens */
+    }
+
+    .app-sidebar .nav-link p {
+    color: #FFFFFF !important; /* Blanc pour le texte dans les <p> */
+    }
+
+    .app-sidebar .nav-link:hover,
+    .app-sidebar .nav-link.active {
+    color: #FFFFFF !important; /* Blanc au survol et actif */
+    }
+    .sidebar-brand {
+    background: #1e7e01;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .sidebar-brand:hover {
+    transform: scale(1.05); /* Légère expansion */
+    box-shadow: 0 4px 10px rgb(247, 109, 3); /* Ombre au survol */
+    }
+
+    .nav-link {
+    color: #f87511;
+    position: relative;
+    overflow: hidden;
+    transition: background-color 0.3s ease, padding-left 0.3s ease;
+    }
+
+    .nav-link::after {
+    content: '';
+    position: absolute;
+    left: -100%;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(2, 91, 6, 0.101); /* Survol orange translucide */
+    transition: left 0.3s ease;
+    }
+
+    .nav-link:hover, .nav-link.active {
+    background-color: #FF8C00;
+    padding-left: 25px; /* Décalage à gauche au survol */
+    }
+
+    .nav-link:hover::after {
+    left: 0; /* Glissement de l’effet */
+    }
+    /* Style de la navbar */
+    .app-header {
+        background-color: #FF6200; /* Orange pour la barre */
+        color: #FFFFFF;
+        border-bottom: 2px solid #FFFFFF; /* Séparation subtile */
+    }
+    .app-header .nav-link {
+        color: #FFFFFF;
+    }
+    .app-header .nav-link:hover {
+        background-color: #FF8C00; /* Orange moyen au survol */
+    }
+    .app-header .navbar-badge {
+        background-color: #FFFFFF; /* Badge blanc pour contraste */
+        color: #FF6200; /* Texte orange */
+    }
+    .app-header .dropdown-menu {
+        background-color: #FFFFFF; /* Fond blanc pour dropdowns */
+        color: #000000;
+    }
+    .app-header .dropdown-item:hover {
+        background-color: #FFF5E6; /* Orange pâle au survol */
+    }
+</style>
+  </head>
+  <!--end::Head-->
+  <!--begin::Body-->
+  <body class="layout-fixed sidebar-expand-lg bg-body-tertiary">
+    <!--begin::App Wrapper-->
+    <div class="app-wrapper">
+      <!--begin::Header-->
+      <nav class="app-header navbar navbar-expand" style="background-color: #FF6200; color: #FFFFFF;">
+        <!--begin::Container-->
+        <div class="container-fluid">
+          <!--begin::Start Navbar Links-->
+          <ul class="navbar-nav">
+            <li class="nav-item">
+              <a class="nav-link" data-lte-toggle="sidebar" href="#" role="button">
+                <i class="bi bi-list"></i>
+              </a>
+            </li>
+            <li class="nav-item d-none d-md-block"><a href="{% url 'accueil' %}" class="nav-link">Page d'accueil</a></li>
+          </ul>
+          <!--end::Start Navbar Links-->
+          <!--begin::End Navbar Links-->
+          <ul class="navbar-nav ms-auto">
+            <!--begin::Navbar Search-->
+            <li class="nav-item">
+              <a class="nav-link" data-widget="navbar-search" href="#" role="button">
+                <i class="bi bi-search"></i>
+              </a>
+            </li>
+            <!--end::Navbar Search-->
+
+            <!--begin::Fullscreen Toggle-->
+            <li class="nav-item">
+              <a class="nav-link" href="#" data-lte-toggle="fullscreen">
+                <i data-lte-icon="maximize" class="bi bi-arrows-fullscreen"></i>
+                <i data-lte-icon="minimize" class="bi bi-fullscreen-exit" style="display: none"></i>
+              </a>
+            </li>
+            <!--end::Fullscreen Toggle-->
+            <!--begin::User Menu Dropdown-->
+            <li class="nav-item dropdown user-menu">
+              <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+                <img
+                  src="{% static 'adminlte/dist/assets/img/istockphoto-1337144146-612x612.jpg' %}"
+                  class="user-image rounded-circle shadow"
+                  alt="User Image"
+                />
+                <span class="d-none d-md-inline">DPSE admin</span>
+              </a>
+              <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
+                <!--begin::User Image-->
+                <li class="user-header text-bg-primary">
+                  <img
+                    src="{% static 'adminlte\dist\assets\img\istockphoto-1337144146-612x612.jpg' %}"
+                    class="rounded-circle shadow"
+                    alt="User Image"
+                  />
+                  <p>
+                    Test user - DPSE
+                  </p>
+                </li>
+                <!--end::User Image-->
+                <!--begin::Menu Body-->
+                <!--begin::Menu Footer-->
+                <li class="user-footer">
+                  <a href="#" class="btn btn-default btn-flat">Profil</a>
+                  <a href="#" class="btn btn-default btn-flat float-end">Se déconnecter</a>
+                </li>
+                <!--end::Menu Footer-->
+              </ul>
+            </li>
+            <!--end::User Menu Dropdown-->
+          </ul>
+          <!--end::End Navbar Links-->
+        </div>
+        <!--end::Container-->
+      </nav>
+      <!--end::Header-->
+            <!--begin::Sidebar-->
+<!-- Sidebar -->
+<aside class="app-sidebar shadow"> <!-- Retire style="background-color: #009A49; color: #FFFFFF;" -->
+  <!-- Sidebar Brand -->
+  <div class="sidebar-brand" style="background-color: #FF6200;">
+      <a href="#" class="brand-link">
+          <img
+              src="{% static 'adminlte/dist/assets/img/DPSE_logo_1 sans arrière plan.png' %}"
+              alt="AdminLTE Logo"
+              class="brand-image"
+          />
+          <span class="brand-text fw-light">Dashboard DPSE</span>
+      </a>
+  </div>
+  <!-- Sidebar Wrapper -->
+  <div class="sidebar-wrapper">
+      <nav class="mt-2">
+          <ul
+              class="nav sidebar-menu flex-column"
+              data-lte-toggle="treeview"
+              role="menu"
+              data-accordion="false"
+          >
+              <!-- Ton contenu de menu existant reste inchangé -->
+              <li class="nav-item menu-open">
+                  <a href="#" class="nav-link active" style="background-color: #049639;">
+                      <i class="nav-icon bi bi-speedometer"></i>
+                      <p>
+                          Dashboard
+                          <i class="nav-arrow bi bi-chevron-right"></i>
+                      </p>
+                  </a>
+                  <ul class="nav nav-treeview">
+                      <li class="nav-item">
+                        <a href="{% url 'dashboard' %}" class="nav-link {% if request.path == '/stats/dashboard/' %}active{% endif %}" style="background-color:#388855">
+                              <i class="nav-icon bi bi-circle"></i>
+                              <p>TOFE</p>
+                          </a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="{% url 'douanes_dashboard' %}" class="nav-link {% if request.path == '/stats/douanes_dashboard/' %}active{% endif %}" >
+                      <i class="nav-icon bi bi-circle"></i>
+                      <p>Douanes</p>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="{% url 'financements_dashboard' %}" class="nav-link {% if request.path == '/stats/financements_dashboard/' %}active{% endif %}">
+                      <i class="nav-icon bi bi-circle"></i>
+                      <p>Financement</p>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="#" class="nav-link">
+                      <i class="nav-icon bi bi-circle"></i>
+                      <p>Marchés publics</p>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="#" class="nav-link">
+                      <i class="nav-icon bi bi-circle"></i>
+                      <p>Suivi du PEF</p>
+                    </a>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+            <!--end::Sidebar Menu-->
+          </nav>
+        </div>
+        <!--end::Sidebar Wrapper-->
+      </aside>
+      <!--end::Sidebar-->
+      <!--begin::App Main-->
+      <main class="app-main">
+        <!--begin::App Content Header-->
+        <div class="app-content-header">
+          <!--begin::Container-->
+          <div class="container-fluid">
+            <!--begin::Row-->
+            <div class="row">
+              <div class="col-sm-6"><h3 class="mb-0">Dashboard</h3></div>
+              <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-end">
+                  <li class="breadcrumb-item"><a href="#">Home</a></li>
+                  <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+                </ol>
+              </div>
+            </div>
+            <!--end::Row-->
+          </div>
+          <!--end::Container-->
+        </div>
+        <!--end::App Content Header-->
+        <!--begin::App Content-->
+        <div class="app-content">
+        <!-- Nouvelles cartes KPI -->
+        <div class="row mb-4">
+          <div class="col-md-3">
+              <div class="card text" style="background-color: #dff3e7;"> <!-- Orange vif -->
+                  <div class="card-body">
+                      <h5>Recettes 2023</h5>
+                      <p class="card-text">{{ recettes_2023|floatformat:2 }} Mds FCFA</p>
+                      <small>
+                          {% if evol_recettes > 0 %}
+                              <span class="text-success"><i class="fas fa-arrow-up"></i> +{{ evol_recettes|floatformat:1 }}%</span>
+                          {% elif evol_recettes < 0 %}
+                              <span class="text-danger"><i class="fas fa-arrow-down"></i> {{ evol_recettes|floatformat:1 }}%</span>
+                          {% else %}
+                              <span class="text-warning"><i class="fas fa-minus"></i> 0%</span>
+                          {% endif %}
+                      </small>
+                  </div>
+              </div>
+          </div>
+          <div class="col-md-3">
+              <div class="card text" style="background-color:#dff3e7;"> <!-- Vert foncé -->
+                  <div class="card-body">
+                      <h5>Solde 2023</h5>
+                      <p class="card-text">{{ solde_2023|floatformat:2 }} Mds FCFA</p>
+                      <small>
+                          {% if evol_solde > 0 %}
+                              <span class="text-success"><i class="fas fa-arrow-up"></i> +{{ evol_solde|floatformat:1 }}%</span>
+                          {% elif evol_solde < 0 %}
+                              <span class="text-danger"><i class="fas fa-arrow-down"></i> {{ evol_solde|floatformat:1 }}%</span>
+                          {% else %}
+                              <span class="text-warning"><i class="fas fa-minus"></i> 0%</span>
+                          {% endif %}
+                      </small>
+                  </div>
+              </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card text" style="background-color:#dff3e7; "> 
+                  <div class="card-body">
+                      <h5>Financement Net 2023</h5>
+                      <p class="card-text">{{ financement_net_2023|floatformat:2 }} Mds FCFA</p>
+                      <small>
+                          {% if evol_financement_net > 0 %}
+                              <span class="text-success"><i class="fas fa-arrow-up"></i> +{{ evol_financement_net|floatformat:1 }}%</span>
+                          {% elif evol_financement_net < 0 %}
+                              <span class="text-danger"><i class="fas fa-arrow-down"></i> {{ evol_financement_net|floatformat:1 }}%</span>
+                          {% else %}
+                              <span class="text-warning"><i class="fas fa-minus"></i> 0%</span>
+                          {% endif %}
+                      </small>
+                  </div>
+              </div>
+          </div>
+          <div class="col-md-3">
+              <div class="card text" style="background-color: #dff3e7;"> <!-- Vert foncé -->
+                  <div class="card-body">
+                      <h5>Financement Extérieur 2023</h5>
+                      <p class="card-text">{{ financement_ext_2023|floatformat:2 }} Mds FCFA</p>
+                      <small>
+                          {% if evol_financement_ext > 0 %}
+                              <span class="text-success"><i class="fas fa-arrow-up"></i> +{{ evol_financement_ext|floatformat:1 }}%</span>
+                          {% elif evol_financement_ext < 0 %}
+                              <span class="text-danger"><i class="fas fa-arrow-down"></i> {{ evol_financement_ext|floatformat:1 }}%</span>
+                          {% else %}
+                              <span class="text-warning"><i class="fas fa-minus"></i> 0%</span>
+                          {% endif %}
+                      </small>
+                  </div>
+              </div>
+          </div>
+        </div>
+            <!--end::Row-->
+            <!--begin::Row-->
+            <div class="row">
+              <!-- Start col -->
+              <div class="row">
+                <!-- Graphique linéaire/area (3/4 de la page) -->
+                <div class="col-md-8">
+                    <div class="card mb-4" style="border: 1px solid #FF6200;">
+                        <div class="card-header" style="background-color: #009A49; color: #FFFFFF;">
+                            <h3 class="card-title">Évolution des Indicateurs Financiers (2018-2023)</h3>
+                        </div>
+                        <div class="card-body">
+                            <!-- Sélecteur de variables -->
+                            <div class="mb-3">
+                                <label for="variableSelector" class="form-label">Choisir les variables :</label>
+                                <select id="variableSelector" multiple class="form-select" size="6">
+                                    {% for categorie in all_data.keys %}
+                                        <option value="{{ categorie }}" {% if categorie == 'RECETTES' %}selected{% endif %}>{{ categorie }}</option>
+                                    {% endfor %}
+                                </select>
+                                <small class="text-muted">Maintenez Ctrl (ou Cmd) pour sélectionner plusieurs variables.</small>
+                            </div>
+                            <!-- Sélecteur de type -->
+                            <div class="mb-3">
+                                <label for="typeSelector" class="form-label">Type de graphique :</label>
+                                <select id="typeSelector" class="form-select">
+                                    <option value="line" selected>Ligne</option>
+                                    <option value="area">Aire</option>
+                                </select>
+                            </div>
+                            <!-- Graphique -->
+                            <div id="evolution-chart" style="min-height: 300px;"></div>
+                        </div>
+                    </div>
+                </div>
+            
+                <!-- Camembert (1/4 de la page) -->
+                <div class="col-md-4">
+                    <div class="card mb-4" style="border: 1px solid #FF6200;">
+                        <div class="card-header" style="background-color: #009A49; color: #FFFFFF;">
+                            <h3 class="card-title">Répartition (2023)</h3>
+                        </div>
+                        <div class="card-body">
+                            <!-- Sélecteur de variable (simple) -->
+                            <div class="mb-3">
+                                <label for="pieSelector" class="form-label">Choisir une variable :</label>
+                                <select id="pieSelector" class="form-select">
+                                    {% for categorie in all_data.keys %}
+                                        <option value="{{ categorie }}" {% if categorie == 'RECETTES' %}selected{% endif %}>{{ categorie }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <!-- Camembert -->
+                            <div id="pie-chart" style="min-height: 300px;"></div>
+                            <div id="bar-chart" style="height: 120px; margin-top: 55px;"></div>
+                        </div>
+                    </div>
+                </div>
+              </div>
+              <!-- Histogramme croisé -->
+              <div class="row">
+                <div class="col-md-12"> 
+                  <div class="card mt-4 mb-4" style="border: 1px solid #FF6200;">
+                    <div class="card-header" style="background-color: #009A49; color: #FFFFFF;" >
+                        <h3 class="card-title">Histogramme Croisé à Deux Variables</h3>
+                    </div>
+                    <div class="card-body">
+                        <!-- Sélecteurs -->
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="xSelector" class="form-label">Variable X :</label>
+                                <select id="xSelector" class="form-select">
+                                    {% for categorie in all_data.keys %}
+                                        <option value="{{ categorie }}" {% if categorie == 'RECETTES' %}selected{% endif %}>{{ categorie }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="ySelector" class="form-label">Variable Y :</label>
+                                <select id="ySelector" class="form-select">
+                                    {% for categorie in all_data.keys %}
+                                        <option value="{{ categorie }}" {% if categorie == 'DÉPENSES TOTALES ET PRETS NET' %}selected{% endif %}>{{ categorie }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="stackSelector" class="form-label">Type d’affichage :</label>
+                                <select id="stackSelector" class="form-select">
+                                    <option value="stacked" selected>Empilé</option>
+                                    <option value="grouped">Étalé</option>
+                                </select>
+                            </div>
+                        </div>
+                        <!-- Histogramme croisé -->
+                        <div id="crossed-histogram" style="min-height: 300px;"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- Section tableau -->
+              <div class="row">
+                <div class="col-md-12"> 
+                  <div class="card mt-4" style="border: 1px solid #FF6200;">
+                    <div class="card-header" style="background-color: #009A49; color: #FFFFFF;">
+                        <h3 class="card-title">Base de Données Complète</h3>
+                    </div>
+                    <div class="card-body">
+                        <!-- Recherche globale -->
+                        <div class="mb-3">
+                            <input type="text" id="globalSearch" class="form-control" placeholder="Rechercher dans toutes les colonnes..." style="border-color: #FF6200;">
+                        </div>
+                        <!-- Tableau avec défilement -->
+                        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                            <table id="dataTable" class="table table-hover">
+                                <thead style="background-color: #FF6200; color: #FFFFFF;">
+                                    <tr>
+                                        <th>Catégorie</th>
+                                        {% for year in years %}
+                                            <th>{{ year }}</th>
+                                        {% endfor %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for row in table_data %}
+                                        <tr>
+                                            <td>{{ row.Catégorie }}</td>
+                                            {% for year in years %}
+                                                <td>{{ row|get_item:year }}</td>
+                                            {% endfor %}
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+                <!-- /.card -->    
+        </div>
+        <!--end::App Content-->
+      </main>
+      <!--end::App Main-->
+      <!--begin::Footer-->
+      <footer class="app-footer">
+        <!--begin::To the end-->
+        <div class="float-end d-none d-sm-inline">Tous droits réservés.</div>
+        <strong>Copyright - Direction de la Planification et du Suivi-Evaluation du MFB Côte d'Ivoire © 2025 <a href="#" class="text-decoration-none">DPSE</a>.</strong>
+        <!--end::Copyright-->
+      </footer>
+      <!--end::Footer-->
+    </div>
+    <!--end::App Wrapper-->
+    <!--begin::Script-->
+    <!--begin::Third Party Plugin(OverlayScrollbars)-->
+    <script
+      src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.10.1/browser/overlayscrollbars.browser.es6.min.js"
+      integrity="sha256-dghWARbRe2eLlIJ56wNB+b760ywulqK3DzZYEpsg2fQ="
+      crossorigin="anonymous"
+    ></script>
+    <!--end::Third Party Plugin(OverlayScrollbars)--><!--begin::Required Plugin(popperjs for Bootstrap 5)-->
+    <script
+      src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+      integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
+      crossorigin="anonymous"
+    ></script>
+    <!--end::Required Plugin(popperjs for Bootstrap 5)--><!--begin::Required Plugin(Bootstrap 5)-->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"
+      integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy"
+      crossorigin="anonymous"
+    ></script>
+    <!--end::Required Plugin(Bootstrap 5)--><!--begin::Required Plugin(AdminLTE)-->
+    <script src="{% static 'adminlte/dist/js/adminlte.js' %}"></script>
+    <!--end::Required Plugin(AdminLTE)--><!--begin::OverlayScrollbars Configure-->
+    <script>
+      const SELECTOR_SIDEBAR_WRAPPER = '.sidebar-wrapper';
+      const Default = {
+        scrollbarTheme: 'os-theme-light',
+        scrollbarAutoHide: 'leave',
+        scrollbarClickScroll: true,
+      };
+      document.addEventListener('DOMContentLoaded', function () {
+        const sidebarWrapper = document.querySelector(SELECTOR_SIDEBAR_WRAPPER);
+        if (sidebarWrapper && typeof OverlayScrollbarsGlobal?.OverlayScrollbars !== 'undefined') {
+          OverlayScrollbarsGlobal.OverlayScrollbars(sidebarWrapper, {
+            scrollbars: {
+              theme: Default.scrollbarTheme,
+              autoHide: Default.scrollbarAutoHide,
+              clickScroll: Default.scrollbarClickScroll,
+            },
+          });
+        }
+      });
+    </script>
+    <!--end::OverlayScrollbars Configure-->
+    <!-- OPTIONAL SCRIPTS -->
+    <!-- sortablejs -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"
+      integrity="sha256-ipiJrswvAR4VAx/th+6zWsdeYmVae0iJuiR+6OqHJHQ="
+      crossorigin="anonymous"
+    ></script>
+    <!-- sortablejs -->
+    <script>
+      const connectedSortables = document.querySelectorAll('.connectedSortable');
+      connectedSortables.forEach((connectedSortable) => {
+        let sortable = new Sortable(connectedSortable, {
+          group: 'shared',
+          handle: '.card-header',
+        });
+      });
+
+      const cardHeaders = document.querySelectorAll('.connectedSortable .card-header');
+      cardHeaders.forEach((cardHeader) => {
+        cardHeader.style.cursor = 'move';
+      });
+    </script>
+    <!-- apexcharts -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/apexcharts@3.37.1/dist/apexcharts.min.js"
+      integrity="sha256-+vh8GkaU7C9/wbSLIcwq82tQ2wTf44aOHA8HlBMwRI8="
+      crossorigin="anonymous"
+    ></script>
+    <!-- ChartJS -->
+    <script>
+      // Données brutes depuis la vue
+      const allData = {{ all_data|safe }};
+      const labels = {{ chart_labels|safe }};
+  
+      // Debug
+      console.log("Toutes les données :", allData);
+      console.log("Labels :", labels);
+  
+      // Fonction pour mettre à jour le graphique linéaire/area
+      function updateEvolutionChart(selectedVariables, chartType) {
+          const series = selectedVariables.map(variable => ({
+              name: variable,
+              data: allData[variable]
+          }));
+  
+          const chartOptions = {
+              series: series,
+              chart: {
+                  height: 300,
+                  type: chartType,
+                  toolbar: { show: true }
+              },
+              colors: ['#FF6200', '#009A49', '#FFD700', '#FF4500', '#1E90FF', '#32CD32', '#8A2BE2', '#FF69B4'],
+              stroke: {
+                  curve: 'smooth',
+                  width: 4
+              },
+              dataLabels: {
+                  enabled: true
+              },
+              xaxis: {
+                  categories: labels,
+                  type: 'category',
+                  title: { text: 'Années' }
+              },
+              yaxis: {
+                  title: { text: 'Milliards FCFA' }
+              },
+              legend: {
+                  position: 'top'
+              },
+              tooltip: {
+                  y: { formatter: function (val) { return val.toFixed(2) + " Mds FCFA"; } }
+              }
+          };
+  
+          if (window.evolutionChart) {
+              window.evolutionChart.updateOptions(chartOptions);
+          } else {
+              window.evolutionChart = new ApexCharts(document.querySelector('#evolution-chart'), chartOptions);
+              window.evolutionChart.render();
+          }
+      }
+  
+      // Fonction pour mettre à jour le camembert
+      function updatePieChart(selectedVariable) {
+          const pieData = allData[selectedVariable];
+  
+          // Mettre à jour le camembert
+          const pieOptions = {
+              series: pieData,
+              chart: {
+                  height: 300,
+                  type: 'donut'
+              },
+              labels: labels,
+              colors: ['#FF6200', '#009A49', '#FFD700', '#FF4500', '#1E90FF', '#32CD32'],
+              legend: {
+                  position: 'bottom'
+              },
+              tooltip: {
+                  y: { formatter: function (val) { return val.toFixed(2) + " Mds FCFA"; } }
+              }
+          };
+  
+          if (window.pieChart) {
+              window.pieChart.updateOptions(pieOptions);
+          } else {
+              window.pieChart = new ApexCharts(document.querySelector('#pie-chart'), pieOptions);
+              window.pieChart.render();
+          }
+  
+          // Mettre à jour l’histogramme horizontal
+          updateBarChart(selectedVariable);
+      }
+  
+      // Fonction pour mettre à jour l’histogramme horizontal
+      function updateBarChart(selectedVariable) {
+          const barOptions = {
+              series: [{
+                  name: selectedVariable,
+                  data: allData[selectedVariable]
+              }],
+              chart: {
+                  height: 200,  // Petite hauteur pour l’espace
+                  type: 'bar'
+              },
+              plotOptions: {
+                  bar: {
+                      horizontal: true,  // Barres horizontales
+                      barHeight: '80%'  // Largeur des barres
+                  }
+              },
+              colors: ['#009A49'],  // Vert pour un contraste avec le camembert
+              dataLabels: {
+                  enabled: false  // Pas de labels pour garder ça compact
+              },
+              xaxis: {
+                  categories: labels,
+                  title: { text: 'Milliards FCFA' }
+              },
+              yaxis: {
+                  title: { text: 'Années' }
+              },
+              tooltip: {
+                  y: { formatter: function (val) { return val.toFixed(2) + " Mds FCFA"; } }
+              }
+          };
+  
+          if (window.barChart) {
+              window.barChart.updateOptions(barOptions);
+          } else {
+              window.barChart = new ApexCharts(document.querySelector('#bar-chart'), barOptions);
+              window.barChart.render();
+          }
+      }
+      <!-- Ton script existant jusqu’à updateBarChart -->
+
+      // Fonction pour mettre à jour l’histogramme croisé
+      function updateCrossedHistogram(xVariable, yVariable, stackType) {
+          const series = [
+              {
+                  name: xVariable,
+                  data: allData[xVariable]
+              },
+              {
+                  name: yVariable,
+                  data: allData[yVariable]
+              }
+          ];
+
+          const histOptions = {
+              series: series,
+              chart: {
+                  height: 300,
+                  type: 'bar',
+                  stacked: stackType === 'stacked',  // Empilé ou non selon le choix
+                  toolbar: { show: true }
+              },
+              plotOptions: {
+                  bar: {
+                      horizontal: false,
+                      columnWidth: '55%'  // Largeur des barres
+                  }
+              },
+              colors: ['#FF6200', '#009A49'],  // Orange et vert pour X et Y
+              dataLabels: {
+                  enabled: false  // Pas de labels pour garder ça clair
+              },
+              xaxis: {
+                  categories: labels,
+                  title: { text: 'Années' }
+              },
+              yaxis: {
+                  title: { text: 'Milliards FCFA' }
+              },
+              legend: {
+                  position: 'top'
+              },
+              tooltip: {
+                  y: { formatter: function (val) { return val.toFixed(2) + " Mds FCFA"; } }
+              }
+          };
+
+          if (window.crossedHistogram) {
+              window.crossedHistogram.updateOptions(histOptions);
+          } else {
+              window.crossedHistogram = new ApexCharts(document.querySelector('#crossed-histogram'), histOptions);
+              window.crossedHistogram.render();
+          }
+      }
+
+      // Initialiser tous les graphiques
+      updateEvolutionChart(['RECETTES'], 'line');
+      updatePieChart('RECETTES');
+      updateCrossedHistogram('RECETTES', 'DÉPENSES TOTALES ET PRETS NET', 'stacked');
+
+      // Écouter les changements pour le graphique linéaire/area
+      document.getElementById('variableSelector').addEventListener('change', function () {
+          const selectedOptions = Array.from(this.selectedOptions).map(option => option.value);
+          const chartType = document.getElementById('typeSelector').value;
+          updateEvolutionChart(selectedOptions, chartType);
+      });
+
+      document.getElementById('typeSelector').addEventListener('change', function () {
+          const selectedOptions = Array.from(document.getElementById('variableSelector').selectedOptions).map(option => option.value);
+          const chartType = this.value;
+          updateEvolutionChart(selectedOptions, chartType);
+      });
+
+      // Écouter les changements pour le donut et l’histogramme
+      document.getElementById('pieSelector').addEventListener('change', function () {
+          const selectedVariable = this.value;
+          updatePieChart(selectedVariable);
+      });
+
+      // Écouter les changements pour l’histogramme croisé
+      document.getElementById('xSelector').addEventListener('change', function () {
+          const xVariable = this.value;
+          const yVariable = document.getElementById('ySelector').value;
+          const stackType = document.getElementById('stackSelector').value;
+          updateCrossedHistogram(xVariable, yVariable, stackType);
+      });
+
+      document.getElementById('ySelector').addEventListener('change', function () {
+          const xVariable = document.getElementById('xSelector').value;
+          const yVariable = this.value;
+          const stackType = document.getElementById('stackSelector').value;
+          updateCrossedHistogram(xVariable, yVariable, stackType);
+      });
+
+      document.getElementById('stackSelector').addEventListener('change', function () {
+          const xVariable = document.getElementById('xSelector').value;
+          const yVariable = document.getElementById('ySelector').value;
+          const stackType = this.value;
+          updateCrossedHistogram(xVariable, yVariable, stackType);
+      });
+
+    </script>
+
+    
+    <script>
+        // Gestion du tableau
+        document.addEventListener('DOMContentLoaded', function () {
+            const table = document.getElementById('dataTable');
+            const rows = Array.from(table.querySelectorAll('tbody tr'));
+            const globalSearch = document.getElementById('globalSearch');
+    
+            // Recherche globale
+            globalSearch.addEventListener('input', filterTable);
+    
+            function filterTable() {
+                const searchText = globalSearch.value.toLowerCase();
+    
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    const rowText = Array.from(cells).map(cell => cell.textContent.toLowerCase()).join(' ');
+    
+                    const matchesSearch = rowText.includes(searchText);
+    
+                    row.style.display = matchesSearch ? '' : 'none';
+                });
+            }
+    
+            // Tri par colonne (clic sur les en-têtes)
+            const headers = table.querySelectorAll('th');
+            headers.forEach((header, index) => {
+                header.addEventListener('click', () => {
+                    const isAscending = header.classList.toggle('asc');
+                    const columnIndex = index;
+    
+                    rows.sort((a, b) => {
+                        const aValue = a.cells[columnIndex].textContent;
+                        const bValue = b.cells[columnIndex].textContent;
+                        if (columnIndex === 0) { // Tri alphabétique pour la catégorie
+                            return isAscending ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+                        } else { // Tri numérique pour les années
+                            return isAscending ? parseFloat(aValue) - parseFloat(bValue) : parseFloat(bValue) - parseFloat(aValue);
+                        }
+                    });
+    
+                    rows.forEach(row => table.querySelector('tbody').appendChild(row));
+                    headers.forEach(h => h.classList.remove('asc'));
+                    header.classList.add('asc');
+                });
+            });
+        });
+    </script>
+  </body>
+  <!--end::Body-->
+</html>
