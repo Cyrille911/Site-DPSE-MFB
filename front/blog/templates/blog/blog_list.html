@@ -1,0 +1,153 @@
+{% extends 'index.html' %}
+
+{% load static %}
+{% load markdown_filters %}
+{% block style %}
+<!-- Meta & Favicon -->
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="author" content="Ministère des Finances CI">
+<link rel="shortcut icon" type="image/png" href="{% static 'assets/images/favicon.png' %}">
+<title>Actualités - Ministère des Finances de Côte d'Ivoire</title>
+
+<!-- CSS Files -->
+<link href="{% static 'assets/css/themify-icons.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/flaticon.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/bootstrap.min.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/animate.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/owl.carousel.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/owl.theme.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/slick.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/slick-theme.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/swiper.min.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/owl.transitions.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/jquery.fancybox.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/odometer-theme-default.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/component.css' %}" rel="stylesheet">
+<link href="{% static 'assets/sass/style.css' %}" rel="stylesheet">
+<link href="{% static 'assets/css/responsive.css' %}" rel="stylesheet">
+{% endblock style %}
+
+{% block content %}
+<div class="page-wrapper">
+    <!-- Preloader -->
+    <div class="preloader">
+        <div class="angular-shape">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+        <div class="spinner">
+            <div class="double-bounce1"></div>
+            <div class="double-bounce2"></div>
+        </div>
+    </div>
+    <!-- End Preloader -->
+
+    <!-- Breadcumb Section -->
+    <div class="wpo-breadcumb-area">
+        <div>
+            <div class="row">
+                <div class="col-12">
+                    <div class="wpo-breadcumb-wrap">
+                        <!-- <h2>{{ news.headline }}</h2> -->
+                        <h2>Blog du MFB</h2>
+                        <ul>
+                            <li><a href="#">Accueil</a></li>
+                            <li><span>Actualités</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Blog Highlights Section -->
+    <section class="wpo-blog-highlights-section  m-5">
+        <div class="">
+            <div class="wpo-section-title">
+                <h2>Notre blog</h2>
+            </div>
+            <div class="row">
+                <div class="col-lg-9 col-12">
+                    <div class="wpo-blog-highlights-wrap">
+                        <div class="wpo-blog-items">
+                            <div class="row">
+                                {% for blog in blogs %}
+                                <div class="col-lg-4 col-md-6 col-12">
+                                    <div class="wpo-blog-item">
+                                        <div class="wpo-blog-img">
+                                            {% if blog.cover_image %}
+                                            <img src="{{ blog.cover_image.url }}" alt="{{ blog.title }}"
+                                                class="card-img-top"
+                                                style="width: 100%; height: 250px; object-fit: cover; border-radius: 5px;">
+                                            {% else %}
+                                            <img src="{% static 'assets/images/blog/default.jpg' %}"
+                                                alt="Image non disponible" class="card-img-top"
+                                                style="width: 100%; height: 250px; object-fit: cover; border-radius: 5px;">
+                                            {% endif %}
+                                            <div class="thumb">Blog</div>
+                                        </div>
+                                        <div class="wpo-blog-content">
+                                            <h2><a href="{% url 'blog_detail' blog.id %}">{{ blog.title }}</a></h2>
+                                            <ul>
+                                                <li>
+                                                    {% if comment.user.photo %}
+                                                    <img src="{{ news.creator.get_full_name|default:news.creator.photo.url }}"
+                                                        class="rounded-circle shadow-sm" width="50" height="50"
+                                                        alt="{{ comment.user.get_full_name|default:comment.user.username }}">
+                                                    {% else %}
+                                                    <div class="rounded-circle m-l-5 bg-success text-white d-flex justify-content-center align-items-center shadow-sm"
+                                                        style="width: 35px; height: 35px; font-size: 18px; font-weight: bold;">
+                                                        {{blog.author.get_full_name|default:blog.author.username|default:""|slice:":1"}}
+                                                        {{blog.author.get_full_name|default:blog.author.username|default:""|slice:":1"}}
+                                                    </div>
+                                                    {% endif %}
+                                                </li>
+                                                <li class="m-1"> <a
+                                                        href="#">{{blog.author.get_full_name|default:blog.author.username}}</a>
+                                                </li>
+                                                <li>{{ blog.created_at|date:"d/m/y" }}</li>
+                                            </ul>
+                                            <p>{{ blog.content|truncatechars:200|safe }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <p>Aucun article disponible.</p>
+                                {% endfor %}
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-12">
+                    <div class="blog-sidebar">
+                        <div class="widget category-widget">
+                            <h3>Sujets Tendance</h3>
+                            <ul>
+                                <li><a href="blog-single.html">Budget et Réformes<span>(05)</span></a></li>
+                                <li><a href="blog-single.html">Investissements<span>(07)</span></a></li>
+                                <li><a href="blog-single.html">Transparence<span>(03)</span></a></li>
+                                <li><a href="blog-single.html">Digitalisation<span>(06)</span></a></li>
+                                <li><a href="blog-single.html">Économie<span>(12)</span></a></li>
+                                <li><a href="blog-single.html">International<span>(08)</span></a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- End Blog Highlights Section -->
+</div>
+{% endblock content %}
+
+{% block script %}
+<script src="{% static 'assets/js/jquery.min.js' %}"></script>
+<script src="{% static 'assets/js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'assets/js/modernizr.custom.js' %}"></script>
+<script src="{% static 'assets/js/jquery-plugin-collection.js' %}"></script>
+<script src="{% static 'assets/js/script.js' %}"></script>
+{% endblock script %}

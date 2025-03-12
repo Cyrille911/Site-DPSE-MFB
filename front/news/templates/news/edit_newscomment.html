@@ -1,0 +1,18 @@
+{% extends 'index.html' %}
+{% block content %}
+<div class="container my-5">
+    <h2 class="text-center mb-4">Modifier votre commentaire ✏️</h2>
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <textarea name="text" rows="4" class="form-control" required>{{ comment.text }}</textarea>
+                <div class="mt-4 text-center">
+                    <button type="submit" class="btn btn-success">Enregistrer les modifications 💾</button>
+                    <a href="{% url 'news_detail' comment.news.pk %}" class="btn btn-secondary">Annuler 🔙</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

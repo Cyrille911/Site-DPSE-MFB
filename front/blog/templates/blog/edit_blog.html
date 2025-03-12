@@ -1,0 +1,77 @@
+{% extends 'index.html' %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="text-center mb-4">Modifier l'Article</h2>
+
+    <form method="post" id="articleForm" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- Titre de l'article -->
+        <div class="form-group mb-3">
+            <label for="title" class="form-label">Titre de l'article</label>
+            <input type="text" name="title" id="title" class="form-control" value="{{ blog.title }}" placeholder="Entrez le titre de l'article" required>
+        </div>
+
+        <!-- Domaine d'application ou Catégorie de l'article -->
+        <div class="form-group mb-3">
+            <label for="category" class="form-label">Domaine d'application</label>
+            <input type="text" name="category" id="category" class="form-control" value="{{ blog.category }}" placeholder="Ex : Gestion budgétaire" required>
+        </div>
+
+        <!-- Image de couverture -->
+        <div class="form-group mb-3">
+            <label for="cover_image" class="form-label">Image de couverture</label>
+            <input type="file" name="cover_image" id="cover_image" class="form-control">
+            {% if blog.cover_image %}
+                <div class="mt-3">
+                    <img src="{{ blog.cover_image.url }}" alt="Cover Image" class="img-fluid" width="200">
+                    <p class="mt-2">Image actuelle : {{ blog.cover_image.name }}</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Contenu de l'article avec Quill.js -->
+        <div class="form-group mb-3">
+            <label for="content" class="form-label">Contenu de l'article</label>
+            <div id="editor-container" style="height: 300px; border: 1px solid #ced4da; resize: vertical; overflow: auto;"></div>
+            <textarea name="content" id="content" class="form-control d-none">{{ blog.content }}</textarea>
+        </div>
+
+        <!-- Boutons -->
+        <div class="d-flex justify-content-between align-items-center mt-4">
+            <a href="{% url 'blog_list' %}" class="btn btn-secondary">Retour</a>
+            <button type="submit" class="btn btn-primary">Mettre à Jour</button>
+        </div>
+    </form>
+</div>
+
+<!-- Initialisation de Quill.js -->
+<link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+<script>
+    // Initialisation de l'éditeur Quill.js
+    const quill = new Quill('#editor-container', {
+        theme: 'snow',
+        placeholder: 'Écrivez votre article ici...',
+        modules: {
+            toolbar: [
+                [{ header: [1, 2, false] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                [{ list: 'ordered' }, { list: 'bullet' }],
+                ['link', 'image'],
+                ['clean']
+            ]
+        }
+    });
+
+    // Chargement du contenu actuel dans l'éditeur Quill
+    quill.root.innerHTML = "{{ blog.content|escapejs }}";
+
+    // Sauvegarde du contenu dans le champ texte avant soumission
+    const form = document.getElementById('articleForm');
+    form.addEventListener('submit', function () {
+        document.getElementById('content').value = quill.root.innerHTML;
+    });
+</script>
+{% endblock %}

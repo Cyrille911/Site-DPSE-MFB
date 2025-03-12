@@ -1,0 +1,549 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>MFB - DPSE</title>
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap"
+    rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="{% static 'general/vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+  <link href="{% static 'general/vendor/bootstrap-icons/bootstrap-icons.css' %}" rel="stylesheet">
+  <link href="{% static 'general/vendor/aos/aos.css' %}" rel="stylesheet">
+  <link href="{% static 'general/vendor/swiper/swiper-bundle.min.css' %}" rel="stylesheet">
+  <link href="{% static 'general/vendor/glightbox/css/glightbox.min.css' %}" rel="stylesheet">
+
+  <!-- Main CSS File -->
+  <link href="{% static 'general/css/main.css' %}" rel="stylesheet">
+
+  <style>
+    .footer-section {
+      flex: 1;
+      min-width: 250px;
+    }
+
+    .footer-section h3 {
+      margin-bottom: 15px;
+      font-size: 18px;
+    }
+
+    .footer-menu {
+      list-style: none;
+    }
+
+    .menu-item {
+      margin-bottom: 10px;
+    }
+
+    .menu-item a {
+      color: #ccc;
+      text-decoration: none;
+    }
+
+    .menu-item a:hover {
+      color: #ff7200;
+    }
+
+    .menu-title {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      color: #ccc;
+    }
+
+    .menu-title:hover {
+      color: white;
+    }
+
+    .chevron {
+      font-size: 10px;
+      margin-right: 8px;
+      transition: transform 0.3s;
+    }
+
+    .menu-item.active .chevron {
+      transform: rotate(90deg);
+    }
+
+    /* Style pour la transition fluide des sous-menus */
+    .submenu {
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      margin-left: 18px;
+      transform: translateY(-10px);
+      transition: max-height 0.3s ease, opacity 0.3s ease, transform 0.3s ease;
+    }
+
+
+    .menu-item.active .submenu {
+      max-height: 500px;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .menu-item:hover .submenu {
+      max-height: 500px;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .submenu li {
+      margin-bottom: 5px;
+    }
+  </style>
+
+  {% block style %}
+  {% endblock %}
+</head>
+
+<body class="index-page">
+
+  <header id="header" class="header fixed-top">
+    <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+      <!-- Logo -->
+      <a href="{% url 'mfb_presentation' %}" class="logo d-flex align-items-center me-auto me-lg-0">
+        <h1 class="sitename">La DPSE</h1>
+      </a>
+
+      <!-- Menu de navigation -->
+      <nav id="navmenu" class="navmenu">
+        <ul>
+          <li><a href="{% url 'accueil' %}">Accueil</a></li>
+          <li class="dropdown">
+            <a href="#"><span>Actualités</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+            <ul>
+              <li><a href="{% url 'news_list' %}">A la Une</a></li>
+              <li><a href="{% url 'add_news' %}">Publier une activité</a></li>
+            </ul>
+          </li>
+          <li class="dropdown">
+            <a href="#"><span>Documents</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+            <ul>
+              <li><a href="{% url 'document_list' document_type='mfb' %}">Revue du MFB</a></li>
+              <li class="dropdown">
+                <a href="#"><span>Documents DPSE</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+                <ul>
+                  <li><a href="{% url 'document_list' document_type='dpse_planification' %}">Prospectives et
+                      Planification</a></li>
+                  <li><a href="{% url 'document_list' document_type='dpse_suivi_evaluation' %}">Programmation et
+                      Suivi-Evaluation</a></li>
+                  <li><a href="{% url 'document_list' document_type='dpse_statistiques' %}">Etudes et Statistiques</a>
+                  </li>
+                  <li><a href="{% url 'document_list' document_type='dpse_qualite' %}">Qualité et Normalisation</a></li>
+                </ul>
+              </li>
+              <li><a href="{% url 'document_list' document_type='dpse_archives' %}">Archives DPSE</a></li>
+            </ul>
+          </li>
+          <li class="dropdown">
+            <a href="#"><span>Plans d'actions</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+            <ul>
+              <li><a href="{% url 'plan_action_list' %}">Catalogue des plans d'actions</a></li>
+              <li><a href="{% url 'task_list' %}">Consulter mes activités</a></li>
+              <li><a href="{% url 'add_plan_action' %}">Créer un plan d'actions</a></li>
+            </ul>
+          </li>
+          <li class="dropdown">
+            <a href="#"><span>Stats MFB</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+            <ul>
+              <li><a href="{% url 'stats' %}">Tableau de bord</a></li>
+              <li><a href="#">Cartis MFB</a></li>
+              <li><a href="#">Annuaire statistique</a></li>
+            </ul>
+          </li>
+          <li class="dropdown">
+            <a href="#"><span>Voir plus</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+            <ul>
+              <li><a href="{% url 'quality' %}">Qualité et Normalisation</a></li>
+              <li><a href="{% url 'faq' %}">Foire aux questions</a></li>
+              <li><a href="{% url 'blog_list' %}">Blog du MFB</a></li>
+              <li><a href="{% url 'glossaire' %}">Glossaire du MFB</a></li>
+            </ul>
+          </li>
+          <!-- Username dans le menu pour mobile et tablette -->
+          {% if request.user.is_authenticated %}
+          <li class="mobile-only">
+            <a href="#" data-bs-toggle="modal" data-bs-target="#profileModal" class="d-flex align-items-center">
+              {% if request.user.photo %}
+              <img src="{{ request.user.photo.url }}" class="rounded-circle" width="30" height="30" alt="Photo"
+                style="margin-right: 10px;">
+              {% else %}
+              <div class="rounded-circle bg-success text-white d-flex justify-content-center align-items-center"
+                style="width: 30px; height: 30px; font-size: 14px; font-weight: bold; margin-right: 10px;">
+                {{ request.user.first_name|default:''|slice:":1" }}{{ request.user.last_name|default:''|slice:":1" }}
+              </div>
+              {% endif %}
+              <span>{{ request.user.first_name }} {{ request.user.last_name }}</span>
+            </a>
+          </li>
+          {% else %}
+          <li class="mobile-only">
+            <a href="#" data-bs-toggle="modal" data-bs-target="#loginModal">Se connecter</a>
+          </li>
+          {% endif %}
+        </ul>
+        <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+      </nav>
+
+      <!-- Profil ou connexion (visible uniquement sur desktop) -->
+      <!-- <div class="desktop-only d-flex align-items-center">
+        {% if request.user.is_authenticated %}
+        <a class="d-flex align-items-center text-white" href="#" data-bs-toggle="modal" data-bs-target="#profileModal">
+          {% if request.user.photo %}
+          <img src="{{ request.user.photo.url }}" class="rounded-circle" width="30" height="30" alt="Photo" style="margin-right: 10px;">
+          {% else %}
+          <div class="rounded-circle bg-success text-white d-flex justify-content-center align-items-center"
+               style="width: 30px; height: 30px; font-size: 14px; font-weight: bold; margin-right: 10px;">
+            {{ request.user.first_name|default:''|slice:":1" }}{{ request.user.last_name|default:''|slice:":1" }}
+          </div>
+          {% endif %}
+          <span>{{ request.user.first_name }} {{ request.user.last_name }}</span>
+        </a>
+        {% else %}
+        <a class="d-flex align-items-center text-white" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">Se connecter</a>
+        {% endif %}
+      </div> -->
+    </div>
+  </header>
+
+  <!-- Modale de confirmation -->
+  <div class="modal fade" id="profileModal" tabindex="-1" aria-labelledby="profileModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <!-- Header de la modale -->
+        <div class="modal-header">
+          <h5 class="modal-title" id="profileModalLabel">Que souhaitez-vous faire ?</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <!-- Corps de la modale -->
+        <div class="modal-body">
+          <p>Voulez-vous voir votre profil ou vous déconnecter ?</p>
+        </div>
+
+        <!-- Footer de la modale -->
+        <div class="modal-footer">
+          <!-- Lien vers le profil utilisateur -->
+          <a href="{% url 'profil_utilisateur' %}" class="btn btn-primary">Voir mon profil</a>
+
+          <!-- Lien vers la déconnexion -->
+          <a href="{% url 'deconnexion' %}" class="btn btn-danger">Déconnexion</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modale pour la connexion ou inscription -->
+  <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="loginModalLabel">Se connecter ou s'inscrire</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Étape 1 : Choix entre nouvelle inscription ou connexion -->
+          <div id="choiceStep">
+            <h6>Que souhaitez-vous faire ?</h6>
+            <button class="btn btn-primary mb-2" id="newAccountBtn">Nouvelle inscription</button>
+            <button class="btn btn-secondary mb-2" id="existingAccountBtn">Connexion à un compte existant</button>
+          </div>
+          <!-- Étape 2 : Choix du type d'utilisateur pour l'inscription -->
+          <div id="userTypeStep1" style="display: none;">
+            <h6>Choisissez votre type d'utilisateur :</h6>
+            <button type="button" class="btn btn-primary" id="membreBtn1" data-bs-dismiss="modal">Membre</button>
+            <button type="button" class="btn btn-primary" id="visiteurBtn1" data-bs-dismiss="modal">Visiteur</button>
+            <button class="btn btn-link" id="backToChoiceStep1">Retour</button> <!-- Bouton Retour -->
+          </div>
+          <!-- Étape 2 : Choix du type d'utilisateur pour la connexion -->
+          <div id="userTypeStep2" style="display: none;">
+            <h6>Choisissez votre type d'utilisateur :</h6>
+            <button type="button" class="btn btn-primary" id="membreBtn2" data-bs-dismiss="modal">Membre</button>
+            <button type="button" class="btn btn-primary" id="visiteurBtn2" data-bs-dismiss="modal">Visiteur</button>
+            <button class="btn btn-link" id="backToChoiceStep2">Retour</button> <!-- Bouton Retour -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript pour gérer les étapes et le processus -->
+  <script>
+    function resetModal() {
+      // Réinitialiser toutes les étapes à l'affichage initial
+      document.getElementById('choiceStep').style.display = 'block';
+      document.getElementById('userTypeStep1').style.display = 'none';
+      document.getElementById('userTypeStep2').style.display = 'none';
+    }
+
+    // Quand l'utilisateur choisit de créer un nouveau compte
+    document.getElementById('newAccountBtn').onclick = function () {
+      document.getElementById('choiceStep').style.display = 'none';
+      document.getElementById('userTypeStep1').style.display = 'block';
+    };
+
+    // Quand l'utilisateur choisit de se connecter à un compte existant
+    document.getElementById('existingAccountBtn').onclick = function () {
+      document.getElementById('choiceStep').style.display = 'none';
+      document.getElementById('userTypeStep2').style.display = 'block';
+    };
+
+    // Bouton pour revenir à l'étape de choix initiale (nouveau compte ou connexion)
+    document.getElementById('backToChoiceStep1').onclick = function () {
+      document.getElementById('userTypeStep1').style.display = 'none';
+      document.getElementById('choiceStep').style.display = 'block';
+    };
+
+    document.getElementById('backToChoiceStep2').onclick = function () {
+      document.getElementById('userTypeStep2').style.display = 'none';
+      document.getElementById('choiceStep').style.display = 'block';
+    };
+
+    document.getElementById('membreBtn1').onclick = function () {
+      window.location.href = "{% url 'inscription_membre' %}";  // Redirige vers la page d'inscription membre
+    };
+
+    document.getElementById('visiteurBtn1').onclick = function () {
+      window.location.href = "{% url 'inscription_visiteur' %}";  // Redirige vers la page d'inscription visiteur
+    };
+
+    document.getElementById('membreBtn2').onclick = function () {
+      window.location.href = "{% url 'connexion_membre' %}";  // Redirige vers la page de connexion membre
+    };
+
+    document.getElementById('visiteurBtn2').onclick = function () {
+      window.location.href = "{% url 'connexion_visiteur' %}";  // Redirige vers la page de connexion visiteur
+    };
+
+
+    // Réinitialiser la modale lorsqu'elle est ouverte (show)
+    var loginModal = document.getElementById('loginModal');
+    loginModal.addEventListener('shown.bs.modal', function () {
+      resetModal();
+    });
+  </script>
+
+  <br>
+  <br>
+  <br>
+  {% block content %}
+
+
+  {% endblock %}
+  <br>
+  <br>
+  <br>
+  <footer id="footer" class="footer dark-background">
+    <div class="footer-top">
+      <div class="container">
+        <div class="row gy-6" style="justify-content: center">
+          <div class="col-lg-3 col-md-6 footer-about">
+            <a href="#" class="logo d-flex align-items-center">
+              <span class="sitename">DPSE</span>
+            </a>
+            <div class="footer-contact pt-3">
+              <p>63 Avenue Marchand</p>
+              <p>Abidjan-Plateau, Côte d'Ivoire</p>
+              <p class="mt-3"><strong>Tel :</strong> <a href="tel:+22527203302538">+225 27 203 302 538</a></p>
+              <p><strong>Email :</strong> <a href="mailto:c.infomef@gmail.com">c.infomef@gmail.com</a>
+              </p>
+            </div>
+            <div class="social-links d-flex mt-4">
+              <a href=""><i class="bi bi-twitter-x"></i></a>
+              <a href=""><i class="bi bi-facebook"></i></a>
+              <a href=""><i class="bi bi-instagram"></i></a>
+              <a href=""><i class="bi bi-linkedin"></i></a>
+            </div>
+          </div>
+
+          <div class="col-lg-2 col-md-3 footer-links">
+            <h4>A propos de nous</h4>
+            <ul>
+              <li> <a href="https://finances.gouv.ci//"> Le Ministère</a></li>
+              <li> <a href="#"> La DPSE</a></li>
+              <li> <a href="#"> Objectif Stratégique</a></li>
+              <li> <a href="#"> Notre vision</a></li>
+              <li> <a href="#"> Manuel de procédure</a></li>
+            </ul>
+          </div>
+
+          <div class="col-lg-2 col-md-3 footer-links">
+            <h4>Nos Services</h4>
+            <ul>
+              <li><a href="#"> Prospectives et Planification</a></li>
+              <li><a href="#"> Programmation et <br> Suivi-Evaluation</a></li>
+              <li><a href="#"> Statistiques</a></li>
+              <li><a href="#"> Qualité et Normalisation</a></li>
+            </ul>
+          </div>
+
+          <!-- Section Cadre de référence avec flèches -->
+          <!-- Section Cadre de référence avec flèches -->
+          <div class="footer-section">
+            <h3>Cadre de référence</h3>
+            <ul class="footer-menu">
+              <li class="menu-item has-submenu">
+                <div class="menu-title">
+                  <span class="chevron"><i class="bi bi-chevron-right"></i></span>
+                  <span>Cadre national</span>
+                </div>
+                <ul class="submenu">
+                  <li><a href="https://www.gouv.ci/">Plan national de Développement</a></li>
+                  <li><a href="https://www.gouv.ci/">Feuille de Route du Gouv</a></li>
+                  <li><a href="https://www.gouv.ci/">Plan d'Action Stratégique</a></li>
+                  <li><a href="https://www.gouv.ci/">Plan d'Actions Operationnels</a></li>
+                </ul>
+              </li>
+              <li class="menu-item">
+                <div class="menu-title">
+                  <span class="chevron"></span>
+                  <span>Vision 2030</span>
+                </div>
+              </li>
+              <li class="menu-item">
+                <div class="menu-title">
+                  <span class="chevron"></span>
+                  <span>Agenda 2063</span>
+                </div>
+              </li>
+              <li class="menu-item">
+                <div class="menu-title">
+                  <span class="chevron"></span>
+                  <span>ODD</span>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Section Liens utiles -->
+          <div class="col-lg-2 col-md-3 footer-section">
+            <h3>Liens utiles</h3>
+            <ul class="footer-menu">
+              <li class="menu-item has-submenu">
+                <div class="menu-title">
+                  <span class="chevron"><i class="bi bi-chevron-right"></i></span>
+                  <span>Directions Générales</span>
+                </div>
+                <ul class="submenu">
+                  <li><a href="https://www.dgi.gouv.ci/">DGBF</a></li>
+                  <li><a href="https://www.dgi.gouv.ci/">DGI</a></li>
+                  <li><a href="https://www.douanes.ci/">DGD</a></li>
+                  <li><a href="https://www.gouv.ci/">DGMP</a></li>
+                  <li><a href="https://www.gouv.ci/">DGF</a></li>
+                </ul>
+              </li>
+              <li class="menu-item">
+                <a href="https://annuaire.gouv.ci/">ANStat</a>
+              </li>
+              <li class="menu-item">
+                <a href="https://www.gouv.ci/">DGE</a>
+              </li>
+              <li class="menu-item">
+                <a href="https://annuaire.gouv.ci/">CAIDP</a>
+              </li>
+              <li class="menu-item">
+                <a href="https://www.gouv.ci/">HABG</a>
+              </li>
+            </ul>
+          </div>
+          <div class="col-lg-2 col-md-3 footer-section">
+            <h3>Liens utiles</h3>
+            <ul class="footer-menu">
+              <li class="menu-item has-submenu">
+                <div class="menu-title">
+                  <span class="chevron"><i class="bi bi-chevron-right"></i></span>
+                  <span>Directions Générales</span>
+                </div>
+                <ul class="submenu">
+                  <li><a href="#dgbf">DGBF</a></li>
+                  <li><a href="#dgi">DGI</a></li>
+                  <li><a href="#dgd">DGD</a></li>
+                  <li><a href="#dgmp">DGMP</a></li>
+                  <li><a href="#dgf">DGF</a></li>
+                </ul>
+              </li>
+              <li class="menu-item">
+                <a href="#anstat">ANStat</a>
+              </li>
+              <li class="menu-item">
+                <a href="#dge">DGE</a>
+              </li>
+              <li class="menu-item">
+                <a href="#caidp">CAIDP</a>
+              </li>
+              <li class="menu-item">
+                <a href="#habg">HABG</a>
+              </li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="copyright">
+      <div class="container text-center">
+        <p>© <span>Copyright</span> <strong class="px-1 sitename">GP</strong> <span>All Rights Reserved</span></p>
+        <div class="credits">
+          <!-- All the links in the footer should remain intact. -->
+          <!-- You can delete the links only if you've purchased the pro version. -->
+          <!-- Licensing information: https://bootstrapmade.com/license/ -->
+          <!-- Purchase the pro version with working PHP/AJAX contact form: [buy-url] -->
+          Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a> Distributed by <a
+            href="https://themewagon.com">ThemeWagon</a>
+        </div>
+      </div>
+    </div>
+
+  </footer>
+
+  <!-- Scroll Top -->
+  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i
+      class="bi bi-arrow-up-short"></i></a>
+
+  <!-- Preloader -->
+  <div id="preloader"></div>
+
+  <!-- Vendor JS Files -->
+  <script src="{% static 'general/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  <script src="{% static 'general/vendor/php-email-form/validate.js' %}"></script>
+  <script src="{% static 'general/vendor/aos/aos.js' %}"></script>
+  <script src="{% static 'general/vendor/swiper/swiper-bundle.min.js' %}"></script>
+  <script src="{% static 'general/vendor/glightbox/js/glightbox.min.js' %}"></script>
+  <script src="{% static 'general/vendor/imagesloaded/imagesloaded.pkgd.min.js' %}"></script>
+  <script src="{% static 'general/vendor/isotope-layout/isotope.pkgd.min.js' %}"></script>
+  <script src="{% static 'general/vendor/purecounter/purecounter_vanilla.js' %}"></script>
+
+  <!-- Main JS File -->
+  <script src="{% static 'general/js/main.js' %}"></script>
+
+  <script>
+    // Gestion des menus déroulants avec flèches
+    document.querySelectorAll('.menu-title').forEach(title => {
+      title.addEventListener('click', function () {
+        const menuItem = this.parentElement;
+
+        // Si l'élément a un sous-menu
+        if (menuItem.classList.contains('has-submenu')) {
+          menuItem.classList.toggle('active');
+        }
+      });
+    });
+  </script>
+  {% block script %}
+  {% endblock %}
+
+</body>
+
+</html>

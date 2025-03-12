@@ -1026,17 +1026,21 @@ section,
 # Services Section
 --------------------------------------------------------------*/
 .services .service-item {
-  background-color: var(--surface-color);
+  background-color: #d9e6e3b4;
+  color: #797979;
   text-align: center;
-  border: 1px solid color-mix(in srgb, var(--default-color), transparent 85%);
+  border: 2px solid color-mix(in srgb, var(--heading-color), transparent 85%);
   padding: 80px 20px;
   height: 100%;
   transition: all ease-in-out 0.3s;
 }
+.services .service-item h3 {
+  color: #059652;
+}
 
 .services .service-item .icon {
   background: var(--accent-color);
-  color: var(--contrast-color);
+  color: #fff;
   margin: 0 auto;
   width: 64px;
   height: 64px;
