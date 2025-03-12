@@ -207,6 +207,7 @@ Matrice Opérationnelle - {{ plan.titre }} - {{ annee }}
     <div class="text-center mt-4 mb-4 animate-fade-in">
         <button id="download-excel-btn" class="btn btn-orange btn-lg px-5 py-2 fw-bold">Télécharger Excel</button>
         <a href="{% url 'hierarchy_review' plan.id %}" class="btn btn-orange btn-lg px-5 py-2 fw-bold me-3">Liste des PAO (H)</a>
+        <a href="{% url 'pao_list' plan.id %}" class="btn btn-orange btn-lg px-5 py-2 fw-bold me-3">Liste des PAO (PF)</a>
         <a href="{% url 'track_execution_list' plan.id %}" class="btn btn-orange btn-lg px-5 py-2 fw-bold me-3">Liste des PAO (SE)</a>
     </div>
 

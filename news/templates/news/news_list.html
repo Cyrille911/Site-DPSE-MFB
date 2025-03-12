@@ -28,68 +28,11 @@
 <link href="{% static 'assets/sass/style.css' %}" rel="stylesheet">
 <link href="{% static 'assets/css/responsive.css' %}" rel="stylesheet">
 <style>
-    /* Styles de base */
-    :root {
-        --bg-dark: #121212;
-        --bg-modal: #1e1e1e;
-        --border-color: #333;
-        --text-primary: #fff;
-        --text-secondary: #aaa;
-        --accent-color: #6366f1;
-        --transition-speed: 0.3s;
-    }
-
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
-
-    body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans",
-            "Helvetica Neue", sans-serif;
-        line-height: 1.6;
-        color: #333;
-        background-color: #f5f5f5;
-    }
-
-    body.modal-open {
-        overflow: hidden;
-    }
-
-    .container {
+    .container-modal {
         max-width: 1200px;
         margin: 0 auto;
         padding: 2rem;
     }
-
-    h1 {
-        margin-bottom: 1rem;
-    }
-
-    p {
-        margin-bottom: 1.5rem;
-    }
-
-    /* Bouton principal */
-    .btn-primary {
-        background-color: var(--accent-color);
-        color: white;
-        border: none;
-        padding: 0.75rem 1.5rem;
-        border-radius: 9999px;
-        font-weight: 500;
-        cursor: pointer;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        transition: all var(--transition-speed) ease;
-    }
-
-    .btn-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
-        background-color: #5254d3;
-    }
-
     /* Modal */
     .modal-overlay {
         position: fixed;
@@ -112,7 +55,7 @@
         opacity: 1;
     }
 
-    .modal-container {
+    .modal-container-modal {
         background-color: var(--bg-modal);
         border-radius: 12px;
         box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
@@ -125,7 +68,7 @@
         transition: all var(--transition-speed) ease;
     }
 
-    .modal-overlay.active .modal-container {
+    .modal-overlay.active .modal-container-modal {
         transform: scale(1);
         opacity: 1;
     }
@@ -140,7 +83,7 @@
         font-weight: 600;
     }
 
-    .modal-content {
+    .modal-content-modal {
         padding: 0;
         background-color: #1e1e1e;
     }
@@ -451,7 +394,7 @@
 <!-- Ajoutez ce code juste après l'ouverture de la balise <body> dans votre template parent -->
 <div class="modal fade video-modal" id="videoModal" tabindex="-1" role="dialog" aria-hidden="true"
     style="display: none;">
-    <div class="modal-content border-0 bg-transparent">
+    <div class="modal-content-modal border-0 bg-transparent">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
         </button>
@@ -486,7 +429,7 @@
 
             // Créer le conteneur du modal
             const modalContainer = document.createElement("div")
-            modalContainer.className = "modal-container"
+            modalContainer.className = "modal-container-modal"
 
             // Créer le bouton de fermeture
             const closeBtn = document.createElement("button")
@@ -508,7 +451,7 @@
 
             // Créer le contenu du modal
             const modalContent = document.createElement("div")
-            modalContent.className = "modal-content"
+            modalContent.className = "modal-content-modal"
 
             // Créer le conteneur de la vidéo
             const videoContainer = document.createElement("div")

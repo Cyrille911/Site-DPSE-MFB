@@ -21,50 +21,32 @@ Liste des Plans d'Actions Stratégiques (PAS)
                 </div>
                 <div class="card-body" style="padding: 20px;">
                     <!-- Ligne entière pour l'impact -->
-                    <div class="row g-2 align-items-center text-dark mb-2">
+                    <div class="row g-2 align-items-center text-dark mb-4">
                         <div class="col-12">
-                            <i class="bi bi-lightbulb text-primary me-1"></i>
+                            <i class="bi bi-lightbulb text-dark me-1"></i>
                             <span class="fw-bold">Impact :</span> 
                             <span class="ms-1">{{ plan.impact|truncatewords:20 }}</span>
                         </div>
                     </div>
-                    <!-- Première ligne : Horizon, Début, Effets, Produits -->
-                    <div class="row g-2 align-items-center text-dark">
+                    <!-- Ligne : Effets, Produits, Actions, Coût -->
+                    <div class="row g-2 align-items-center text-dark mb-2">
                         <div class="col-md-3">
-                            <i class="bi bi-calendar3 text-success me-1"></i>
-                            <span class="fw-bold">Horizon :</span> 
-                            <span class="ms-1">{{ plan.horizon }} ans</span>
-                        </div>
-                        <div class="col-md-3">
-                            <i class="bi bi-calendar-check text-info me-1"></i>
-                            <span class="fw-bold">Début :</span> 
-                            <span class="ms-1">{{ plan.annee_debut }}</span>
-                        </div>
-                        <div class="col-md-3">
-                            <i class="bi bi-bar-chart text-warning me-1"></i>
+                            <i class="bi bi-bar-chart text-dark me-1"></i>
                             <span class="fw-bold">Effets :</span> 
                             <span class="ms-1">{{ plan.nombre_effets }}</span>
                         </div>
                         <div class="col-md-3">
-                            <i class="bi bi-boxes text-danger me-1"></i>
-                            <span class="fw-bold">Prod :</span> 
+                            <i class="bi bi-boxes text-dark me-1"></i>
+                            <span class="fw-bold">Produits :</span> 
                             <span class="ms-1">{{ plan.nombre_produits }}</span>
                         </div>
-                    </div>
-                    <!-- Deuxième ligne : Actions, Activités, Coût, Statut -->
-                    <div class="row g-2 align-items-center text-dark mt-2">
                         <div class="col-md-3">
-                            <i class="bi bi-gear text-purple me-1"></i>
+                            <i class="bi bi-gear text-dark me-1"></i>
                             <span class="fw-bold">Actions :</span> 
                             <span class="ms-1">{{ plan.nombre_actions }}</span>
                         </div>
                         <div class="col-md-3">
-                            <i class="bi bi-check2-square text-teal me-1"></i>
-                            <span class="fw-bold">Activités :</span> 
-                            <span class="ms-1">{{ plan.nombre_activites }}</span>
-                        </div>
-                        <div class="col-md-3">
-                            <i class="bi bi-currency-dollar text-success me-1"></i>
+                            <i class="bi bi-currency-dollar text-dark me-1"></i>
                             <span class="fw-bold">Coût :</span> 
                             <span class="ms-1">
                                 {% with total_cost=plan.couts|sum_list %}
@@ -73,8 +55,21 @@ Liste des Plans d'Actions Stratégiques (PAS)
                             </span>
                             <span class="ms-1"> millions</span> 
                         </div>
-                        <div class="col-md-3">
-                            <i class="bi bi-link-45deg text-primary me-1"></i>
+                    </div>
+                    <!-- Dernière ligne : Début, Horizon, Statut -->
+                    <div class="row g-2 align-items-center text-dark">
+                        <div class="col-md-4">
+                            <i class="bi bi-calendar-check text-dark me-1"></i>
+                            <span class="fw-bold">Début :</span> 
+                            <span class="ms-1">{{ plan.annee_debut }}</span>
+                        </div>
+                        <div class="col-md-4">
+                            <i class="bi bi-calendar3 text-dark me-1"></i>
+                            <span class="fw-bold">Horizon :</span> 
+                            <span class="ms-1">{{ plan.horizon }} ans</span>
+                        </div>
+                        <div class="col-md-4">
+                            <i class="bi bi-link-45deg text-dark me-1"></i>
                             <span class="fw-bold">Statut :</span> 
                             <span class="ms-1">
                                 {% for i in plan.horizon|times %}
@@ -114,7 +109,6 @@ Liste des Plans d'Actions Stratégiques (PAS)
             </a>
         {% else %}
             <a href="{% url 'add_plan_action' %}" class="btn btn-success btn-lg d-inline-flex align-items-center">
-            <!-- <a href="#" class="btn btn-success btn-lg d-inline-flex align-items-center" data-bs-toggle="modal" data-bs-target="#loginModal2"> -->
                 <i class="bi bi-plus-circle me-2"></i> Ajouter un PAS
             </a>
         {% endif %}
@@ -178,11 +172,11 @@ Liste des Plans d'Actions Stratégiques (PAS)
     .fw-bold {
         font-weight: 600;
         color: #2c3e50;
-        font-size: 0.9rem;
+        font-size: 1.1rem; /* Augmenté de 0.9rem à 1.1rem */
     }
     .text-dark {
         color: #2c3e50;
-        font-size: 0.9rem;
+        font-size: 1.1rem; /* Augmenté de 0.9rem à 1.1rem */
     }
     .row.align-items-center {
         margin-bottom: 0;
@@ -191,7 +185,7 @@ Liste des Plans d'Actions Stratégiques (PAS)
         padding: 0 10px;
     }
     .bi {
-        font-size: 1rem;
+        font-size: 1.2rem; /* Augmenté pour les icônes */
         vertical-align: middle;
     }
     .text-purple { color: #6f42c1; }
@@ -199,7 +193,7 @@ Liste des Plans d'Actions Stratégiques (PAS)
     /* Style pour la chaîne de statut */
     .chain-link {
         display: inline-block;
-        font-size: 0.8rem;
+        font-size: 0.9rem; /* Légèrement augmenté */
         color: #6c757d;
         margin: 0 1px;
         transition: color 0.3s ease;
