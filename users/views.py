@@ -192,28 +192,24 @@ def activer_compte_visiteur(request, uidb64, token):
         return redirect('inscription_visiteur')
 
 def connexion_membre(request):
-    context = {'message': "Bienvenue sur la page de connexion pour les membres !"}
-    form = ConnexionForm(request.POST or None)
-
-    if request.method == 'POST' and form.is_valid():
-        # Récupérer les données du formulaire
+    if request.method == 'POST':
         form = ConnexionForm(request.POST)
         if form.is_valid():
-            username = form.cleaned_data['username']
+            email = form.cleaned_data['email']
             password = form.cleaned_data['password']
-            
-            # Authentification de l'utilisateur
-            user = authenticate(request, username=username, password=password)
-            
-            if user is not None and request.user.groups.filter(name="Membres").exists():
-                login(request, user)
-                messages.success(request, f"Bienvenue, {user.first_name} !")
-                return redirect('accueil')  # Redirection après connexion
-            else:
-                messages.error(request, "Adresse email ou mot de passe incorrect.")
 
-    context['form'] = form
-    return render(request, 'users/formulaire.html', context)
+            user = authenticate(request, email=email, password=password)
+
+            if user and user.role in ['membre', 'responsable', 'point_focal', 'cabinet']:
+                login(request, user)
+                messages.success(request, f'Bienvenue, {user.first_name} !')
+                return redirect('accueil')
+            else:
+                messages.error(request, "Email ou mot de passe incorrect ou accès non autorisé.")
+    else:
+        form = ConnexionForm()
+
+    return render(request, 'users/formulaire.html', {'form': form, 'title': 'Connexion Membre'})
 
 def connexion_visiteur(request):
     context = {'message': "Bienvenue sur la page de connexion pour les visiteurs !"}

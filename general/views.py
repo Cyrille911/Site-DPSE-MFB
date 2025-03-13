@@ -11,7 +11,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils.timezone import now
 from .models import Discussion
 
-@login_required
+
 def faq(request):
     if request.method == "POST":
         nouvelle_question = request.POST.get("question")
@@ -32,7 +32,7 @@ def faq(request):
     })
 
 
-@login_required
+
 def faq_r(request):
     if request.method == "POST":
         question_id = request.POST.get("question_id")

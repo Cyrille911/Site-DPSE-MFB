@@ -323,6 +323,8 @@
     width: 100%;
     height: 100%;
     overflow: hidden;
+    transition: transform 0.5s ease-in-out;
+    /* Animation fluide pour le défilement */
   }
 
   .carousel-slide {
@@ -383,6 +385,7 @@
     justify-content: center;
     text-align: center;
     color: white;
+    transition: background-color 0.3s ease, opacity 0.3s ease; /* Animation fluide */
   }
 
   .content-carousel {
@@ -406,11 +409,15 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background-color 0.3s;
+    transition: background-color 0.3s ease, opacity 0.3s ease;
+    /* Animation fluide */
+
   }
 
   .carousel-button:hover {
     background-color: rgba(0, 0, 0, 0.5);
+    opacity: 1;
+    /* Opacité maximale */
   }
 
   .carousel-button-prev {
@@ -470,7 +477,14 @@
     height: 100%;
   }
 
+  .hero {
+    transition: background-color 0.5s ease;
+  }
 
+  .hero:hover {
+    background-color: rgba(0, 0, 0, 0.7);
+    /* Assombrir légèrement au survol */
+  }
 
   @media (max-width: 768px) {
     .hero {
@@ -516,10 +530,16 @@
     padding: 1rem;
     border-radius: 0.5rem;
     transition: background-color 0.3s;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    /* Animation fluide */
   }
 
   .icon-box:hover {
     background-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-10px);
+    /* Légère élévation au survol */
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    /* Ombre portée */
   }
 
   .icon {
@@ -544,6 +564,10 @@
     text-decoration: none;
     color: inherit;
   }
+
+  html {
+    scroll-behavior: smooth;
+  }
 </style>
 {% endblock%}
 {% block content %}
@@ -551,70 +575,71 @@
 <main class="main">
 
   <!-- Accueil -->
-  <section id="hero" class="hero section dark-background">
-    <div class="hero-dark"></div>
+<!-- Accueil -->
+<section id="hero" class="hero section dark-background">
+  <div class="hero-dark"></div>
 
-    <!-- Carousel -->
-    <div class="carousel" id="carousel">
-      <!-- Slides will be added by JavaScript -->
+  <!-- Carousel -->
+  <div class="carousel" id="carousel">
+    <!-- Slides will be added by JavaScript -->
+  </div>
+
+  <div class="container-carousel">
+    <div class="content-carousel">
+      <h2 class="title">Direction de la Planification et du Suivi Evaluation</h2>
+      <p class="description">Planifier, suivre, évaluer : agir mieux !</p>
     </div>
+  </div>
 
-    <div class="container-carousel">
-      <div class="content-carousel">
-        <h2 class="title">Direction de la Planification et du Suivi Evaluation</h2>
-        <p class="description">Planifier, suivre, évaluer : agir mieux !</p>
-      </div>
+  <!-- Navigation buttons -->
+  <button class="carousel-button carousel-button-prev" id="prevButton" aria-label="Previous slide">
+    ❮
+  </button>
+  <button class="carousel-button carousel-button-next" id="nextButton" aria-label="Next slide">
+    ❯
+  </button>
+
+  <!-- Indicators -->
+  <div class="carousel-indicators" id="indicators">
+    <!-- Indicators will be added by JavaScript -->
+  </div>
+
+  <!-- Icon boxes -->
+  <div class="icon-boxes">
+    <div class="icon-boxes-container">
+      <a href="#about" class="icon-box-link">
+        <div class="icon-box">
+          <i class="bi bi-house"></i>
+          <h3 class="icon-title">Le Ministère</h3>
+        </div>
+      </a>
+      <a href="#dpse" class="icon-box-link">
+        <div class="icon-box">
+          <i class="bi bi-bar-chart"></i>
+          <h3 class="icon-title">La DPSE</h3>
+        </div>
+      </a>
+      <a href="#gar" class="icon-box-link">
+        <div class="icon-box">
+          <i class="bi bi-puzzle"></i>
+          <h3 class="icon-title">GAR</h3>
+        </div>
+      </a>
+      <a href="#letmotiv" class="icon-box-link">
+        <div class="icon-box">
+          <i class="bi bi-person-fill"></i>
+          <h3 class="icon-title">Letmotiv</h3>
+        </div>
+      </a>
+      <a href="#contact" class="icon-box-link">
+        <div class="icon-box">
+          <i class="bi bi-person-vcard-fill"></i>
+          <h3 class="icon-title">Contacts</h3>
+        </div>
+      </a>
     </div>
-
-    <!-- Navigation buttons -->
-    <button class="carousel-button carousel-button-prev" id="prevButton" aria-label="Previous slide">
-      &#10094;
-    </button>
-    <button class="carousel-button carousel-button-next" id="nextButton" aria-label="Next slide">
-      &#10095;
-    </button>
-
-    <!-- Indicators -->
-    <div class="carousel-indicators" id="indicators">
-      <!-- Indicators will be added by JavaScript -->
-    </div>
-
-    <!-- Icon boxes -->
-    <div class="icon-boxes">
-      <div class="icon-boxes-container">
-        <a href="#about" class="icon-box-link">
-          <div class="icon-box">
-            <span class="icon">🏠</span>
-            <h3 class="icon-title">Le Ministère</h3>
-          </div>
-        </a>
-        <a href="#dpse" class="icon-box-link">
-          <div class="icon-box">
-            <span class="icon">📊</span>
-            <h3 class="icon-title">La DPSE</h3>
-          </div>
-        </a>
-        <a href="#gar" class="icon-box-link">
-          <div class="icon-box">
-            <span class="icon">🧩</span>
-            <h3 class="icon-title">GAR</h3>
-          </div>
-        </a>
-        <a href="#letmotiv" class="icon-box-link">
-          <div class="icon-box">
-            <span class="icon">👤</span>
-            <h3 class="icon-title">Letmotiv</h3>
-          </div>
-        </a>
-        <a href="#contact" class="icon-box-link">
-          <div class="icon-box">
-            <span class="icon">📇</span>
-            <h3 class="icon-title">Contacts</h3>
-          </div>
-        </a>
-      </div>
-    </div>
-  </section><!-- /Accueil -->
+  </div>
+</section><!-- /Accueil -->
 
 
   <!-- Le Ministère -->
@@ -1664,6 +1689,32 @@
 
     // Initialize the carousel
     initCarousel();
+  });
+</script>
+<script>
+  // Sélectionner tous les liens dans les icon-boxes
+  const links = document.querySelectorAll('.icon-box-link');
+
+  // Ajouter un écouteur d'événement à chaque lien
+  links.forEach(link => {
+    link.addEventListener('click', function(event) {
+      // Empêcher le comportement par défaut du lien
+      event.preventDefault();
+      
+      // Récupérer l'ID de la section cible à partir de l'attribut href
+      const targetId = this.getAttribute('href').substring(1); // Supprime le '#'
+      
+      // Sélectionner la section cible
+      const targetSection = document.getElementById(targetId);
+      
+      // Faire défiler vers la section avec un effet fluide
+      if (targetSection) {
+        targetSection.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+    });
   });
 </script>
 {% endblock %}
