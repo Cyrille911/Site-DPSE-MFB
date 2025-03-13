@@ -9,6 +9,9 @@ from reversion import revisions as reversion
 from django.contrib import messages
 from django.core.paginator import Paginator
 from .forms import PaoStatusForm  # Import du formulaire
+from django.core.exceptions import ValidationError
+from django.db import transaction
+
 
 
 def pppbse_gar(request):
@@ -146,99 +149,131 @@ def plan_action_detail(request, id):
         'horizon': plan.horizon
     })
 
+
 def add_plan_action(request):
     if request.method == 'POST':
-        titre = request.POST.get('titre')
-        horizon = request.POST.get('horizon')
-        impact = request.POST.get('impact')
-        annee_depart = request.POST.get('annee_depart')  # Ajouté car présent dans le template
-
-        # Validation du champ horizon
         try:
-            horizon = int(horizon)
-            if horizon <= 0:
-                raise ValueError("L'horizon doit être un entier positif.")
-        except ValueError:
-            return render(request, 'planning/add_plan_action.html', {'error': "L'horizon doit être un entier positif."})
+            with transaction.atomic():
+                # 1. Création du PlanAction
+                plan_action = PlanAction(
+                    titre=request.POST.get('titre'),
+                    impact=request.POST.get('impact'),
+                    annee_debut=int(request.POST.get('annee_depart', 2025)),
+                    horizon=int(request.POST.get('horizon', 1)),
+                )
+                plan_action.save()  # Sauvegarde initiale pour générer la référence
 
-        # Validation de l'année de départ
-        try:
-            annee_depart = int(annee_depart)
-            if annee_depart < 2010:  # Contrainte du template
-                raise ValueError("L'année de départ doit être >= 2010.")
-        except ValueError:
-            return render(request, 'planning/add_plan_action.html', {'error': "L'année de départ doit être >= 2010."})
+                # 2. Traitement des Effets
+                effet_count = 0
+                while f'effet_titre_{effet_count + 1}' in request.POST:
+                    effet_count += 1
+                    effet_titre = request.POST.get(f'effet_titre_{effet_count}')
+                    effet = Effet(plan=plan_action, titre=effet_titre)
+                    effet.save()
 
-        # Création du plan d'action
-        plan = PlanAction.objects.create(
-            titre=titre,
-            horizon=horizon,
-            impact=impact,
-            annee_debut=annee_depart,
-            couts=[0.0] * horizon  # Initialisation dynamique
-        )
+                    # 3. Traitement des Produits
+                    produit_count = 0
+                    while f'produit_titre_{effet_count}.{produit_count + 1}' in request.POST:
+                        produit_count += 1
+                        produit_titre = request.POST.get(f'produit_titre_{effet_count}.{produit_count}')
+                        produit = Produit(effet=effet, titre=produit_titre)
+                        produit.save()
 
-        # Gestion des effets, produits, actions et activités
-        effet_index = 1
-        while f"effet_titre_{effet_index}" in request.POST:
-            effet_titre = request.POST.get(f"effet_titre_{effet_index}")
-            effet = Effet.objects.create(plan=plan, titre=effet_titre, couts=[0.0] * horizon)
+                        # 4. Traitement des Actions
+                        action_count = 0
+                        while f'action_titre_{effet_count}.{produit_count}.{action_count + 1}' in request.POST:
+                            action_count += 1
+                            action_titre = request.POST.get(f'action_titre_{effet_count}.{produit_count}.{action_count}')
+                            action = Action(produit=produit, titre=action_titre)
+                            action.save()
 
-            produit_index = 1
-            while f"produit_titre_{effet_index}.{produit_index}" in request.POST:
-                produit_titre = request.POST.get(f"produit_titre_{effet_index}.{produit_index}")
-                produit = Produit.objects.create(effet=effet, titre=produit_titre, couts=[0.0] * horizon)
+                            # 5. Traitement des Activités
+                            activite_count = 0
+                            while f'activite_titre_{effet_count}.{produit_count}.{action_count}.{activite_count + 1}' in request.POST:
+                                activite_count += 1
+                                activite_titre = request.POST.get(f'activite_titre_{effet_count}.{produit_count}.{action_count}.{activite_count}')
+                                activite_type = request.POST.get(f'activite_type_{effet_count}.{produit_count}.{action_count}.{activite_count}')
+                                indicateur_label = request.POST.get(f'indicateur_label_{effet_count}.{produit_count}.{action_count}.{activite_count}')
+                                indicateur_reference = request.POST.get(f'indicateur_reference_{effet_count}.{produit_count}.{action_count}.{activite_count}')
 
-                action_index = 1
-                while f"action_titre_{effet_index}.{produit_index}.{action_index}" in request.POST:
-                    action_titre = request.POST.get(f"action_titre_{effet_index}.{produit_index}.{action_index}")
-                    action = Action.objects.create(produit=produit, titre=action_titre, couts=[0.0] * horizon)
+                                # Initialisation des champs JSON
+                                horizon = plan_action.horizon
+                                cibles = [None] * horizon
+                                realisation = [""] * horizon
+                                couts = [0.0] * horizon
+                                periodes_execution = [[] for _ in range(horizon)]  # Liste vide par année
+                                etat_avancement = [""] * horizon
+                                commentaire = [""] * horizon
+                                commentaire_se = [""] * horizon
+                                pending_changes = [{}] * horizon
+                                status = ["Non entamée"] * horizon
+                                matrix_status = ["En cours"] * horizon
 
-                    activite_index = 1
-                    while f"activite_titre_{effet_index}.{produit_index}.{action_index}.{activite_index}" in request.POST:
-                        # Récupération des informations de l'activité
-                        activite_titre = request.POST.get(f"activite_titre_{effet_index}.{produit_index}.{action_index}.{activite_index}")
-                        activite_type = request.POST.get(f"activite_type_{effet_index}.{produit_index}.{action_index}.{activite_index}")
-                        indicateur_label = request.POST.get(f"indicateur_label_{effet_index}.{produit_index}.{action_index}.{activite_index}")
-                        indicateur_reference = request.POST.get(f"indicateur_reference_{effet_index}.{produit_index}.{action_index}.{activite_index}")
+                                # Remplissage des champs depuis le formulaire
+                                for i in range(horizon):
+                                    cible_key = f'cible_{effet_count}.{produit_count}.{action_count}.{activite_count}[{i + 1}]'
+                                    cout_key = f'cout_{effet_count}.{produit_count}.{action_count}.{activite_count}[{i + 1}]'
+                                    if cible_key in request.POST:
+                                        cibles[i] = request.POST.get(cible_key) or None
+                                    if cout_key in request.POST:
+                                        couts[i] = float(request.POST.get(cout_key, 0.0))
 
-                        # Récupérer et valider les cibles et coûts
-                        cibles = []
-                        couts = []
-                        for i in range(1, horizon + 1):
-                            cible_valeur = request.POST.get(f"cible_{effet_index}.{produit_index}.{action_index}.{activite_index}[{i}]", "")
-                            cout_valeur = request.POST.get(f"cout_{effet_index}.{produit_index}.{action_index}.{activite_index}[{i}]", "0")
-                            cibles.append(cible_valeur if cible_valeur else None)
-                            try:
-                                couts.append(float(cout_valeur) if cout_valeur else 0.0)
-                            except ValueError:
-                                couts.append(0.0)
+                                    # Remplissage des périodes d'exécution
+                                    periodes = []
+                                    for trimestre in range(1, 5):
+                                        periode_key = f'periode_{effet_count}.{produit_count}.{action_count}.{activite_count}[{i}][{trimestre}]'
+                                        if periode_key in request.POST:
+                                            periodes.append(f"T{trimestre}")
+                                    periodes_execution[i] = periodes
+                                    if periodes:
+                                        etat_avancement[i] = f"Planifié pour {', '.join(periodes)}"
 
-                        # Initialisation de realisation
-                        realisation = [""] * horizon  # Liste vide de la bonne taille
+                                # Création de l'activité
+                                activite = Activite(
+                                    action=action,
+                                    titre=activite_titre,
+                                    type=activite_type,
+                                    indicateur_label=indicateur_label,
+                                    indicateur_reference=indicateur_reference,
+                                    cibles=cibles,
+                                    realisation=realisation,
+                                    couts=couts,
+                                    periodes_execution=periodes_execution,
+                                    point_focal=request.user,
+                                    responsable=None,
+                                    etat_avancement=etat_avancement,
+                                    commentaire=commentaire,
+                                    commentaire_se=commentaire_se,
+                                    pending_changes=pending_changes,
+                                    status=status,
+                                    matrix_status=matrix_status
+                                )
+                                activite.save(user=request.user)
 
-                        # Création de l'activité
-                        point_focal = request.user
-                        Activite.objects.create(
-                            action=action,
-                            titre=activite_titre,
-                            type=activite_type,
-                            indicateur_label=indicateur_label,
-                            indicateur_reference=indicateur_reference,
-                            cibles=cibles,
-                            realisation=realisation,  # Ajouté ici
-                            couts=couts,
-                            point_focal=point_focal
-                        )
+                            # Mise à jour des calculs pour l'action
+                            action.calculer_couts()
+                            action.calculer_nombres()
 
-                        activite_index += 1
-                    action_index += 1
-                produit_index += 1
-            effet_index += 1
+                        # Mise à jour des calculs pour le produit
+                        produit.calculer_couts()
+                        produit.calculer_nombres()
 
-        return redirect('plan_action_list')
+                    # Mise à jour des calculs pour l'effet
+                    effet.calculer_couts()
+                    effet.calculer_nombres()
 
-    return render(request, 'planning/add_plan_action.html')
+                # Mise à jour des calculs pour le plan d'action
+                plan_action.calculer_couts()
+                plan_action.calculer_nombres()
+
+                messages.success(request, f"Plan d'action '{plan_action.titre}' créé avec succès (Référence: {plan_action.reference}).")
+                return redirect('plan_action_list')  # À adapter selon votre URL
+
+        except Exception as e:
+            messages.error(request, f"Erreur lors de la création du plan d'action : {str(e)}")
+            return render(request, 'planning/add_plan_action.html', {})
+
+    return render(request, 'planning/add_plan_action.html', {})
 
 def edit_plan_action(request, id):
     plan = get_object_or_404(PlanAction, id=id)
@@ -356,17 +391,10 @@ def manage_activities(request, plan_id, entity):
     # Vérification des rôles
     is_responsable = request.user.groups.filter(name='Responsable').exists()
     is_point_focal = request.user.groups.filter(name='PointFocal').exists()
-    is_suiveur_evaluateur = request.user.groups.filter(name='SuiveurEvaluateur').exists()
 
-    # Récupérer l'entité de l'utilisateur
-    user_entity = getattr(request.user, 'entity', None)
-    #if not user_entity:
-        #messages.error(request, "Utilisateur sans entité définie.")
-        #return render(request, 'planning/access_denied.html', {'plan': plan})
-
-    #if is_suiveur_evaluateur or not (is_responsable or is_point_focal) or user_entity != entity:
-        #messages.error(request, "Cette page est réservée au point focal et au responsable de la structure.")
-        #return render(request, 'planning/access_denied.html', {'plan': plan})
+    if not (is_responsable or is_point_focal):
+        messages.error(request, "Cette page est réservée au point focal et au responsable de la structure.")
+        return render(request, 'planning/access_denied.html', {'plan': plan})
 
     annee = int(request.GET.get('annee', plan.annee_debut))
     index = annee - plan.annee_debut
@@ -374,18 +402,17 @@ def manage_activities(request, plan_id, entity):
         messages.error(request, "Année invalide.")
         return render(request, 'planning/error.html', {'message': "Année invalide."})
 
+    # Filtrer les activités par plan et entité
     filters = Q(action__produit__effet__plan=plan)
-    if is_point_focal:
-        filters &= Q(point_focal__entity=entity)
-    if is_responsable:
-        filters &= Q(responsable__entity=entity)
-
-    activites = Activite.objects.filter(filters).select_related('point_focal', 'responsable')
+    filters &= (Q(point_focal__entity=entity) | Q(responsable__entity=entity))
+    
+    activites = Activite.objects.filter(filters).distinct()
 
     if request.method == 'POST':
         data = request.POST
         activite = get_object_or_404(Activite, id=data.get('activite_id'))
 
+        # Vérifier que l'activité appartient à l'entité
         activite_entity = getattr(activite.point_focal, 'entity', None) or getattr(activite.responsable, 'entity', None)
         if activite_entity != entity:
             return JsonResponse({'success': False, 'message': "Activité hors de votre structure."})
@@ -405,7 +432,7 @@ def manage_activities(request, plan_id, entity):
         # Comparer avant/après pour les logs
         changes = {k: {'avant': old_data[k], 'apres': new_data[k]} for k in old_data if old_data[k] != new_data[k]}
 
-        if 'save' in data:
+        if 'save' in data and (is_responsable or is_point_focal):
             activite.etat_avancement = new_data['etat_avancement']
             activite.realisation[index] = new_data['realisation']
             activite.commentaire = new_data['commentaire']
@@ -437,7 +464,10 @@ def manage_activities(request, plan_id, entity):
                 )
             return JsonResponse({'success': True, 'message': 'Activité validée et soumise au SE'})
 
-    activites_by_entity = {}
+        return JsonResponse({'success': False, 'message': 'Action non autorisée'})
+
+    # Préparer les données pour l'affichage
+    activites_list = []
     for a in activites:
         horizon = plan.horizon
         for attr in ['realisation', 'matrix_status', 'couts', 'cibles']:
@@ -445,8 +475,7 @@ def manage_activities(request, plan_id, entity):
                 setattr(a, attr, ["" if attr == 'realisation' else 'En cours' if attr == 'matrix_status' else 0.0 if attr == 'couts' else None] * horizon)
                 a.save()
 
-        entity_key = getattr(a.point_focal, 'entity', None) or getattr(a.responsable, 'entity', None) or 'Sans entité'
-        activites_by_entity.setdefault(entity_key, []).append({
+        activites_list.append({
             'id': a.id,
             'titre': a.titre,
             'type': a.type,
@@ -464,7 +493,7 @@ def manage_activities(request, plan_id, entity):
         'plan': plan,
         'annee': annee,
         'entity': entity,
-        'activites_by_entity': {entity: activites_by_entity.get(entity, [])},
+        'activites': activites_list,
         'is_responsable': is_responsable,
         'is_point_focal': is_point_focal,
     }

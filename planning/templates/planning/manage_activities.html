@@ -19,7 +19,7 @@ Gestion des Activités - {{ plan.titre }} - {{ annee }}
         </div>
     {% endif %}
 
-    {% for entity, activites in activites_by_entity.items %}
+    {% if activites %}
         <div class="table-container shadow-lg rounded animate-slide-up" style="animation-delay: 0.2s;">
             <div class="scrollable-table">
                 <table class="table table-bordered table-striped">
@@ -62,7 +62,7 @@ Gestion des Activités - {{ plan.titre }} - {{ annee }}
                                         <button class="btn btn-primary save-btn">Enregistrer</button>
                                     {% endif %}
                                     {% if is_responsable %}
-                                        <button class="btn btn-success validate-btn">Valider</button>
+                                        <button class="btn btn-success validate-btn">Soumettre</button>
                                     {% endif %}
                                 </td>
                             </tr>
@@ -71,11 +71,11 @@ Gestion des Activités - {{ plan.titre }} - {{ annee }}
                 </table>
             </div>
         </div>
-    {% empty %}
+    {% else %}
         <div class="text-center py-5 animate-fade-in">
-            <h3 class="text-warning fw-bold">Aucune activité pour {{ annee }} !</h3>
+            <h3 class="text-warning fw-bold">Aucune activité pour {{ entity }} en {{ annee }} !</h3>
         </div>
-    {% endfor %}
+    {% endif %}
 
     <div class="text-center mt-4 animate-fade-in">
         <a href="{% url 'pao_list' plan.id %}" class="btn btn-secondary btn-lg px-5 py-2 fw-bold">Retour</a>
@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }, data => {
                 alert(data.message);
                 if (data.success) {
-                    row.querySelector('td:nth-child(9)').textContent = 'Draft'; // Mise à jour du statut dans le tableau
+                    row.querySelector('td:nth-child(9)').textContent = 'Draft';
                 }
             });
         });
@@ -132,7 +132,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }, data => {
                 alert(data.message);
                 if (data.success) {
-                    row.querySelector('td:nth-child(9)').textContent = 'Submitted_SE'; // Mise à jour du statut dans le tableau
+                    row.querySelector('td:nth-child(9)').textContent = 'Submitted_SE';
                 }
             });
         });
@@ -156,10 +156,10 @@ document.addEventListener('DOMContentLoaded', function () {
         background: #fff; 
     }
     .scrollable-table {
-        max-height: 500px; /* Hauteur maximale avant défilement */
-        overflow-y: auto; /* Défilement vertical */
-        overflow-x: auto; /* Défilement horizontal si nécessaire */
-        display: block; /* Nécessaire pour le défilement */
+        max-height: 500px;
+        overflow-y: auto;
+        overflow-x: auto;
+        display: block;
     }
     .table { 
         margin-bottom: 0; 
@@ -170,20 +170,19 @@ document.addEventListener('DOMContentLoaded', function () {
         vertical-align: middle; 
         border: 1px solid #ff6200; 
         padding: 10px; 
-        min-width: 120px; /* Largeur minimale pour éviter l'écrasement */
+        min-width: 120px;
     }
     .table thead th { 
         text-align: center; 
         position: sticky; 
         top: 0; 
-        z-index: 10; /* Garde l'en-tête au-dessus du contenu */
+        z-index: 10;
         background: #ff6200; 
         color: white; 
     }
     .table-striped tbody tr:nth-of-type(odd) { background-color: #fff3e6; }
     .form-control { min-width: 100px; }
     textarea.form-control { min-height: 80px; resize: vertical; }
-    select.form-control { padding: 6px; }
 
     .btn-primary { background: #007bff; border: none; border-radius: 25px; padding: 6px 15px; }
     .btn-success { background: #28a745; color: white; border: none; border-radius: 25px; padding: 6px 15px; }
@@ -196,7 +195,6 @@ document.addEventListener('DOMContentLoaded', function () {
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* Assurer que le conteneur reste responsive */
     @media (max-width: 768px) {
         .scrollable-table { max-height: 300px; }
         .table th, .table td { min-width: 100px; }
