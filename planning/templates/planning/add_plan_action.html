@@ -43,6 +43,22 @@ Création d'un Plan d'Action
         </form>
     </div>
 
+    <style>
+        /* Style pour les textarea des cibles */
+        .cible-textarea {
+            transition: height 0.4s ease-in-out, padding 0.4s ease-in-out; /* Transition douce pour la hauteur et le padding */
+            height: 38px; /* Hauteur initiale similaire à un input */
+            min-height: 38px; /* Hauteur minimale */
+            resize: vertical; /* Permettre le redimensionnement manuel vertical */
+            overflow: hidden; /* Masquer la barre de défilement par défaut */
+            padding: 6px 12px; /* Padding initial similaire à un input */
+        }
+        .cible-textarea:focus {
+            height: auto; /* Permettre l'expansion */
+            padding: 10px 12px; /* Légère augmentation du padding pour un effet élégant */
+        }
+    </style>
+
     <script>
         // Gestion des compteurs
         let effetCount = 0;
@@ -52,7 +68,6 @@ Création d'un Plan d'Action
         
         // Met à jour les compteurs dans l'interface utilisateur
         function mettreAJourStatistiques() {
-            // Si les éléments de statistiques ne sont pas dans le DOM, on ne met pas à jour
             if (document.getElementById('effet_count')) {
                 document.getElementById('effet_count').innerText = effetCount;
                 document.getElementById('produit_count').innerText = Object.values(produitCounts).reduce((a, b) => a + b, 0);
@@ -368,14 +383,15 @@ Création d'un Plan d'Action
                 let yearContainer = document.createElement("div");
                 yearContainer.className = "row mb-3 p-3 border rounded bg-white shadow-sm";
 
-                // Colonne pour la cible
+                // Colonne pour la cible (toujours un textarea)
                 let cibleCol = document.createElement("div");
                 cibleCol.className = "col-md-4";
                 cibleCol.innerHTML = `
                     <label class="form-label fw-bold text-primary">Cible ${anneeDepart + i}</label>
-                    <input type="text" class="form-control border-primary shadow-sm" 
+                    <textarea class="form-control border-primary shadow-sm cible-textarea" 
+                        id="cible_${effetNum}.${produitNum}.${actionNum}.${activiteNum}_${i}" 
                         name="cible_${effetNum}.${produitNum}.${actionNum}.${activiteNum}[${i + 1}]" 
-                        placeholder="Cible ${anneeDepart + i}">
+                        placeholder="Cible ${anneeDepart + i}"></textarea>
                 `;
 
                 // Colonne pour le coût
@@ -410,6 +426,27 @@ Création d'un Plan d'Action
                 yearContainer.appendChild(periodesCol);
                 ciblesPeriodesCoutsContainer.appendChild(yearContainer);
             }
+
+            // Ajouter un événement pour ajuster dynamiquement la hauteur des textareas
+            document.querySelectorAll(".cible-textarea").forEach(textarea => {
+                textarea.addEventListener("input", function() {
+                    this.style.height = "auto"; // Réinitialiser pour calculer la hauteur réelle
+                    this.style.height = `${this.scrollHeight}px`; // Ajuster à la hauteur du contenu
+                });
+
+                // Ajuster la hauteur au focus et au blur pour un effet élégant
+                textarea.addEventListener("focus", function() {
+                    if (this.value === "") {
+                        this.style.height = "38px"; // Garder la hauteur initiale si vide
+                    }
+                });
+
+                textarea.addEventListener("blur", function() {
+                    if (this.value === "") {
+                        this.style.height = "38px"; // Revenir à la hauteur initiale si vide
+                    }
+                });
+            });
         }
 
         // Ajouter une activité
@@ -488,6 +525,7 @@ Création d'un Plan d'Action
 
             document.getElementById(`activites_action_${effetNum}.${produitNum}.${actionNum}`).appendChild(activiteContainer);
             updateResults();
+            mettreAJourStatistiques();
         }
 
         // Supprimer une activité

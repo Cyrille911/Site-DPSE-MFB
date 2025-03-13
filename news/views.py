@@ -25,12 +25,6 @@ def news_list(request):
 
     # Passer les actualités au template
     return render(request, 'news/news_list.html', {'news_list': news_list })
-# def news_list(request):
-#     # Récupérer toutes les actualités (vous pouvez aussi filtrer selon un critère si nécessaire)
-#     news = News.objects.all()
-
-#     # Passer les actualités au template
-#     return render(request, 'news/news_list.html', {'news': news})
 
 def news_detail(request, pk):
     """ Affiche les détails d'une actualité spécifique avec gestion des commentaires """

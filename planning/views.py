@@ -155,19 +155,30 @@ def add_plan_action(request):
         try:
             with transaction.atomic():
                 # 1. Création du PlanAction
+                titre = request.POST.get('titre')
+                impact = request.POST.get('impact')
+                annee_debut = int(request.POST.get('annee_depart', 2025))
+                horizon = int(request.POST.get('horizon', 1))
+
+                if not titre or not impact:
+                    raise ValueError("Le titre et l'impact sont requis.")
+
                 plan_action = PlanAction(
-                    titre=request.POST.get('titre'),
-                    impact=request.POST.get('impact'),
-                    annee_debut=int(request.POST.get('annee_depart', 2025)),
-                    horizon=int(request.POST.get('horizon', 1)),
+                    titre=titre,
+                    impact=impact,
+                    annee_debut=annee_debut,
+                    horizon=horizon,
                 )
-                plan_action.save()  # Sauvegarde initiale pour générer la référence
+                plan_action.save()  # Sauvegarde initiale pour générer l'ID ou la référence
 
                 # 2. Traitement des Effets
                 effet_count = 0
                 while f'effet_titre_{effet_count + 1}' in request.POST:
                     effet_count += 1
                     effet_titre = request.POST.get(f'effet_titre_{effet_count}')
+                    if not effet_titre:
+                        raise ValueError(f"Le titre de l'effet {effet_count} est requis.")
+                    
                     effet = Effet(plan=plan_action, titre=effet_titre)
                     effet.save()
 
@@ -176,6 +187,9 @@ def add_plan_action(request):
                     while f'produit_titre_{effet_count}.{produit_count + 1}' in request.POST:
                         produit_count += 1
                         produit_titre = request.POST.get(f'produit_titre_{effet_count}.{produit_count}')
+                        if not produit_titre:
+                            raise ValueError(f"Le titre du produit {effet_count}.{produit_count} est requis.")
+                        
                         produit = Produit(effet=effet, titre=produit_titre)
                         produit.save()
 
@@ -184,6 +198,9 @@ def add_plan_action(request):
                         while f'action_titre_{effet_count}.{produit_count}.{action_count + 1}' in request.POST:
                             action_count += 1
                             action_titre = request.POST.get(f'action_titre_{effet_count}.{produit_count}.{action_count}')
+                            if not action_titre:
+                                raise ValueError(f"Le titre de l'action {effet_count}.{produit_count}.{action_count} est requis.")
+                            
                             action = Action(produit=produit, titre=action_titre)
                             action.save()
 
@@ -196,12 +213,14 @@ def add_plan_action(request):
                                 indicateur_label = request.POST.get(f'indicateur_label_{effet_count}.{produit_count}.{action_count}.{activite_count}')
                                 indicateur_reference = request.POST.get(f'indicateur_reference_{effet_count}.{produit_count}.{action_count}.{activite_count}')
 
-                                # Initialisation des champs JSON
-                                horizon = plan_action.horizon
+                                if not all([activite_titre, activite_type, indicateur_label, indicateur_reference]):
+                                    raise ValueError(f"Les champs de l'activité {effet_count}.{produit_count}.{action_count}.{activite_count} doivent être remplis.")
+
+                                # Initialisation des champs JSON avec horizon années
                                 cibles = [None] * horizon
                                 realisation = [""] * horizon
                                 couts = [0.0] * horizon
-                                periodes_execution = [[] for _ in range(horizon)]  # Liste vide par année
+                                periodes_execution = [[] for _ in range(horizon)]
                                 etat_avancement = [""] * horizon
                                 commentaire = [""] * horizon
                                 commentaire_se = [""] * horizon
@@ -209,16 +228,15 @@ def add_plan_action(request):
                                 status = ["Non entamée"] * horizon
                                 matrix_status = ["En cours"] * horizon
 
-                                # Remplissage des champs depuis le formulaire
+                                # Remplissage des champs dynamiques
                                 for i in range(horizon):
                                     cible_key = f'cible_{effet_count}.{produit_count}.{action_count}.{activite_count}[{i + 1}]'
                                     cout_key = f'cout_{effet_count}.{produit_count}.{action_count}.{activite_count}[{i + 1}]'
-                                    if cible_key in request.POST:
-                                        cibles[i] = request.POST.get(cible_key) or None
-                                    if cout_key in request.POST:
-                                        couts[i] = float(request.POST.get(cout_key, 0.0))
+                                    
+                                    cibles[i] = request.POST.get(cible_key) or None
+                                    couts[i] = float(request.POST.get(cout_key, 0.0) or 0.0)
 
-                                    # Remplissage des périodes d'exécution
+                                    # Périodes d'exécution (trimestres)
                                     periodes = []
                                     for trimestre in range(1, 5):
                                         periode_key = f'periode_{effet_count}.{produit_count}.{action_count}.{activite_count}[{i}][{trimestre}]'
@@ -240,7 +258,7 @@ def add_plan_action(request):
                                     couts=couts,
                                     periodes_execution=periodes_execution,
                                     point_focal=request.user,
-                                    responsable=None,
+                                    responsable=None,  # À ajuster selon votre logique
                                     etat_avancement=etat_avancement,
                                     commentaire=commentaire,
                                     commentaire_se=commentaire_se,
@@ -248,7 +266,7 @@ def add_plan_action(request):
                                     status=status,
                                     matrix_status=matrix_status
                                 )
-                                activite.save(user=request.user)
+                                activite.save(user=request.user)  # Supposant une méthode save personnalisée
 
                             # Mise à jour des calculs pour l'action
                             action.calculer_couts()
@@ -267,12 +285,16 @@ def add_plan_action(request):
                 plan_action.calculer_nombres()
 
                 messages.success(request, f"Plan d'action '{plan_action.titre}' créé avec succès (Référence: {plan_action.reference}).")
-                return redirect('plan_action_list')  # À adapter selon votre URL
+                return redirect('plan_action_list')  # Assurez-vous que cette URL existe
 
+        except ValueError as ve:
+            messages.error(request, f"Erreur de validation : {str(ve)}")
+            return render(request, 'planning/add_plan_action.html', {})
         except Exception as e:
             messages.error(request, f"Erreur lors de la création du plan d'action : {str(e)}")
             return render(request, 'planning/add_plan_action.html', {})
 
+    # Si méthode GET, afficher le formulaire vide
     return render(request, 'planning/add_plan_action.html', {})
 
 def edit_plan_action(request, id):
