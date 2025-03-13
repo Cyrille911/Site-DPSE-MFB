@@ -11,6 +11,7 @@ class InscriptionMembreForm(forms.ModelForm):
         ('membre', 'Membre simple'),
         ('responsable', 'Responsable'),
         ('point_focal', 'Point Focal'),
+        ('cabinet', 'Cabinet MFB'),
     )
     role = forms.ChoiceField(choices=ROLE_CHOICES, label="Rôle", initial='membre')
 

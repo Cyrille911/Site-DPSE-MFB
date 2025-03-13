@@ -608,10 +608,17 @@ a:hover {
 .form textarea:focus,
 .form select:focus {
   border-color: #ff7200;
+<<<<<<< HEAD
   -webkit-box-shadow: 0 0 5px 0 #687ff9;
   -o-box-shadow: 0 0 5px 0 #687ff9;
   -ms-box-shadow: 0 0 5px 0 #687ff9;
   box-shadow: 0 0 5px 0 #687ff9;
+=======
+  -webkit-box-shadow: 0 0 5px 0 #ff7200;
+  -o-box-shadow: 0 0 5px 0 #ff7200;
+  -ms-box-shadow: 0 0 5px 0 #ff7200;
+  box-shadow: 0 0 5px 0 #ff7200;
+>>>>>>> front
 }
 
 .form ::-webkit-input-placeholder {
@@ -684,7 +691,11 @@ a:hover {
 }
 
 .social-links li a {
+<<<<<<< HEAD
   background-color: #687ff9;
+=======
+  background-color: #ff7200;
+>>>>>>> front
   width: 35px;
   height: 35px;
   line-height: 35px;

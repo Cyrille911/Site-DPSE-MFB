@@ -59,8 +59,8 @@ def news_detail(request, pk):
 
 # Vue pour ajouter une actualité
 def add_news(request):
-    if not request.user.has_perm('general.add_news'):
-        return HttpResponseForbidden("Vous n'avez pas l'autorisation d'ajouter des actualités.")
+    # if not request.user.has_perm('general.add_news'):
+    #     return HttpResponseForbidden("Vous n'avez pas l'autorisation d'ajouter des actualités.")
     
     if request.method == 'POST':
         headline = request.POST.get('headline')

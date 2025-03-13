@@ -62,72 +62,586 @@
     cursor: pointer;
   }
 </style>
+
+<style>
+  /* Styles de base */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    background-color: #f5f5f5;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  /* Styles du modal */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+  }
+
+  .modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .modal-container-success {
+    background-color: white;
+    border-radius: 24px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    width: 100%;
+    margin: 0 16px;
+    overflow: hidden;
+    transform: scale(0.95);
+    opacity: 0;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+      opacity 0.3s ease;
+  }
+
+  .modal-overlay.active .modal-container-success {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  .modal-content-success {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  /* Container pour l'animation du logo */
+  .success-icon-container {
+    width: 100px;
+    height: 100px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+  }
+
+  /* SVG pour le cercle qui se dessine */
+  .success-circle-svg {
+    width: 100px;
+    height: 100px;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  /* Animation du cercle - se dessine progressivement */
+  .success-circle {
+    stroke: #22c55e;
+    stroke-width: 4;
+    fill: none;
+    stroke-dasharray: 283;
+    /* Circonférence approximative du cercle (2*PI*r) */
+    stroke-dashoffset: 283;
+    animation: drawCircle 0.4s ease-out forwards;
+    transform-origin: center;
+    transform: rotate(-90deg);
+    stroke-linecap: round;
+  }
+
+  @keyframes drawCircle {
+    0% {
+      stroke-dashoffset: 283;
+      opacity: 0.3;
+    }
+
+    50% {
+      opacity: 1;
+    }
+
+    100% {
+      stroke-dashoffset: 0;
+      opacity: 1;
+    }
+  }
+
+  /* SVG pour la coche qui se dessine */
+  .success-check-svg {
+    width: 50px;
+    height: 50px;
+    position: relative;
+    z-index: 2;
+    /* Délai pour commencer après que le cercle soit dessiné */
+    opacity: 0;
+    animation: fadeIn 0.01s ease forwards 1s;
+  }
+
+  @keyframes fadeIn {
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* Animation de la coche - se dessine progressivement */
+  .success-check {
+    stroke: #22c55e;
+    stroke-width: 6;
+    fill: none;
+    stroke-dasharray: 50;
+    stroke-dashoffset: 50;
+    animation: drawCheck 0.8s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  @keyframes drawCheck {
+    0% {
+      stroke-dashoffset: 50;
+    }
+
+    100% {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  /* Effet de "crayon" qui dessine */
+  .drawing-effect {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #22c55e;
+    filter: blur(2px);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .circle-pen {
+    top: 0;
+    left: 50%;
+    animation: movePenCircle 1.2s linear forwards;
+  }
+
+  @keyframes movePenCircle {
+    0% {
+      opacity: 0.7;
+      transform: rotate(0deg) translateX(45px);
+    }
+
+    100% {
+      opacity: 0.7;
+      transform: rotate(360deg) translateX(45px);
+    }
+  }
+
+  .check-pen {
+    top: 50%;
+    left: 30%;
+    animation: movePenCheck 0.8s linear 1.2s forwards;
+  }
+
+  @keyframes movePenCheck {
+    0% {
+      opacity: 0.7;
+      transform: translate(0, 0);
+    }
+
+    40% {
+      transform: translate(7px, 7px);
+    }
+
+    100% {
+      opacity: 0.7;
+      transform: translate(16px, -8px);
+    }
+  }
+
+  .modal-title-success {
+    font-size: 24px;
+    font-weight: bold;
+    color: #22c55e;
+    margin-bottom: 16px;
+    opacity: 0;
+    transform: translateY(10px);
+    animation: slideUp 0.5s ease forwards 2s;
+  }
+
+  .modal-message-success {
+    color: #4b5563;
+    margin-bottom: 32px;
+    font-size: 18px;
+    opacity: 0;
+    transform: translateY(10px);
+    animation: slideUp 0.5s ease forwards 2.2s;
+  }
+
+  @keyframes slideUp {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .modal-button-success {
+    background-color: #22c55e;
+    color: white;
+    border: none;
+    padding: 8px 32px;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 500;
+    min-width: 100px;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    opacity: 0;
+    transform: translateY(10px);
+    animation: slideUp 0.5s ease forwards 2.4s;
+  }
+
+  .modal-button-success:hover {
+    background-color: #16a34a;
+    transform: translateY(-2px);
+  }
+</style>
+<style>
+  /* Carousel styles */
+  .carousel {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    transition: transform 0.5s ease-in-out;
+    /* Animation fluide pour le défilement */
+  }
+
+  .carousel-slide {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    transition: transform 700ms ease-in-out;
+    z-index: 0;
+  }
+
+  .carousel-slide.active {
+    transform: translateX(0);
+    z-index: 20;
+  }
+
+  .carousel-slide.prev {
+    transform: translateX(-100%);
+    z-index: 10;
+  }
+
+  .carousel-slide.next {
+    transform: translateX(100%);
+    z-index: 10;
+  }
+
+  .carousel-slide.hidden {
+    transform: translateX(100%);
+    z-index: 0;
+  }
+
+  .carousel-overlay {
+    position: absolute;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 10;
+  }
+
+  .carousel-image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Content styles */
+  .container-carousel {
+    position: relative;
+    z-index: 30;
+    height: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: white;
+    transition: background-color 0.3s ease, opacity 0.3s ease; /* Animation fluide */
+  }
+
+  .content-carousel {
+    max-width: 800px;
+    bottom: 1;
+  }
+
+  /* Navigation buttons */
+  .carousel-button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 40;
+    background-color: rgba(0, 0, 0, 0.3);
+    color: white;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease, opacity 0.3s ease;
+    /* Animation fluide */
+
+  }
+
+  .carousel-button:hover {
+    background-color: rgba(0, 0, 0, 0.5);
+    opacity: 1;
+    /* Opacité maximale */
+  }
+
+  .carousel-button-prev {
+    left: 1rem;
+  }
+
+  .carousel-button-next {
+    right: 1rem;
+  }
+
+  /* Indicators */
+  .carousel-indicators {
+    position: absolute;
+    bottom: 2rem;
+    z-index: 40;
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .carousel-indicator {
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 9999px;
+    background-color: rgba(255, 255, 255, 0.5);
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .carousel-indicator:hover {
+    background-color: rgba(255, 255, 255, 0.8);
+  }
+
+  .carousel-indicator.active {
+    background-color: white;
+    width: 1.5rem;
+  }
+
+  /* Icon boxes */
+  .icon-boxes {
+    position: absolute;
+    bottom: 5rem;
+    left: 0;
+    right: 0;
+    z-index: 25;
+    padding: 1.5rem 0;
+  }
+
+  .hero-dark {
+    background-color: rgba(0, 0, 0, 0.7);
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 25;
+    padding: 1.5rem 0;
+    height: 100%;
+  }
+
+  .hero {
+    transition: background-color 0.5s ease;
+  }
+
+  .hero:hover {
+    background-color: rgba(0, 0, 0, 0.7);
+    /* Assombrir légèrement au survol */
+  }
+
+  @media (max-width: 768px) {
+    .hero {
+      display: block;
+    }
+
+    .icon-boxes {
+      position: relative;
+      top: 5rem;
+      left: 0;
+      right: 0;
+      z-index: 25;
+      padding: 1px 0;
+    }
+
+
+  }
+
+  .icon-boxes-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    text-align: center;
+  }
+
+  @media (min-width: 768px) {
+    .icon-boxes-container {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .icon-boxes-container {
+      grid-template-columns: repeat(5, 1fr);
+    }
+  }
+
+  .icon-box {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    transition: background-color 0.3s;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    /* Animation fluide */
+  }
+
+  .icon-box:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-10px);
+    /* Légère élévation au survol */
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    /* Ombre portée */
+  }
+
+  .icon {
+    color: white;
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+
+  .icon-title {
+    color: white;
+    font-size: 0.875rem;
+  }
+
+  @media (min-width: 768px) {
+    .icon-title {
+      font-size: 1rem;
+    }
+  }
+
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+</style>
+
 {% endblock%}
 {% block content %}
 
 <main class="main">
 
   <!-- Accueil -->
-  <section id="hero" class="hero section dark-background">
+<!-- Accueil -->
+<section id="hero" class="hero section dark-background">
+  <div class="hero-dark"></div>
 
-    <img src="{% static 'general/images/plateau.jpg' %}" alt="" data-aos="fade-in">
+  <!-- Carousel -->
+  <div class="carousel" id="carousel">
+    <!-- Slides will be added by JavaScript -->
+  </div>
 
-    <div class="container">
-
-      <div class="row justify-content-center text-center" data-aos="fade-up" data-aos-delay="100">
-        <div class="col-xl-9 col-lg-8">
-          <h2>Direction de la Planification et du Suivi Evaluation</h2>
-          <p>Planifier, suivre, évaluer : agir mieux !</p>
-        </div>
-      </div>
-
-      <div class="row gy-4 mt-5 justify-content-center" data-aos="fade-up" data-aos-delay="200">
-        <div class="col-xl-2 col-md-4" data-aos="fade-up" data-aos-delay="300">
-          <a href="#about">
-            <div class="icon-box">
-              <i class="bi bi-house"></i>
-              <h3>Le Ministère</h3>
-            </div>
-          </a>
-        </div>
-        <div class="col-xl-2 col-md-4" data-aos="fade-up" data-aos-delay="400">
-          <a href="#dpse">
-            <div class="icon-box">
-              <i class="bi bi-bar-chart"></i>
-              <h3>La DPSE</h3>
-            </div>
-          </a>
-        </div>
-        <div class="col-xl-2 col-md-4" data-aos="fade-up" data-aos-delay="500">
-          <a href="#gar">
-            <div class="icon-box">
-              <i class="bi bi-puzzle"></i>
-              <h3>GAR</h3>
-            </div>
-          </a>
-        </div>
-        <div class="col-xl-2 col-md-4" data-aos="fade-up" data-aos-delay="600">
-          <a href="#letmotiv">
-            <div class="icon-box">
-              <i class="bi bi-person-fill"></i>
-              <h3>Letmotiv</h3>
-            </div>
-          </a>
-        </div>
-        <div class="col-xl-2 col-md-4" data-aos="fade-up" data-aos-delay="700">
-          <a href="#contact">
-            <div class="icon-box">
-              <i class="bi bi-person-vcard-fill"></i>
-              <h3>Contacts</h3>
-            </div>
-          </a>
-        </div>
-      </div>
-
+  <div class="container-carousel">
+    <div class="content-carousel">
+      <h2 class="title">Direction de la Planification et du Suivi Evaluation</h2>
+      <p class="description">Planifier, suivre, évaluer : agir mieux !</p>
     </div>
+  </div>
 
-  </section><!-- /Accueil -->
+  <!-- Navigation buttons -->
+  <button class="carousel-button carousel-button-prev" id="prevButton" aria-label="Previous slide">
+    ❮
+  </button>
+  <button class="carousel-button carousel-button-next" id="nextButton" aria-label="Next slide">
+    ❯
+  </button>
 
+  <!-- Indicators -->
+  <div class="carousel-indicators" id="indicators">
+    <!-- Indicators will be added by JavaScript -->
+  </div>
+
+  <!-- Icon boxes -->
+  <div class="icon-boxes">
+    <div class="icon-boxes-container">
+      <a href="#about" class="icon-box-link">
+        <div class="icon-box">
+          <i class="bi bi-house"></i>
+          <h3 class="icon-title">Le Ministère</h3>
+        </div>
+      </a>
+      <a href="#dpse" class="icon-box-link">
+        <div class="icon-box">
+          <i class="bi bi-bar-chart"></i>
+          <h3 class="icon-title">La DPSE</h3>
+        </div>
+      </a>
+      <a href="#gar" class="icon-box-link">
+        <div class="icon-box">
+          <i class="bi bi-puzzle"></i>
+          <h3 class="icon-title">GAR</h3>
+        </div>
+      </a>
+      <a href="#letmotiv" class="icon-box-link">
+        <div class="icon-box">
+          <i class="bi bi-person-fill"></i>
+          <h3 class="icon-title">Letmotiv</h3>
+        </div>
+      </a>
+      <a href="#contact" class="icon-box-link">
+        <div class="icon-box">
+          <i class="bi bi-person-vcard-fill"></i>
+          <h3 class="icon-title">Contacts</h3>
+        </div>
+      </a>
+    </div>
+  </div>
+</section><!-- /Accueil -->
 
   <!-- Le Ministère -->
   <section id="about" class="about section">
@@ -418,7 +932,7 @@
               <i class="bi bi-building"></i>
             </div>
             <a href="https://www.gouv.ci/_actualite-article.php?recordID=13461" class="stretched-link">
-              <h3 style="color:white;">Programme National de Développement (PND) 2021-2025</h3>
+              <h3>Programme National de Développement (PND) 2021-2025</h3>
             </a>
             <p>Un plan stratégique visant à transformer l'économie et la société ivoiriennes pour atteindre l'émergence
               à l'horizon 2030, avec un investissement global prévu de 90 milliards d'euros, principalement porté par le
@@ -433,7 +947,7 @@
             </div>
             <a href="https://www.banquemondiale.org/fr/news/press-release/2024/07/10/cote-ivoire-programme-825-millions-dollars-acces-eau-et-assainissement"
               class="stretched-link">
-              <h3 style="color:white;">Projet d'Appui à la Sécurité de l'Eau et de l'Assainissement (PASEA)</h3>
+              <h3>Projet d'Appui à la Sécurité de l'Eau et de l'Assainissement (PASEA)</h3>
             </a>
             <p>Un projet ambitieux doté de 825 millions de dollars visant à améliorer l'accès à l'eau potable et aux
               services d'assainissement pour les populations ivoiriennes.</p>
@@ -447,7 +961,8 @@
             </div>
             <a href="https://www.eib.org/fr/press/news/eib-supports-transformative-forestry-project-in-cote-d-ivoire"
               class="stretched-link">
-              <h3 style="color:white;">Projet de Réhabilitation et d'Extension des Zones Forestières</h3>
+
+              <h3>Projet de Réhabilitation et d'Extension des Zones Forestières</h3>
             </a>
             <p>Une initiative soutenue par la Banque Européenne d'Investissement visant à protéger, réhabiliter et
               étendre les zones forestières en Côte d'Ivoire.</p>
@@ -461,7 +976,7 @@
             </div>
             <a href="https://www.lemonde.fr/afrique/article/2024/10/25/la-cote-d-ivoire-mise-a-la-fois-sur-les-energies-vertes-et-les-energies-fossiles_6359441_3212.html"
               class="stretched-link">
-              <h3 style="color:white;">Programme de Diversification Énergétique</h3>
+              <h3>Programme de Diversification Énergétique</h3>
             </a>
             <p>Un programme visant à combiner les énergies renouvelables et fossiles pour répondre à la demande
               croissante en électricité, avec des projets solaires et biomasse prévus.</p>
@@ -474,7 +989,7 @@
               <i class="bi bi-people"></i>
             </div>
             <a href="https://www.gouv.ci/_actualite-article.php?recordID=15868" class="stretched-link">
-              <h3 style="color:white;">Programme d'Investissement Public 2018-2020</h3>
+              <h3>Programme d'Investissement Public 2018-2020</h3>
             </a>
             <p>Un programme visant à renforcer les infrastructures socio-économiques et soutenir la croissance durable
               en Côte d'Ivoire.</p>
@@ -487,7 +1002,7 @@
               <i class="bi bi-globe"></i>
             </div>
             <a href="https://www.gcpnd.gouv.ci/presentation/cgpnd/fr" class="stretched-link">
-              <h3 style="color:white;">Plan National de Développement Touristique "Sublime Côte d'Ivoire"</h3>
+              <h3>Plan National de Développement Touristique "Sublime Côte d'Ivoire"</h3>
             </a>
             <p>Une stratégie visant à positionner la Côte d'Ivoire comme une destination touristique de premier plan,
               avec pour objectif d'augmenter le nombre de visiteurs et la contribution du tourisme au PIB.</p>
@@ -635,7 +1150,7 @@
             <div class="icon">
               <i class="bi bi-search"></i>
             </div>
-            <h3 style="color:white;">Prospective</h3>
+            <h3>Prospective</h3>
             <p><strong>Anticipation des tendances et des scénarios futurs</strong>. Analyse des évolutions possibles
               dans l'environnement interne et externe, identification des opportunités et menaces à venir.</p>
           </div>
@@ -646,7 +1161,7 @@
             <div class="icon">
               <i class="bi bi-calendar-check"></i>
             </div>
-            <h3 style="color:white;">Planification</h3>
+            <h3>Planification</h3>
             <p><strong>Définition des objectifs et actions</strong>. Établissement d'un cadre détaillé des actions avec
               identification des ressources nécessaires et définition des priorités.</p>
           </div>
@@ -657,7 +1172,7 @@
             <div class="icon">
               <i class="bi bi-gear"></i>
             </div>
-            <h3 style="color:white;">Programmation</h3>
+            <h3>Programmation</h3>
             <p><strong>Organisation temporelle des actions</strong>. Structuration des activités avec échéances précises
               et allocation optimale des ressources humaines/matérielles.</p>
           </div>
@@ -668,7 +1183,7 @@
             <div class="icon">
               <i class="bi bi-wallet"></i>
             </div>
-            <h3 style="color:white;">Budgétisation</h3>
+            <h3>Budgétisation</h3>
             <p><strong>Gestion financière prévisionnelle</strong>. Estimation des coûts et allocation des fonds pour une
               utilisation optimale des ressources financières.</p>
           </div>
@@ -679,7 +1194,7 @@
             <div class="icon">
               <i class="bi bi-bar-chart-line"></i>
             </div>
-            <h3 style="color:white;">Suivi</h3>
+            <h3>Suivi</h3>
             <p><strong>Contrôle continu des progrès</strong>. Surveillance en temps réel de l'avancement et ajustements
               des actions pour respecter les objectifs.</p>
           </div>
@@ -690,7 +1205,7 @@
             <div class="icon">
               <i class="bi bi-check-circle"></i>
             </div>
-            <h3 style="color:white;">Évaluation</h3>
+            <h3>Évaluation</h3>
             <p><strong>Mesure des résultats et impacts</strong>. Analyse de l'efficacité du projet et identification des
               leçons apprises pour les futurs initiatives.</p>
           </div>
@@ -863,10 +1378,33 @@
 
   </section><!-- /Contacts -->
   <!-- Popup de confirmation -->
-  <div class="popup" id="popup">
-    <div class="popup-content">
-      <span class="close-btn" id="closePopup">×</span>
-      <p>Merci <span id="userName"></span> pour votre message !</p>
+  <div id="successModal" class="modal-overlay">
+    <div class="modal-container-success">
+      <div class="modal-content-success">
+        <div class="success-icon-container">
+          <!-- Cercle qui se dessine progressivement -->
+          <svg class="success-circle-svg" viewBox="0 0 100 100">
+            <circle class="success-circle" cx="50" cy="50" r="45"></circle>
+          </svg>
+
+          <!-- Effet visuel du "crayon" qui dessine le cercle -->
+          <div class="drawing-effect circle-pen"></div>
+
+          <!-- Coche qui se dessine progressivement -->
+          <svg class="success-check-svg" viewBox="0 0 50 50">
+            <path class="success-check" d="M10 25 L20 35 L40 15"></path>
+          </svg>
+
+          <!-- Effet visuel du "crayon" qui dessine la coche -->
+          <div class="drawing-effect check-pen"></div>
+        </div>
+
+        <h2 class="modal-title-success">Oh Yeah!</h2>
+
+        <p class="modal-message-success">You have successfully registered and logged in.</p>
+
+        <button id="closeModalBtn" class="modal-button-success">Ok</button>
+      </div>
     </div>
   </div>
 </main>
@@ -874,55 +1412,307 @@
 {% endblock %}
 {% block script %}
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const form = document.querySelector(".php-email-form");
-    const popup = document.getElementById("popup");
-    const closePopup = document.getElementById("closePopup");
-    const userNameSpan = document.getElementById("userName");
+  // Sélection des éléments
+  const modal = document.getElementById('successModal');
+  const closeModalBtn = document.getElementById('closeModalBtn');
+  const form = document.querySelector('.php-email-form');
 
-    form.addEventListener("submit", function (event) {
-      event.preventDefault(); // Empêche l’envoi réel pour cet exemple
+  // Fonction pour afficher le modal
+  function showModal() {
+    modal.classList.add('active');
 
-      // Récupérer le nom saisi dans le champ "name"
-      const nameInput = form.querySelector('input[name="name"]');
-      const userName = nameInput.value.trim();
+    // Réinitialiser les animations en rechargeant les éléments
+    setTimeout(() => {
+      const container = document.querySelector('.success-icon-container');
+      const clone = container.cloneNode(true);
+      container.parentNode.replaceChild(clone, container);
+    }, 100);
+  }
 
-      // Simuler un envoi réussi
-      setTimeout(function () {
-        // Insérer le nom dans le popup
-        userNameSpan.textContent = userName || "cher utilisateur";
+  // Fonction pour masquer le modal
+  function hideModal() {
+    modal.classList.remove('active');
+  }
 
-        // Afficher le popup avec effet fluide
-        popup.classList.add("active");
+  // Fermer le modal en cliquant en dehors
+  modal.addEventListener('click', function (event) {
+    if (event.target === modal) {
+      hideModal();
+    }
+  });
 
-        // Réinitialiser le formulaire
-        form.reset();
+  // Fonction pour afficher le modal avec des paramètres personnalisés
+  function showSuccessModal(options = {}) {
+    const { title, message, buttonText } = options;
 
-        // Fermer automatiquement après 3 secondes
-        setTimeout(function () {
-          popup.classList.remove("active");
-          setTimeout(function () {
-            popup.style.display = "none"; // Cache après la transition
-          }, 400); // Correspond à la durée de la transition CSS
-        }, 3000); // 3 secondes
-      }, 1000); // Délai de 1 seconde pour simuler l’envoi
+    if (title) {
+      document.querySelector('.modal-title-success').textContent = title;
+    }
+
+    if (message) {
+      document.querySelector('.modal-message-success').textContent = message;
+    }
+
+    if (buttonText) {
+      document.querySelector('.modal-button-success').textContent = buttonText;
+    }
+
+    showModal();
+  }
+
+  // Écouteur d'événement pour le bouton fermer du modal
+  closeModalBtn.addEventListener('click', hideModal);
+
+  // Déclenchement du modal à la soumission du formulaire
+  form.addEventListener('submit', function (event) {
+    event.preventDefault(); // Empêche le rechargement de la page
+
+    // Afficher le modal personnalisé à la soumission
+    showSuccessModal({
+      title: 'Message envoyé',
+      message: 'Votre message a été envoyé avec succès !',
+      buttonText: 'Fermer'
     });
 
-    // Fermer manuellement avec le bouton
-    closePopup.addEventListener("click", function () {
-      popup.classList.remove("active");
-      setTimeout(function () {
-        popup.style.display = "none";
-      }, 400); // Correspond à la durée de la transition CSS
-    });
+    // Fermer automatiquement après 5 secondes (5000 ms)
+    setTimeout(() => {
+      hideModal();
+    }, 5000);
 
-    // Fermer en cliquant à l’extérieur
-    popup.addEventListener("click", function (event) {
-      if (event.target === popup) {
-        popup.classList.remove("active");
-        setTimeout(function () {
-          popup.style.display = "none";
-        }, 400); // Correspond à la durée de la transition CSS
+    // Réinitialiser le formulaire après l'envoi
+    form.reset();
+  });
+
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // Carousel configuration
+    const config = {
+      slides: [
+        '/static/general/images/plateau.jpg',
+        '/static/general/images/plateau.jpg',
+        '/static/general/images/plateau.jpg'
+      ],
+      interval: 8000, // 8 seconds
+      transitionDuration: 700 // 700ms
+    };
+
+    // Carousel state
+    let currentSlide = 0;
+    let isAnimating = false;
+    let direction = 'right';
+    let intervalId = null;
+
+    // DOM elements
+    const carousel = document.getElementById('carousel');
+    const prevButton = document.getElementById('prevButton');
+    const nextButton = document.getElementById('nextButton');
+    const indicators = document.getElementById('indicators');
+
+    // Initialize carousel
+    function initCarousel() {
+      // Create slides
+      config.slides.forEach((slide, index) => {
+        const slideElement = document.createElement('div');
+        slideElement.className = `carousel-slide ${index === 0 ? 'active' : index === 1 ? 'next' : 'hidden'}`;
+        slideElement.innerHTML = `
+          <div class="carousel-overlay"></div>
+          <img src="${slide}" alt="Slide ${index + 1}" class="carousel-image">
+        `;
+        carousel.appendChild(slideElement);
+      });
+
+      // Create indicators
+      config.slides.forEach((_, index) => {
+        const indicator = document.createElement('button');
+        indicator.className = `carousel-indicator ${index === 0 ? 'active' : ''}`;
+        indicator.setAttribute('aria-label', `Go to slide ${index + 1}`);
+        indicator.addEventListener('click', () => goToSlide(index));
+        indicators.appendChild(indicator);
+      });
+
+      // Add event listeners
+      prevButton.addEventListener('click', prevSlide);
+      nextButton.addEventListener('click', nextSlide);
+
+      // Start automatic slideshow
+      startSlideshow();
+    }
+
+    // Get all slides
+    function getSlides() {
+      return Array.from(document.querySelectorAll('.carousel-slide'));
+    }
+
+    // Get all indicators
+    function getIndicators() {
+      return Array.from(document.querySelectorAll('.carousel-indicator'));
+    }
+
+    // Get previous slide index
+    function getPrevSlideIndex(current) {
+      return current === 0 ? config.slides.length - 1 : current - 1;
+    }
+
+    // Get next slide index
+    function getNextSlideIndex(current) {
+      return current === config.slides.length - 1 ? 0 : current + 1;
+    }
+
+    // Update slide classes based on their position
+    function updateSlideClasses() {
+      const slides = getSlides();
+      const prevIndex = getPrevSlideIndex(currentSlide);
+      const nextIndex = getNextSlideIndex(currentSlide);
+
+      slides.forEach((slide, index) => {
+        // Remove all position classes
+        slide.classList.remove('active', 'prev', 'next', 'hidden');
+
+        // Add appropriate position class
+        if (index === currentSlide) {
+          slide.classList.add('active');
+        } else if (direction === 'right' && index === prevIndex) {
+          slide.classList.add('prev');
+        } else if (direction === 'left' && index === nextIndex) {
+          slide.classList.add('prev');
+        } else if (direction === 'right' && index === nextIndex) {
+          slide.classList.add('next');
+        } else if (direction === 'left' && index === prevIndex) {
+          slide.classList.add('next');
+        } else {
+          slide.classList.add('hidden');
+        }
+      });
+    }
+
+    // Update indicator classes
+    function updateIndicators() {
+      const indicatorElements = getIndicators();
+
+      indicatorElements.forEach((indicator, index) => {
+        if (index === currentSlide) {
+          indicator.classList.add('active');
+        } else {
+          indicator.classList.remove('active');
+        }
+      });
+    }
+
+    // Go to previous slide
+    function prevSlide() {
+      if (isAnimating) return;
+
+      isAnimating = true;
+      direction = 'left';
+      currentSlide = getPrevSlideIndex(currentSlide);
+
+      updateSlideClasses();
+      updateIndicators();
+
+      // Reset animation flag after transition
+      setTimeout(() => {
+        isAnimating = false;
+      }, config.transitionDuration);
+
+      // Restart slideshow
+      restartSlideshow();
+    }
+
+    // Go to next slide
+    function nextSlide() {
+      if (isAnimating) return;
+
+      isAnimating = true;
+      direction = 'right';
+      currentSlide = getNextSlideIndex(currentSlide);
+
+      updateSlideClasses();
+      updateIndicators();
+
+      // Reset animation flag after transition
+      setTimeout(() => {
+        isAnimating = false;
+      }, config.transitionDuration);
+
+      // Restart slideshow
+      restartSlideshow();
+    }
+
+    // Go to specific slide
+    function goToSlide(index) {
+      if (isAnimating || index === currentSlide) return;
+
+      isAnimating = true;
+      direction = index > currentSlide ? 'right' : 'left';
+      currentSlide = index;
+
+      updateSlideClasses();
+      updateIndicators();
+
+      // Reset animation flag after transition
+      setTimeout(() => {
+        isAnimating = false;
+      }, config.transitionDuration);
+
+      // Restart slideshow
+      restartSlideshow();
+    }
+
+    // Start automatic slideshow
+    function startSlideshow() {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+
+      intervalId = setInterval(() => {
+        if (!isAnimating) {
+          direction = 'right';
+          currentSlide = getNextSlideIndex(currentSlide);
+
+          updateSlideClasses();
+          updateIndicators();
+
+          isAnimating = true;
+          setTimeout(() => {
+            isAnimating = false;
+          }, config.transitionDuration);
+        }
+      }, config.interval);
+    }
+
+    // Restart slideshow
+    function restartSlideshow() {
+      clearInterval(intervalId);
+      startSlideshow();
+    }
+
+    // Initialize the carousel
+    initCarousel();
+  });
+</script>
+<script>
+  // Sélectionner tous les liens dans les icon-boxes
+  const links = document.querySelectorAll('.icon-box-link');
+
+  // Ajouter un écouteur d'événement à chaque lien
+  links.forEach(link => {
+    link.addEventListener('click', function(event) {
+      // Empêcher le comportement par défaut du lien
+      event.preventDefault();
+      
+      // Récupérer l'ID de la section cible à partir de l'attribut href
+      const targetId = this.getAttribute('href').substring(1); // Supprime le '#'
+      
+      // Sélectionner la section cible
+      const targetSection = document.getElementById(targetId);
+      
+      // Faire défiler vers la section avec un effet fluide
+      if (targetSection) {
+        targetSection.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
       }
     });
   });
