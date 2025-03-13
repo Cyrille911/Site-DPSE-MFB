@@ -8,11 +8,14 @@ import os
 
 def user_directory_path(instance, filename):
     
-    return os.path.join('users', 'media', 'profiles', filename)
+    return os.path.join('user', 'media', 'profiles', filename)
 
 class User(AbstractUser):
     ROLE_CHOICES = (
         ('membre', 'Membre'),
+        ('point_focal', 'Point Focal'),
+        ('responsable', 'Responsable'),
+        ('cabinet', 'Cabinet MFB'),
         ('visiteur', 'Visiteur'),
     )
 
@@ -32,7 +35,7 @@ class User(AbstractUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']  # Aucun autre champ obligatoire pour le superutilisateur
 
-    role = models.CharField(max_length=10, choices=ROLE_CHOICES)  # Rôle de l'utilisateur
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES)  # Rôle de l'utilisateur
     phone_number = models.CharField(max_length=50, blank=True, null=True)
     photo = models.ImageField(upload_to=user_directory_path, blank=True, null=True)
     

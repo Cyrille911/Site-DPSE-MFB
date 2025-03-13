@@ -1,66 +1,355 @@
-{% extends 'index.html' %}
+<!DOCTYPE html>
+<html lang="fr">
 
-{% block title %}Foire Aux Questions (FAQ) - Ministère des Finances et du Budget de la Côte d'Ivoire{% endblock %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modal de Succès avec Animation de Dessin</title>
+    <style>
+        /* Styles de base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-{% block content %}
-    <div class="container mt-5">
-        <h2 class="text-center text-primary">Foire Aux Questions (FAQ)</h2>
-        <p class="text-center">
-            Le Ministère des Finances et du Budget de la Côte d'Ivoire vous invite à échanger sur les enjeux liés à la gestion des finances publiques et à poser vos questions sur nos initiatives en matière de statistiques économiques.
-        </p>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: #f5f5f5;
+        }
 
-        <!-- Onglets -->
-        <ul class="nav nav-tabs" id="faqTab" role="tablist">
-            <li class="nav-item" role="presentation">
-                <a class="nav-link active" id="questions-courantes-tab" data-bs-toggle="tab" href="#questions-courantes" role="tab" aria-controls="questions-courantes" aria-selected="true">Questions Courantes</a>
-            </li>
-        </ul>
+        button {
+            cursor: pointer;
+        }
 
-        <!-- Contenu des Onglets -->
-        <div class="tab-content mt-4" id="faqTabContent">
-            <!-- Onglet Questions Courantes -->
-            <div class="tab-pane fade show active" id="questions-courantes" role="tabpanel" aria-labelledby="questions-courantes-tab">
-                <h4>Questions fréquemment posées</h4>
-                <div class="accordion" id="faqAccordion">
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="headingOne">
-                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                                Quelles sont les priorités du Ministère des Finances et du Budget de la Côte d'Ivoire ?
-                            </button>
-                        </h2>
-                        <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body">
-                                Le Ministère des Finances et du Budget se concentre sur la gestion prudente des finances publiques, la transparence, et la mise en œuvre de politiques fiscales qui soutiennent la croissance durable.
-                            </div>
-                        </div>
-                    </div>
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="headingTwo">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                                Comment le MFB collecte-t-il les données économiques ?
-                            </button>
-                        </h2>
-                        <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body">
-                                Le MFB utilise des méthodes statistiques rigoureuses, incluant les enquêtes, les rapports financiers, et la collecte de données administratives pour suivre les indicateurs économiques clés.
-                            </div>
-                        </div>
-                    </div>
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="headingThree">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-                                Comment les citoyens peuvent-ils suivre les finances publiques ?
-                            </button>
-                        </h2>
-                        <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body">
-                                Le MFB rend accessible ses rapports et données financières via son site web, ainsi que des plateformes de transparence pour garantir un suivi direct par la population.
-                            </div>
-                        </div>
-                    </div>
+        /* Styles du modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-container-success {
+            background-color: white;
+            border-radius: 24px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+            margin: 0 16px;
+            overflow: hidden;
+            transform: scale(0.95);
+            opacity: 0;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+                opacity 0.3s ease;
+        }
+
+        .modal-overlay.active .modal-container-success {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        .modal-content-success {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        /* Container pour l'animation du logo */
+        .success-icon-container {
+            width: 100px;
+            height: 100px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+
+        /* SVG pour le cercle qui se dessine */
+        .success-circle-svg {
+            width: 100px;
+            height: 100px;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        /* Animation du cercle - se dessine progressivement */
+        .success-circle {
+            stroke: #22c55e;
+            stroke-width: 4;
+            fill: none;
+            stroke-dasharray: 283;
+            /* Circonférence approximative du cercle (2*PI*r) */
+            stroke-dashoffset: 283;
+            animation: drawCircle 0.4s ease-out forwards;
+            transform-origin: center;
+            transform: rotate(-90deg);
+            stroke-linecap: round;
+        }
+
+        @keyframes drawCircle {
+            0% {
+                stroke-dashoffset: 283;
+                opacity: 0.3;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                stroke-dashoffset: 0;
+                opacity: 1;
+            }
+        }
+
+        /* SVG pour la coche qui se dessine */
+        .success-check-svg {
+            width: 50px;
+            height: 50px;
+            position: relative;
+            z-index: 2;
+            /* Délai pour commencer après que le cercle soit dessiné */
+            opacity: 0;
+            animation: fadeIn 0.01s ease forwards 1s;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Animation de la coche - se dessine progressivement */
+        .success-check {
+            stroke: #22c55e;
+            stroke-width: 6;
+            fill: none;
+            stroke-dasharray: 50;
+            stroke-dashoffset: 50;
+            animation: drawCheck 0.8s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        @keyframes drawCheck {
+            0% {
+                stroke-dashoffset: 50;
+            }
+
+            100% {
+                stroke-dashoffset: 0;
+            }
+        }
+
+        /* Effet de "crayon" qui dessine */
+        .drawing-effect {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #22c55e;
+            filter: blur(2px);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .circle-pen {
+            top: 0;
+            left: 50%;
+            animation: movePenCircle 1.2s linear forwards;
+        }
+
+        @keyframes movePenCircle {
+            0% {
+                opacity: 0.7;
+                transform: rotate(0deg) translateX(45px);
+            }
+
+            100% {
+                opacity: 0.7;
+                transform: rotate(360deg) translateX(45px);
+            }
+        }
+
+        .check-pen {
+            top: 50%;
+            left: 30%;
+            animation: movePenCheck 0.8s linear 1.2s forwards;
+        }
+
+        @keyframes movePenCheck {
+            0% {
+                opacity: 0.7;
+                transform: translate(0, 0);
+            }
+
+            40% {
+                transform: translate(7px, 7px);
+            }
+
+            100% {
+                opacity: 0.7;
+                transform: translate(16px, -8px);
+            }
+        }
+
+        .modal-title-success {
+            font-size: 24px;
+            font-weight: bold;
+            color: #22c55e;
+            margin-bottom: 16px;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: slideUp 0.5s ease forwards 2s;
+        }
+
+        .modal-message-success {
+            color: #4b5563;
+            margin-bottom: 32px;
+            font-size: 18px;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: slideUp 0.5s ease forwards 2.2s;
+        }
+
+        @keyframes slideUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-button-success {
+            background-color: #22c55e;
+            color: white;
+            border: none;
+            padding: 8px 32px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 500;
+            min-width: 100px;
+            transition: background-color 0.2s ease, transform 0.2s ease;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: slideUp 0.5s ease forwards 2.4s;
+        }
+
+        .modal-button-success:hover {
+            background-color: #16a34a;
+            transform: translateY(-2px);
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="demo-container">
+        <h1 class="demo-title">Démo du Modal de Succès</h1>
+        <button id="showModalBtn" class="demo-button">Simuler une inscription réussie</button>
+    </div>
+
+    <div id="successModal" class="modal-overlay">
+        <div class="modal-container-success">
+            <div class="modal-content-success">
+                <div class="success-icon-container">
+                    <!-- Cercle qui se dessine progressivement -->
+                    <svg class="success-circle-svg" viewBox="0 0 100 100">
+                        <circle class="success-circle" cx="50" cy="50" r="45"></circle>
+                    </svg>
+
+                    <!-- Effet visuel du "crayon" qui dessine le cercle -->
+                    <div class="drawing-effect circle-pen"></div>
+
+                    <!-- Coche qui se dessine progressivement -->
+                    <svg class="success-check-svg" viewBox="0 0 50 50">
+                        <path class="success-check" d="M10 25 L20 35 L40 15"></path>
+                    </svg>
+
+                    <!-- Effet visuel du "crayon" qui dessine la coche -->
+                    <div class="drawing-effect check-pen"></div>
                 </div>
-            </div>
 
+                <h2 class="modal-title-success">Oh Yeah!</h2>
+
+                <p class="modal-message-success">You have successfully registered and logged in.</p>
+
+                <button id="closeModalBtn" class="modal-button-success">Ok</button>
+            </div>
         </div>
     </div>
-{% endblock %}
+
+    <script>
+        // Sélection des éléments
+        const modal = document.getElementById('successModal');
+        const showModalBtn = document.getElementById('showModalBtn');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+
+        // Fonction pour afficher le modal
+        function showModal() {
+            modal.classList.add('active');
+
+            // Réinitialiser les animations en rechargeant les éléments
+            setTimeout(() => {
+                const container = document.querySelector('.success-icon-container');
+                const clone = container.cloneNode(true);
+                container.parentNode.replaceChild(clone, container);
+            }, 100);
+        }
+
+        // Fonction pour masquer le modal
+        function hideModal() {
+            modal.classList.remove('active');
+        }
+
+        // Écouteurs d'événements
+        showModalBtn.addEventListener('click', showModal);
+        closeModalBtn.addEventListener('click', hideModal);
+
+        // Fermer le modal en cliquant en dehors
+        modal.addEventListener('click', function (event) {
+            if (event.target === modal) {
+                hideModal();
+            }
+        });
+
+        // Fonction pour afficher le modal avec des paramètres personnalisés
+        function showSuccessModal(options = {}) {
+            const { title, message, buttonText } = options;
+
+            if (title) {
+                document.querySelector('.modal-title-success').textContent = title;
+            }
+
+            if (message) {
+                document.querySelector('.modal-message-success').textContent = message;
+            }
+
+            if (buttonText) {
+                document.querySelector('.modal-button-success').textContent = buttonText;
+            }
+
+            showModal();
+        }
+    </script>
+</body>
+
+</html>

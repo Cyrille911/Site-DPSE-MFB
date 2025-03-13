@@ -63,6 +63,259 @@
   }
 </style>
 <style>
+  /* Styles de base */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    background-color: #f5f5f5;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  /* Styles du modal */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+  }
+
+  .modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .modal-container-success {
+    background-color: white;
+    border-radius: 24px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    width: 100%;
+    margin: 0 16px;
+    overflow: hidden;
+    transform: scale(0.95);
+    opacity: 0;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+      opacity 0.3s ease;
+  }
+
+  .modal-overlay.active .modal-container-success {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  .modal-content-success {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  /* Container pour l'animation du logo */
+  .success-icon-container {
+    width: 100px;
+    height: 100px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+  }
+
+  /* SVG pour le cercle qui se dessine */
+  .success-circle-svg {
+    width: 100px;
+    height: 100px;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  /* Animation du cercle - se dessine progressivement */
+  .success-circle {
+    stroke: #22c55e;
+    stroke-width: 4;
+    fill: none;
+    stroke-dasharray: 283;
+    /* Circonférence approximative du cercle (2*PI*r) */
+    stroke-dashoffset: 283;
+    animation: drawCircle 0.4s ease-out forwards;
+    transform-origin: center;
+    transform: rotate(-90deg);
+    stroke-linecap: round;
+  }
+
+  @keyframes drawCircle {
+    0% {
+      stroke-dashoffset: 283;
+      opacity: 0.3;
+    }
+
+    50% {
+      opacity: 1;
+    }
+
+    100% {
+      stroke-dashoffset: 0;
+      opacity: 1;
+    }
+  }
+
+  /* SVG pour la coche qui se dessine */
+  .success-check-svg {
+    width: 50px;
+    height: 50px;
+    position: relative;
+    z-index: 2;
+    /* Délai pour commencer après que le cercle soit dessiné */
+    opacity: 0;
+    animation: fadeIn 0.01s ease forwards 1s;
+  }
+
+  @keyframes fadeIn {
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* Animation de la coche - se dessine progressivement */
+  .success-check {
+    stroke: #22c55e;
+    stroke-width: 6;
+    fill: none;
+    stroke-dasharray: 50;
+    stroke-dashoffset: 50;
+    animation: drawCheck 0.8s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  @keyframes drawCheck {
+    0% {
+      stroke-dashoffset: 50;
+    }
+
+    100% {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  /* Effet de "crayon" qui dessine */
+  .drawing-effect {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #22c55e;
+    filter: blur(2px);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .circle-pen {
+    top: 0;
+    left: 50%;
+    animation: movePenCircle 1.2s linear forwards;
+  }
+
+  @keyframes movePenCircle {
+    0% {
+      opacity: 0.7;
+      transform: rotate(0deg) translateX(45px);
+    }
+
+    100% {
+      opacity: 0.7;
+      transform: rotate(360deg) translateX(45px);
+    }
+  }
+
+  .check-pen {
+    top: 50%;
+    left: 30%;
+    animation: movePenCheck 0.8s linear 1.2s forwards;
+  }
+
+  @keyframes movePenCheck {
+    0% {
+      opacity: 0.7;
+      transform: translate(0, 0);
+    }
+
+    40% {
+      transform: translate(7px, 7px);
+    }
+
+    100% {
+      opacity: 0.7;
+      transform: translate(16px, -8px);
+    }
+  }
+
+  .modal-title-success {
+    font-size: 24px;
+    font-weight: bold;
+    color: #22c55e;
+    margin-bottom: 16px;
+    opacity: 0;
+    transform: translateY(10px);
+    animation: slideUp 0.5s ease forwards 2s;
+  }
+
+  .modal-message-success {
+    color: #4b5563;
+    margin-bottom: 32px;
+    font-size: 18px;
+    opacity: 0;
+    transform: translateY(10px);
+    animation: slideUp 0.5s ease forwards 2.2s;
+  }
+
+  @keyframes slideUp {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .modal-button-success {
+    background-color: #22c55e;
+    color: white;
+    border: none;
+    padding: 8px 32px;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 500;
+    min-width: 100px;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    opacity: 0;
+    transform: translateY(10px);
+    animation: slideUp 0.5s ease forwards 2.4s;
+  }
+
+  .modal-button-success:hover {
+    background-color: #16a34a;
+    transform: translateY(-2px);
+  }
+</style>
+<style>
   /* Carousel styles */
   .carousel {
     position: absolute;
@@ -1098,10 +1351,35 @@
 
   </section><!-- /Contacts -->
   <!-- Popup de confirmation -->
-  <div class="popup" id="popup">
-    <div class="popup-content">
-      <span class="close-btn" id="closePopup">×</span>
-      <p>Merci <span id="userName"></span> pour votre message !</p>
+
+
+  <div id="successModal" class="modal-overlay">
+    <div class="modal-container-success">
+      <div class="modal-content-success">
+        <div class="success-icon-container">
+          <!-- Cercle qui se dessine progressivement -->
+          <svg class="success-circle-svg" viewBox="0 0 100 100">
+            <circle class="success-circle" cx="50" cy="50" r="45"></circle>
+          </svg>
+
+          <!-- Effet visuel du "crayon" qui dessine le cercle -->
+          <div class="drawing-effect circle-pen"></div>
+
+          <!-- Coche qui se dessine progressivement -->
+          <svg class="success-check-svg" viewBox="0 0 50 50">
+            <path class="success-check" d="M10 25 L20 35 L40 15"></path>
+          </svg>
+
+          <!-- Effet visuel du "crayon" qui dessine la coche -->
+          <div class="drawing-effect check-pen"></div>
+        </div>
+
+        <h2 class="modal-title-success">Oh Yeah!</h2>
+
+        <p class="modal-message-success">You have successfully registered and logged in.</p>
+
+        <button id="closeModalBtn" class="modal-button-success">Ok</button>
+      </div>
     </div>
   </div>
 </main>
@@ -1109,58 +1387,77 @@
 {% endblock %}
 {% block script %}
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const form = document.querySelector(".php-email-form");
-    const popup = document.getElementById("popup");
-    const closePopup = document.getElementById("closePopup");
-    const userNameSpan = document.getElementById("userName");
+  // Sélection des éléments
+  const modal = document.getElementById('successModal');
+  const closeModalBtn = document.getElementById('closeModalBtn');
+  const form = document.querySelector('.php-email-form');
 
-    form.addEventListener("submit", function (event) {
-      event.preventDefault(); // Empêche l’envoi réel pour cet exemple
+  // Fonction pour afficher le modal
+  function showModal() {
+    modal.classList.add('active');
 
-      // Récupérer le nom saisi dans le champ "name"
-      const nameInput = form.querySelector('input[name="name"]');
-      const userName = nameInput.value.trim();
+    // Réinitialiser les animations en rechargeant les éléments
+    setTimeout(() => {
+      const container = document.querySelector('.success-icon-container');
+      const clone = container.cloneNode(true);
+      container.parentNode.replaceChild(clone, container);
+    }, 100);
+  }
 
-      // Simuler un envoi réussi
-      setTimeout(function () {
-        // Insérer le nom dans le popup
-        userNameSpan.textContent = userName || "cher utilisateur";
+  // Fonction pour masquer le modal
+  function hideModal() {
+    modal.classList.remove('active');
+  }
 
-        // Afficher le popup avec effet fluide
-        popup.classList.add("active");
-
-        // Réinitialiser le formulaire
-        form.reset();
-
-        // Fermer automatiquement après 3 secondes
-        setTimeout(function () {
-          popup.classList.remove("active");
-          setTimeout(function () {
-            popup.style.display = "none"; // Cache après la transition
-          }, 400); // Correspond à la durée de la transition CSS
-        }, 3000); // 3 secondes
-      }, 1000); // Délai de 1 seconde pour simuler l’envoi
-    });
-
-    // Fermer manuellement avec le bouton
-    closePopup.addEventListener("click", function () {
-      popup.classList.remove("active");
-      setTimeout(function () {
-        popup.style.display = "none";
-      }, 400); // Correspond à la durée de la transition CSS
-    });
-
-    // Fermer en cliquant à l’extérieur
-    popup.addEventListener("click", function (event) {
-      if (event.target === popup) {
-        popup.classList.remove("active");
-        setTimeout(function () {
-          popup.style.display = "none";
-        }, 400); // Correspond à la durée de la transition CSS
-      }
-    });
+  // Fermer le modal en cliquant en dehors
+  modal.addEventListener('click', function (event) {
+    if (event.target === modal) {
+      hideModal();
+    }
   });
+
+  // Fonction pour afficher le modal avec des paramètres personnalisés
+  function showSuccessModal(options = {}) {
+    const { title, message, buttonText } = options;
+
+    if (title) {
+      document.querySelector('.modal-title-success').textContent = title;
+    }
+
+    if (message) {
+      document.querySelector('.modal-message-success').textContent = message;
+    }
+
+    if (buttonText) {
+      document.querySelector('.modal-button-success').textContent = buttonText;
+    }
+
+    showModal();
+  }
+
+  // Écouteur d'événement pour le bouton fermer du modal
+  closeModalBtn.addEventListener('click', hideModal);
+
+  // Déclenchement du modal à la soumission du formulaire
+  form.addEventListener('submit', function (event) {
+    event.preventDefault(); // Empêche le rechargement de la page
+
+    // Afficher le modal personnalisé à la soumission
+    showSuccessModal({
+      title: 'Message envoyé',
+      message: 'Votre message a été envoyé avec succès !',
+      buttonText: 'Fermer'
+    });
+
+    // Fermer automatiquement après 5 secondes (5000 ms)
+    setTimeout(() => {
+      hideModal();
+    }, 5000);
+
+    // Réinitialiser le formulaire après l'envoi
+    form.reset();
+  });
+
 </script>
 <script>
   document.addEventListener('DOMContentLoaded', function () {

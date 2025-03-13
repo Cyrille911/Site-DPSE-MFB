@@ -1,86 +1,241 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
     {% load static %}
-    <title>Formulaire</title>
+    <title>Inscription</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <!-- Styles CSS -->
-    <link rel="stylesheet" type="text/css" href="{% static 'general/login/vendor/bootstrap/css/bootstrap.min.css' %}">
-    <link rel="stylesheet" type="text/css"
-        href="{% static 'general/login/fonts/Linearicons-Free-v1.0.0/icon-font.min.css' %}">
-    <link rel="stylesheet" type="text/css" href="{% static 'general/login/vendor/animate/animate.css' %}">
-    <link rel="stylesheet" type="text/css" href="{% static 'general/login/vendor/css-hamburgers/hamburgers.min.css' %}">
-    <link rel="stylesheet" type="text/css" href="{% static 'general/login/vendor/animsition/css/animsition.min.css' %}">
-    <link rel="stylesheet" type="text/css" href="{% static 'general/login/vendor/select2/select2.min.css' %}">
-    <link rel="stylesheet" type="text/css"
-        href="{% static 'general/login/vendor/daterangepicker/daterangepicker.css' %}">
-    <link rel="stylesheet" type="text/css" href="{% static 'general/login/css/util.css' %}">
-    <link rel="stylesheet" type="text/css" href="{% static 'general/login/css/main.css' %}">
+    <!-- Styles existants -->
+    <link rel="stylesheet" href="{% static 'general/login/vendor/bootstrap/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'general/login/fonts/Linearicons-Free-v1.0.0/icon-font.min.css' %}">
+    <link rel="stylesheet" href="{% static 'general/login/vendor/animate/animate.css' %}">
+    <link rel="stylesheet" href="{% static 'general/login/vendor/css-hamburgers/hamburgers.min.css' %}">
+    <link rel="stylesheet" href="{% static 'general/login/vendor/animsition/css/animsition.min.css' %}">
+    <link rel="stylesheet" href="{% static 'general/login/vendor/select2/select2.min.css' %}">
+    <link rel="stylesheet" href="{% static 'general/login/vendor/daterangepicker/daterangepicker.css' %}">
+    <link rel="stylesheet" href="{% static 'general/login/css/util.css' %}">
+    <link rel="stylesheet" href="{% static 'general/login/css/main.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+        .limiter {
+            width: 100%;
+            margin: 0 auto;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container-login100 {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            height: 100%;
+            background: none;
+        }
+        .wrap-login100 {
+            background: rgba(239, 240, 240, 0.818); /* Fond gris clair sombre */
+            border: 3px solid #F77F00; /* Bordure orange */
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            max-width: 900px;
+            width: 100%;
+            padding: 30px 40px;
+        }
+        .login100-form-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #F77F00; /* Orange ivoirien */
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* Deux colonnes */
+            gap: 15px;
+        }
+        .form-field {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-field label {
+            font-size: 14px;
+            color: #009E60; /* Vert ivoirien */
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+        .form-field input, .form-field select, .form-field textarea {
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 20px;
+            font-size: 14px;
+            color: #333;
+            background: #fff;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            width: 100%; /* S’assure que les champs prennent toute la largeur */
+        }
+        .form-field input:focus, .form-field select:focus, .form-field textarea:focus {
+            border-color: #F77F00; /* Orange au focus */
+            box-shadow: 0 0 8px rgba(247, 127, 0, 0.3);
+            outline: none;
+        }
+        .form-field .text-danger {
+            font-size: 12px;
+            color: #e74c3c;
+            margin-top: 5px;
+        }
+        .login100-form-btn {
+            background: linear-gradient(45deg, #F77F00, #009E60); /* Gradient orange-vert */
+            border: none;
+            border-radius: 25px;
+            padding: 10px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #FFFFFF;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: block;
+            margin: 15px auto 0;
+        }
+        .login100-form-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(247, 127, 0, 0.4);
+        }
+        /* Styles pour les vidéos */
+        .video-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            transition: opacity 1s ease-in-out;
+        }
+    </style>
 </head>
-
 <body>
+    <!-- Messages -->
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} mt-3" role="alert">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 
-    <!-- Formulaire Django -->
+    <!-- Conteneur pour les vidéos -->
+    <div class="video-container">
+        <video id="bgVideoForward" autoplay muted>
+            <source src="{% static 'videos/ma_video.mp4' %}" type="video/mp4">
+            Votre navigateur ne supporte pas la balise vidéo.
+        </video>
+        <video id="bgVideoReverse" muted>
+            <source src="{% static 'videos/ma_video_reverse.mp4' %}" type="video/mp4">
+            Votre navigateur ne supporte pas la balise vidéo.
+        </video>
+    </div>
+
     <div class="limiter">
-        <div class="container-login100" style="background: linear-gradient(to right, #f77f00, #ffffff, #009e60);">
-            <div class="wrap-login100 p-l-110 p-r-110 p-t-62 p-b-33">
-                <form class="login100-form validate-form flex-sb flex-w" method="POST" enctype="multipart/form-data">
+        <div class="container-login100">
+            <div class="wrap-login100">
+                <form class="login100-form" method="POST" enctype="multipart/form-data">
                     {% csrf_token %}
-
                     <span class="login100-form-title">
-                        Formulaire
+                        {{ title }}
                     </span>
 
-                    <!-- Personnalisation des champs Django -->
-                    {% for field in form %}
-                    <div class="p-t-13 p-b-9">
-                        <span class="txt1">{{ field.label }}</span>
+                    <div class="form-grid">
+                        {% for field in form %}
+                        <div class="form-field">
+                            {{ field.label_tag }} <!-- Utilise label_tag pour générer le label avec l’id -->
+                            {{ field }} <!-- Champ généré par Django -->
+                            {% if field.errors %}
+                            <span class="text-danger">{{ field.errors }}</span>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
                     </div>
-                    <div class="wrap-input100 validate-input">
-                        {{ field }}
-                        <span class="focus-input100"></span>
-                    </div>
-                    {% endfor %}
 
-                    <!-- Bouton de soumission -->
-                    <div class="container-login100-form-btn m-t-17">
-                        <!-- <button class="login100-form-btn" type="submit">Soumettre</button> -->
-                        <a class="login100-form-btn" href="/">Soumettre</a>
-                    </div>
+                    <button class="login100-form-btn" type="submit">
+                        S'inscrire
+                    </button>
                 </form>
             </div>
         </div>
     </div>
 
-    <div id="dropDownSelect1"></div>
+    <!-- Scripts existants -->
+    <script src="{% static 'general/login/vendor/jquery/jquery-3.2.1.min.js' %}"></script>
+    <script src="{% static 'general/login/vendor/animsition/js/animsition.min.js' %}"></script>
+    <script src="{% static 'general/login/vendor/bootstrap/js/popper.js' %}"></script>
+    <script src="{% static 'general/login/vendor/bootstrap/js/bootstrap.min.js' %}"></script>
+    <script src="{% static 'general/login/vendor/select2/select2.min.js' %}"></script>
+    <script src="{% static 'general/login/vendor/daterangepicker/moment.min.js' %}"></script>
+    <script src="{% static 'general/login/vendor/daterangepicker/daterangepicker.js' %}"></script>
+    <script src="{% static 'general/login/vendor/countdowntime/countdowntime.js' %}"></script>
+    <script src="{% static 'general/login/js/main.js' %}"></script>
 
-    <!-- Scripts -->
+    <!-- Gestion des vidéos avec transition -->
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            var hasMessages = document.querySelector('.messages li');
-            if (hasMessages) {
-                var messageModal = new bootstrap.Modal(document.getElementById('messageModal'));
-                messageModal.show();
-                setTimeout(function () {
-                    messageModal.hide();
-                }, 3000);
-            }
+        const videoForward = document.getElementById('bgVideoForward');
+        const videoReverse = document.getElementById('bgVideoReverse');
+        let isForward = true;
+
+        videoForward.style.opacity = 1;
+        videoReverse.style.opacity = 0;
+
+        videoForward.addEventListener('ended', function() {
+            console.log('Vidéo normale finie');
+            videoForward.style.opacity = 0;
+            videoReverse.currentTime = 0;
+            videoReverse.style.opacity = 1;
+            videoReverse.play();
+            isForward = false;
+        });
+
+        videoReverse.addEventListener('ended', function() {
+            console.log('Vidéo inversée finie');
+            videoReverse.style.opacity = 0;
+            videoForward.currentTime = 0;
+            videoForward.style.opacity = 1;
+            videoForward.play();
+            isForward = true;
+        });
+
+        videoForward.play().catch(function(error) {
+            console.log('Erreur autoplay : ', error);
         });
     </script>
 
-    <script src="{% static 'general/login/vendor/jquery/jquery-3.2.1.min.js'%}"></script>
-    <script src="{% static 'general/login/vendor/animsition/js/animsition.min.js'%}"></script>
-    <script src="{% static 'general/login/vendor/bootstrap/js/popper.js'%}"></script>
-    <script src="{% static 'general/login/vendor/bootstrap/js/bootstrap.min.js'%}"></script>
-    <script src="{% static 'general/login/vendor/select2/select2.min.js'%}"></script>
-    <script src="{% static 'general/login/vendor/daterangepicker/moment.min.js'%}"></script>
-    <script src="{% static 'general/login/vendor/daterangepicker/daterangepicker.js'%}"></script>
-    <script src="{% static 'general/login/vendor/countdowntime/countdowntime.js'%}"></script>
-    <script src="{% static 'general/login/js/main.js'%}"></script>
-
+    <!-- Gestion des messages -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var messages = document.querySelectorAll('.alert');
+            messages.forEach(function(message) {
+                setTimeout(function() {
+                    message.style.transition = 'opacity 0.5s';
+                    message.style.opacity = '0';
+                    setTimeout(function() {
+                        message.remove();
+                    }, 500);
+                }, 3000);
+            });
+        });
+    </script>
 </body>
-
 </html>
