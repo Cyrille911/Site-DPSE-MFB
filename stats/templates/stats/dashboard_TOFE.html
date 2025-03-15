@@ -1,0 +1,734 @@
+{% extends 'index-stats.html' %}
+{% load static %}
+{% load table_tags %}
+
+{% block content %}
+<style>
+  #evolution-chart .apexcharts-line-series path {
+      stroke-width: 5px !important;
+      opacity: 1 !important;
+  }
+  #pie-chart, #bar-chart {
+      max-height: 300px;
+  }
+  #dataTable th {
+      cursor: pointer;
+      position: sticky;
+      top: 0;
+      background: #f9ecd1;
+      z-index: 1;
+  }
+  #dataTable th.asc::after {
+      content: ' ↑';
+  }
+  .table-responsive {
+      max-height: 400px;
+      overflow-y: auto;
+  }
+  /* Style des cartes KPI */
+  .card {
+      border: none;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  .card-body {
+      padding: 1rem;
+  }
+  .card-title {
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+  }
+  .card-text {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-bottom: 0.25rem;
+  }
+  .card small {
+      font-size: 0.9rem;
+  }
+  /* Style du tableau */
+  #dataTable {
+      border-collapse: separate;
+      border-spacing: 0;
+      background-color: #FFFFFF;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  #dataTable th {
+      cursor: pointer;
+      position: sticky;
+      top: 0;
+      background-color: #FF6200;
+      color: #FFFFFF;
+      border-bottom: 2px solid #FFFFFF;
+      padding: 10px;
+  }
+  #dataTable th.asc::after {
+      content: ' ↑';
+  }
+  #dataTable td {
+      padding: 8px;
+      border-bottom: 1px solid #F5F5F5;
+  }
+  #dataTable tr:hover {
+      background-color: #FFF5E6;
+  }
+  #dataTable tbody tr:nth-child(even) {
+      background-color: #F9FCF9;
+  }
+  .table-responsive {
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid #009A49;
+      border-radius: 4px;
+  }
+  /* Style de la sidebar */
+  .app-sidebar {
+      background: #ff6200db;
+      color: #FFFFFF !important;
+      transition: all 0.3s ease;
+  }
+  .app-sidebar .sidebar-brand .brand-link {
+      color: #FFFFFF !important;
+  }
+  .app-sidebar .sidebar-brand .brand-link span.brand-text {
+      color: #FFFFFF !important;
+  }
+  .app-sidebar .nav-link {
+      color: #FFFFFF !important;
+  }
+  .app-sidebar .nav-link p {
+      color: #FFFFFF !important;
+  }
+  .app-sidebar .nav-link:hover,
+  .app-sidebar .nav-link.active {
+      color: #FFFFFF !important;
+  }
+  .sidebar-brand {
+      background: #1e7e01;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .sidebar-brand:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 10px rgb(247, 109, 3);
+  }
+  .nav-link {
+      color: #f87511;
+      position: relative;
+      overflow: hidden;
+      transition: background-color 0.3s ease, padding-left 0.3s ease;
+  }
+  .nav-link::after {
+      content: '';
+      position: absolute;
+      left: -100%;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(2, 91, 6, 0.101);
+      transition: left 0.3s ease;
+  }
+  .nav-link:hover, .nav-link.active {
+      background-color: #FF8C00;
+      padding-left: 25px;
+  }
+  .nav-link:hover::after {
+      left: 0;
+  }
+</style>
+
+<!--begin::Sidebar-->
+<aside class="app-sidebar shadow">
+  <div class="sidebar-brand" style="background-color: #FF6200;">
+    <a href="{% url 'dashboard_TOFE' %}" class="brand-link">
+        <img src="{% static 'adminlte/dist/assets/img/DPSE_logo_1 sans arrière plan.png' %}" alt="AdminLTE Logo" class="brand-image" />
+        <span class="brand-text fw-light">Stats MFB</span>
+    </a>
+  </div>
+  <div class="sidebar-wrapper">
+      <nav class="mt-2">
+          <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="menu" data-accordion="false">
+              <li class="nav-item menu-open">
+                  <a href="#" class="nav-link active" style="background-color: #049639;">
+                      <i class="nav-icon bi bi-speedometer"></i>
+                      <p>
+                          Dashboard
+                          <i class="nav-arrow bi bi-chevron-right"></i>
+                      </p>
+                  </a>
+                  <ul class="nav nav-treeview">
+                      <li class="nav-item">
+                          <a href="{% url 'dashboard_TOFE' %}" class="nav-link {% if request.path == '/Statistiques/TOFE/' %}active{% endif %}" style="background-color:#388855">
+                              <i class="nav-icon bi bi-circle"></i>
+                              <p>TOFE</p>
+                          </a>
+                      </li>
+                      <li class="nav-item">
+                          <a href="{% url 'douanes_dashboard' %}" class="nav-link {% if request.path == '/Statistiques/Douanes/' %}active{% endif %}">
+                              <i class="nav-icon bi bi-circle"></i>
+                              <p>Douanes</p>
+                          </a>
+                      </li>
+                      <li class="nav-item">
+                          <a href="{% url 'financements_dashboard' %}" class="nav-link {% if request.path == '/Statistiques/Financements/' %}active{% endif %}">
+                              <i class="nav-icon bi bi-circle"></i>
+                              <p>Financement</p>
+                          </a>
+                      </li>
+                      <li class="nav-item">
+                          <a href="#" class="nav-link">
+                              <i class="nav-icon bi bi-circle"></i>
+                              <p>Marchés publics</p>
+                          </a>
+                      </li>
+                      <li class="nav-item">
+                          <a href="#" class="nav-link">
+                              <i class="nav-icon bi bi-circle"></i>
+                              <p>Suivi du PEF</p>
+                          </a>
+                      </li>
+                  </ul>
+              </li>
+          </ul>
+      </nav>
+  </div>
+</aside>
+<!--end::Sidebar-->
+
+<main class="app-main">
+  <div class="app-content-header">
+      <div class="container-fluid">
+          <div class="row">
+              <div class="col-sm-6"><h3 class="mb-0">Dashboard</h3></div>
+              <div class="col-sm-6">
+                  <ol class="breadcrumb float-sm-end">
+                      <li class="breadcrumb-item"><a href="#">Home</a></li>
+                      <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+                  </ol>
+              </div>
+          </div>
+      </div>
+  </div>
+  <div class="app-content">
+      <div class="row mb-4">
+          <div class="col-md-3">
+              <div class="card text" style="background-color: #dff3e7;">
+                  <div class="card-body">
+                      <h5>Recettes 2023</h5>
+                      <p class="card-text">{{ recettes_2023|floatformat:2 }} Mds FCFA</p>
+                      <small>
+                          {% if evol_recettes > 0 %}
+                              <span class="text-success"><i class="fas fa-arrow-up"></i> +{{ evol_recettes|floatformat:1 }}%</span>
+                          {% elif evol_recettes < 0 %}
+                              <span class="text-danger"><i class="fas fa-arrow-down"></i> {{ evol_recettes|floatformat:1 }}%</span>
+                          {% else %}
+                              <span class="text-warning"><i class="fas fa-minus"></i> 0%</span>
+                          {% endif %}
+                      </small>
+                  </div>
+              </div>
+          </div>
+          <div class="col-md-3">
+              <div class="card text" style="background-color:#dff3e7;">
+                  <div class="card-body">
+                      <h5>Solde 2023</h5>
+                      <p class="card-text">{{ solde_2023|floatformat:2 }} Mds FCFA</p>
+                      <small>
+                          {% if evol_solde > 0 %}
+                              <span class="text-success"><i class="fas fa-arrow-up"></i> +{{ evol_solde|floatformat:1 }}%</span>
+                          {% elif evol_solde < 0 %}
+                              <span class="text-danger"><i class="fas fa-arrow-down"></i> {{ evol_solde|floatformat:1 }}%</span>
+                          {% else %}
+                              <span class="text-warning"><i class="fas fa-minus"></i> 0%</span>
+                          {% endif %}
+                      </small>
+                  </div>
+              </div>
+          </div>
+          <div class="col-md-3">
+              <div class="card text" style="background-color:#dff3e7;">
+                  <div class="card-body">
+                      <h5>Financement Net 2023</h5>
+                      <p class="card-text">{{ financement_net_2023|floatformat:2 }} Mds FCFA</p>
+                      <small>
+                          {% if evol_financement_net > 0 %}
+                              <span class="text-success"><i class="fas fa-arrow-up"></i> +{{ evol_financement_net|floatformat:1 }}%</span>
+                          {% elif evol_financement_net < 0 %}
+                              <span class="text-danger"><i class="fas fa-arrow-down"></i> {{ evol_financement_net|floatformat:1 }}%</span>
+                          {% else %}
+                              <span class="text-warning"><i class="fas fa-minus"></i> 0%</span>
+                          {% endif %}
+                      </small>
+                  </div>
+              </div>
+          </div>
+          <div class="col-md-3">
+              <div class="card text" style="background-color: #dff3e7;">
+                  <div class="card-body">
+                      <h5>Financement Extérieur 2023</h5>
+                      <p class="card-text">{{ financement_ext_2023|floatformat:2 }} Mds FCFA</p>
+                      <small>
+                          {% if evol_financement_ext > 0 %}
+                              <span class="text-success"><i class="fas fa-arrow-up"></i> +{{ evol_financement_ext|floatformat:1 }}%</span>
+                          {% elif evol_financement_ext < 0 %}
+                              <span class="text-danger"><i class="fas fa-arrow-down"></i> {{ evol_financement_ext|floatformat:1 }}%</span>
+                          {% else %}
+                              <span class="text-warning"><i class="fas fa-minus"></i> 0%</span>
+                          {% endif %}
+                      </small>
+                  </div>
+              </div>
+          </div>
+      </div>
+      <div class="row">
+          <div class="row">
+              <div class="col-md-8">
+                  <div class="card mb-4" style="border: 1px solid #FF6200;">
+                      <div class="card-header" style="background-color: #009A49; color: #FFFFFF;">
+                          <h3 class="card-title">Évolution des Indicateurs Financiers (2018-2023)</h3>
+                      </div>
+                      <div class="card-body">
+                          <div class="mb-3">
+                              <label for="variableSelector" class="form-label">Choisir les variables :</label>
+                              <select id="variableSelector" multiple class="form-select" size="6">
+                                  {% for categorie in all_data.keys %}
+                                      <option value="{{ categorie }}" {% if categorie == 'RECETTES' %}selected{% endif %}>{{ categorie }}</option>
+                                  {% endfor %}
+                              </select>
+                              <small class="text-muted">Maintenez Ctrl (ou Cmd) pour sélectionner plusieurs variables.</small>
+                          </div>
+                          <div class="mb-3">
+                              <label for="typeSelector" class="form-label">Type de graphique :</label>
+                              <select id="typeSelector" class="form-select">
+                                  <option value="line" selected>Ligne</option>
+                                  <option value="area">Aire</option>
+                              </select>
+                          </div>
+                          <div id="evolution-chart" style="min-height: 300px;"></div>
+                      </div>
+                  </div>
+              </div>
+              <div class="col-md-4">
+                  <div class="card mb-4" style="border: 1px solid #FF6200;">
+                      <div class="card-header" style="background-color: #009A49; color: #FFFFFF;">
+                          <h3 class="card-title">Répartition (2023)</h3>
+                      </div>
+                      <div class="card-body">
+                          <div class="mb-3">
+                              <label for="pieSelector" class="form-label">Choisir une variable :</label>
+                              <select id="pieSelector" class="form-select">
+                                  {% for categorie in all_data.keys %}
+                                      <option value="{{ categorie }}" {% if categorie == 'RECETTES' %}selected{% endif %}>{{ categorie }}</option>
+                                  {% endfor %}
+                              </select>
+                          </div>
+                          <div id="pie-chart" style="min-height: 300px;"></div>
+                          <div id="bar-chart" style="height: 120px; margin-top: 55px;"></div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+          <div class="row">
+              <div class="col-md-12">
+                  <div class="card mt-4 mb-4" style="border: 1px solid #FF6200;">
+                      <div class="card-header" style="background-color: #009A49; color: #FFFFFF;">
+                          <h3 class="card-title">Histogramme Croisé à Deux Variables</h3>
+                      </div>
+                      <div class="card-body">
+                          <div class="row mb-3">
+                              <div class="col-md-4">
+                                  <label for="xSelector" class="form-label">Variable X :</label>
+                                  <select id="xSelector" class="form-select">
+                                      {% for categorie in all_data.keys %}
+                                          <option value="{{ categorie }}" {% if categorie == 'RECETTES' %}selected{% endif %}>{{ categorie }}</option>
+                                      {% endfor %}
+                                  </select>
+                              </div>
+                              <div class="col-md-4">
+                                  <label for="ySelector" class="form-label">Variable Y :</label>
+                                  <select id="ySelector" class="form-select">
+                                      {% for categorie in all_data.keys %}
+                                          <option value="{{ categorie }}" {% if categorie == 'DÉPENSES TOTALES ET PRETS NET' %}selected{% endif %}>{{ categorie }}</option>
+                                      {% endfor %}
+                                  </select>
+                              </div>
+                              <div class="col-md-4">
+                                  <label for="stackSelector" class="form-label">Type d’affichage :</label>
+                                  <select id="stackSelector" class="form-select">
+                                      <option value="stacked" selected>Empilé</option>
+                                      <option value="grouped">Étalé</option>
+                                  </select>
+                              </div>
+                          </div>
+                          <div id="crossed-histogram" style="min-height: 300px;"></div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+          <div class="row">
+              <div class="col-md-12">
+                  <div class="card mt-4" style="border: 1px solid #FF6200;">
+                      <div class="card-header" style="background-color: #009A49; color: #FFFFFF;">
+                          <h3 class="card-title">Base de Données Complète</h3>
+                      </div>
+                      <div class="card-body">
+                          <div class="mb-3">
+                              <input type="text" id="globalSearch" class="form-control" placeholder="Rechercher dans toutes les colonnes..." style="border-color: #FF6200;">
+                          </div>
+                          <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                              <table id="dataTable" class="table table-hover">
+                                  <thead style="background-color: #FF6200; color: #FFFFFF;">
+                                      <tr>
+                                          <th>Catégorie</th>
+                                          {% for year in years %}
+                                              <th>{{ year }}</th>
+                                          {% endfor %}
+                                      </tr>
+                                  </thead>
+                                  <tbody>
+                                      {% for row in table_data %}
+                                          <tr>
+                                              <td>{{ row.Catégorie }}</td>
+                                              {% for year in years %}
+                                                  <td>{{ row|get_item:year }}</td>
+                                              {% endfor %}
+                                          </tr>
+                                      {% endfor %}
+                                  </tbody>
+                              </table>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+</main>
+
+<footer class="app-footer">
+  <div class="float-end d-none d-sm-inline">Tous droits réservés.</div>
+  <strong>Copyright - Direction de la Planification et du Suivi-Evaluation du MFB Côte d'Ivoire © 2025 <a href="#" class="text-decoration-none">DPSE</a>.</strong>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.10.1/browser/overlayscrollbars.browser.es6.min.js" integrity="sha256-dghWARbRe2eLlIJ56wNB+b760ywulqK3DzZYEpsg2fQ=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
+<script src="{% static 'adminlte/dist/js/adminlte.js' %}"></script>
+<script>
+  const SELECTOR_SIDEBAR_WRAPPER = '.sidebar-wrapper';
+  const Default = {
+    scrollbarTheme: 'os-theme-light',
+    scrollbarAutoHide: 'leave',
+    scrollbarClickScroll: true,
+  };
+  document.addEventListener('DOMContentLoaded', function () {
+    const sidebarWrapper = document.querySelector(SELECTOR_SIDEBAR_WRAPPER);
+    if (sidebarWrapper && typeof OverlayScrollbarsGlobal?.OverlayScrollbars !== 'undefined') {
+      OverlayScrollbarsGlobal.OverlayScrollbars(sidebarWrapper, {
+        scrollbars: {
+          theme: Default.scrollbarTheme,
+          autoHide: Default.scrollbarAutoHide,
+          clickScroll: Default.scrollbarClickScroll,
+        },
+      });
+    }
+  });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js" integrity="sha256-ipiJrswvAR4VAx/th+6zWsdeYmVae0iJuiR+6OqHJHQ=" crossorigin="anonymous"></script>
+<script>
+  const connectedSortables = document.querySelectorAll('.connectedSortable');
+  connectedSortables.forEach((connectedSortable) => {
+    let sortable = new Sortable(connectedSortable, {
+      group: 'shared',
+      handle: '.card-header',
+    });
+  });
+  const cardHeaders = document.querySelectorAll('.connectedSortable .card-header');
+  cardHeaders.forEach((cardHeader) => {
+    cardHeader.style.cursor = 'move';
+  });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.37.1/dist/apexcharts.min.js" integrity="sha256-+vh8GkaU7C9/wbSLIcwq82tQ2wTf44aOHA8HlBMwRI8=" crossorigin="anonymous"></script>
+<script>
+  const allData = {{ all_data|safe }};
+  const labels = {{ chart_labels|safe }};
+  console.log("Toutes les données :", allData);
+  console.log("Labels :", labels);
+
+  function updateEvolutionChart(selectedVariables, chartType) {
+      const series = selectedVariables.map(variable => ({
+          name: variable,
+          data: allData[variable]
+      }));
+      const chartOptions = {
+          series: series,
+          chart: {
+              height: 300,
+              type: chartType,
+              toolbar: { show: true }
+          },
+          colors: ['#FF6200', '#009A49', '#FFD700', '#FF4500', '#1E90FF', '#32CD32', '#8A2BE2', '#FF69B4'],
+          stroke: {
+              curve: 'smooth',
+              width: 4
+          },
+          dataLabels: {
+              enabled: true
+          },
+          xaxis: {
+              categories: labels,
+              type: 'category',
+              title: { text: 'Années' }
+          },
+          yaxis: {
+              title: { text: 'Milliards FCFA' }
+          },
+          legend: {
+              position: 'top'
+          },
+          tooltip: {
+              y: { formatter: function (val) { return val.toFixed(2) + " Mds FCFA"; } }
+          }
+      };
+      if (window.evolutionChart) {
+          window.evolutionChart.updateOptions(chartOptions);
+      } else {
+          window.evolutionChart = new ApexCharts(document.querySelector('#evolution-chart'), chartOptions);
+          window.evolutionChart.render();
+      }
+  }
+
+  function updatePieChart(selectedVariable) {
+      const pieData = allData[selectedVariable];
+      const pieOptions = {
+          series: pieData,
+          chart: {
+              height: 300,
+              type: 'donut'
+          },
+          labels: labels,
+          colors: ['#FF6200', '#009A49', '#FFD700', '#FF4500', '#1E90FF', '#32CD32'],
+          legend: {
+              position: 'bottom'
+          },
+          tooltip: {
+              y: { formatter: function (val) { return val.toFixed(2) + " Mds FCFA"; } }
+          }
+      };
+      if (window.pieChart) {
+          window.pieChart.updateOptions(pieOptions);
+      } else {
+          window.pieChart = new ApexCharts(document.querySelector('#pie-chart'), pieOptions);
+          window.pieChart.render();
+      }
+      updateBarChart(selectedVariable);
+  }
+
+  function updateBarChart(selectedVariable) {
+      const barOptions = {
+          series: [{
+              name: selectedVariable,
+              data: allData[selectedVariable]
+          }],
+          chart: {
+              height: 200,
+              type: 'bar'
+          },
+          plotOptions: {
+              bar: {
+                  horizontal: true,
+                  barHeight: '80%'
+              }
+          },
+          colors: ['#009A49'],
+          dataLabels: {
+              enabled: false
+          },
+          xaxis: {
+              categories: labels,
+              title: { text: 'Milliards FCFA' }
+          },
+          yaxis: {
+              title: { text: 'Années' }
+          },
+          tooltip: {
+              y: { formatter: function (val) { return val.toFixed(2) + " Mds FCFA"; } }
+          }
+      };
+      if (window.barChart) {
+          window.barChart.updateOptions(barOptions);
+      } else {
+          window.barChart = new ApexCharts(document.querySelector('#bar-chart'), barOptions);
+          window.barChart.render();
+      }
+  }
+
+  function updateCrossedHistogram(xVariable, yVariable, stackType) {
+      const series = [
+          { name: xVariable, data: allData[xVariable] },
+          { name: yVariable, data: allData[yVariable] }
+      ];
+      const histOptions = {
+          series: series,
+          chart: {
+              height: 300,
+              type: 'bar',
+              stacked: stackType === 'stacked',
+              toolbar: { show: true }
+          },
+          plotOptions: {
+              bar: {
+                  horizontal: false,
+                  columnWidth: '55%'
+              }
+          },
+          colors: ['#FF6200', '#009A49'],
+          dataLabels: {
+              enabled: false
+          },
+          xaxis: {
+              categories: labels,
+              title: { text: 'Années' }
+          },
+          yaxis: {
+              title: { text: 'Milliards FCFA' }
+          },
+          legend: {
+              position: 'top'
+          },
+          tooltip: {
+              y: { formatter: function (val) { return val.toFixed(2) + " Mds FCFA"; } }
+          }
+      };
+      if (window.crossedHistogram) {
+          window.crossedHistogram.updateOptions(histOptions);
+      } else {
+          window.crossedHistogram = new ApexCharts(document.querySelector('#crossed-histogram'), histOptions);
+          window.crossedHistogram.render();
+      }
+  }
+
+  updateEvolutionChart(['RECETTES'], 'line');
+  updatePieChart('RECETTES');
+  updateCrossedHistogram('RECETTES', 'DÉPENSES TOTALES ET PRETS NET', 'stacked');
+
+  document.getElementById('variableSelector').addEventListener('change', function () {
+      const selectedOptions = Array.from(this.selectedOptions).map(option => option.value);
+      const chartType = document.getElementById('typeSelector').value;
+      updateEvolutionChart(selectedOptions, chartType);
+  });
+
+  document.getElementById('typeSelector').addEventListener('change', function () {
+      const selectedOptions = Array.from(document.getElementById('variableSelector').selectedOptions).map(option => option.value);
+      const chartType = this.value;
+      updateEvolutionChart(selectedOptions, chartType);
+  });
+
+  document.getElementById('pieSelector').addEventListener('change', function () {
+      const selectedVariable = this.value;
+      updatePieChart(selectedVariable);
+  });
+
+  document.getElementById('xSelector').addEventListener('change', function () {
+      const xVariable = this.value;
+      const yVariable = document.getElementById('ySelector').value;
+      const stackType = document.getElementById('stackSelector').value;
+      updateCrossedHistogram(xVariable, yVariable, stackType);
+  });
+
+  document.getElementById('ySelector').addEventListener('change', function () {
+      const xVariable = document.getElementById('xSelector').value;
+      const yVariable = this.value;
+      const stackType = document.getElementById('stackSelector').value;
+      updateCrossedHistogram(xVariable, yVariable, stackType);
+  });
+
+  document.getElementById('stackSelector').addEventListener('change', function () {
+      const xVariable = document.getElementById('xSelector').value;
+      const yVariable = document.getElementById('ySelector').value;
+      const stackType = this.value;
+      updateCrossedHistogram(xVariable, yVariable, stackType);
+  });
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      const table = document.getElementById('dataTable');
+      const rows = Array.from(table.querySelectorAll('tbody tr'));
+      const globalSearch = document.getElementById('globalSearch');
+
+      globalSearch.addEventListener('input', filterTable);
+
+      function filterTable() {
+          const searchText = globalSearch.value.toLowerCase();
+          rows.forEach(row => {
+              const cells = row.querySelectorAll('td');
+              const rowText = Array.from(cells).map(cell => cell.textContent.toLowerCase()).join(' ');
+              const matchesSearch = rowText.includes(searchText);
+              row.style.display = matchesSearch ? '' : 'none';
+          });
+      }
+
+      const headers = table.querySelectorAll('th');
+      headers.forEach((header, index) => {
+          header.addEventListener('click', () => {
+              const isAscending = header.classList.toggle('asc');
+              const columnIndex = index;
+
+              rows.sort((a, b) => {
+                  const aValue = a.cells[columnIndex].textContent;
+                  const bValue = b.cells[columnIndex].textContent;
+                  if (columnIndex === 0) {
+                      return isAscending ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+                  } else {
+                      return isAscending ? parseFloat(aValue) - parseFloat(bValue) : parseFloat(bValue) - parseFloat(aValue);
+                  }
+              });
+
+              rows.forEach(row => table.querySelector('tbody').appendChild(row));
+              headers.forEach(h => h.classList.remove('asc'));
+              header.classList.add('asc');
+          });
+      });
+  });
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.getElementById('navbar-search');
+    const suggestionsList = document.getElementById('search-suggestions');
+    const sidebarLinks = [
+      { label: 'TOFE', url: '{% url "dashboard_TOFE" %}', parentDashboard: 'tofe' },
+      { label: 'Douanes', url: '{% url "douanes_dashboard" %}', parentDashboard: 'douanes' },
+      { label: 'Financements', url: '{% url "financements_dashboard" %}', parentDashboard: 'financements' }
+    ];
+
+    searchInput.addEventListener('input', function () {
+      const searchTerm = this.value.trim().toLowerCase();
+      suggestionsList.innerHTML = '';
+      if (searchTerm.length < 1) {
+        suggestionsList.style.display = 'none';
+        return;
+      }
+      const matches = sidebarLinks.filter(item => item.label.toLowerCase().includes(searchTerm));
+      if (matches.length > 0) {
+        matches.forEach(match => {
+          const li = document.createElement('li');
+          li.textContent = match.label;
+          li.dataset.url = match.url;
+          li.dataset.parentDashboard = match.parentDashboard;
+          li.addEventListener('click', function () {
+            window.location.href = match.url;
+            suggestionsList.style.display = 'none';
+            searchInput.value = match.label;
+          });
+          suggestionsList.appendChild(li);
+        });
+        suggestionsList.style.display = 'block';
+      } else {
+        suggestionsList.style.display = 'none';
+      }
+    });
+  });
+</script>
+{% endblock %}

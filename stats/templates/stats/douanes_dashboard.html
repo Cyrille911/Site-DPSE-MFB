@@ -1,1176 +1,802 @@
+{% extends 'index-stats.html' %}
 {% load static %}
 {% load table_tags %}
-<link rel="stylesheet" href="{% static 'adminlte/plugins/fontawesome-free/css/all.min.css' %}">
-<!doctype html>
-<html lang="en">
-  <!--begin::Head-->
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Dashboard Douanes</title>
-    <!--begin::Primary Meta Tags-->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="title" content="AdminLTE v4 | Dashboard" />
-    <meta name="author" content="ColorlibHQ" />
-    <meta
-      name="description"
-      content="AdminLTE is a Free Bootstrap 5 Admin Dashboard, 30 example pages using Vanilla JS."
-    />
-    <meta
-      name="keywords"
-      content="bootstrap 5, bootstrap, bootstrap 5 admin dashboard, bootstrap 5 dashboard, bootstrap 5 charts, bootstrap 5 calendar, bootstrap 5 datepicker, bootstrap 5 tables, bootstrap 5 datatable, vanilla js datatable, colorlibhq, colorlibhq dashboard, colorlibhq admin dashboard"
-    />
-    <!--end::Primary Meta Tags-->
-    <!--begin::Fonts-->
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@fontsource/source-sans-3@5.0.12/index.css"
-      integrity="sha256-tXJfXfp6Ewt1ilPzLDtQnJV4hclT9XuaZUKyUvmyr+Q="
-      crossorigin="anonymous"
-    />
-    <!--end::Fonts-->
-    <!--begin::Third Party Plugin(OverlayScrollbars)-->
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.10.1/styles/overlayscrollbars.min.css"
-      integrity="sha256-tZHrRjVqNSRyWg2wbppGnT833E/Ys0DHWGwT04GiqQg="
-      crossorigin="anonymous"
-    />
-    <!--end::Third Party Plugin(OverlayScrollbars)-->
-    <!--begin::Third Party Plugin(Bootstrap Icons)-->
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-      integrity="sha256-9kPW/n5nn53j4WMRYAxe9c1rCY96Oogo/MKSVdKzPmI="
-      crossorigin="anonymous"
-    />
-    <!--end::Third Party Plugin(Bootstrap Icons)-->
-    <!--begin::Required Plugin(AdminLTE)-->
-    <link rel="stylesheet" href="{% static 'adminlte/dist/css/adminlte.css' %}" />
-    <link rel="stylesheet" href="{% static 'adminlte/custom.css' %}">
-    <!--end::Required Plugin(AdminLTE)-->
-    <!-- apexcharts -->
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/apexcharts@3.37.1/dist/apexcharts.css"
-      integrity="sha256-4MX+61mt9NVvvuPjUWdUdyfZfxSB1/Rf9WtqRHgG5S0="
-      crossorigin="anonymous"
-    />
-    <!-- jsvectormap -->
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/jsvectormap@1.5.3/dist/css/jsvectormap.min.css"
-      integrity="sha256-+uGLJmmTKOqBr+2E6KDYs/NRsHxSkONXFHUL0fy2O/4="
-      crossorigin="anonymous"
-    />
-    <style>
-      #evolution-chart .apexcharts-line-series path {
-          stroke-width: 5px !important;
-          opacity: 1 !important;
-      }
-      #pie-chart, #bar-chart {
-          max-height: 300px;
-      }
-      #dataTable th {
-          cursor: pointer;
-          position: sticky;
-          top: 0;
-          background: #f9ecd1;
-          z-index: 1;
-      }
-      #dataTable th.asc::after {
-          content: ' ↑';
-      }
-      .table-responsive {
-          max-height: 400px;
-          overflow-y: auto;
-      }
-      /* Style des cartes KPI */
-      .card {
-          border: none;
-          border-radius: 8px;
-          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-      }
-      .card-body {
-          padding: 1rem;
-      }
-      .card-title {
-          font-size: 1.1rem;
-          margin-bottom: 0.5rem;
-      }
-      .card-text {
-          font-size: 1.5rem;
-          font-weight: bold;
-          margin-bottom: 0.25rem;
-      }
-      .card small {
-          font-size: 0.9rem;
-      }
-      .search-container {
-        width: 300px; /* Largeur fixe, ajustable selon tes besoins */
-        }
 
-    #navbar-search {
-        width: 100%; /* Prend toute la largeur du conteneur */
-        }
-    #search-suggestions {
-        position: absolute;
-        top: 100%;
-        left: 0;
-        z-index: 1000;
-        background-color: #fff;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        padding: 0;
-        margin: 0;
-        width: 100%;
-        }
+{% block title %}Dashboard Douanes{% endblock %}
 
-    #search-suggestions li {
-        list-style: none;
-        padding: 8px 12px;
-        cursor: pointer;
-        }
-
-    #search-suggestions li:hover {
-        background-color: #f8f9fa;
-        }
-      /* Style du tableau */
-    #dataTable {
-        border-collapse: separate;
-        border-spacing: 0;
-        background-color: #FFFFFF; /* Fond blanc */
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    }
-    #dataTable th {
-        cursor: pointer;
-        position: sticky;
-        top: 0;
-        background-color: #FF6200; /* Orange pour en-têtes */
-        color: #FFFFFF;
-        border-bottom: 2px solid #FFFFFF; /* Séparation blanche */
-        padding: 10px;
-    }
-    #dataTable th.asc::after {
-        content: ' ↑';
-    }
-    #dataTable td {
-        padding: 8px;
-        border-bottom: 1px solid #F5F5F5; /* Gris clair subtil */
-    }
-    #dataTable tr:hover {
-        background-color: #FFF5E6; /* Nuance orange pâle au survol */
-    }
-    #dataTable tbody tr:nth-child(even) {
-        background-color: #F9FCF9; /* Nuance verte très pâle pour alternance */
-    }
-    .table-responsive {
-        max-height: 400px;
-        overflow-y: auto;
-        border: 1px solid #009A49; /* Bordure verte */
-        border-radius: 4px;
-    }
-    /* Style de la sidebar */
-    .app-sidebar {
-    background: #ff6200db; /* Dégradé vert */
-    color: #FFFFFF !important;
-    transition: all 0.3s ease; /* Transition fluide pour les changements */
-    }
-    .app-sidebar .sidebar-brand .brand-link {
-    color: #FFFFFF !important; /* Blanc pour le texte du brand */
-    }
-
-    .app-sidebar .sidebar-brand .brand-link span.brand-text {
-    color: #FFFFFF !important; /* Cible spécifiquement le span */
-    }
-
-    .app-sidebar .nav-link {
-    color: #FFFFFF !important; /* Blanc pour les liens */
-    }
-
-    .app-sidebar .nav-link p {
-    color: #FFFFFF !important; /* Blanc pour le texte dans les <p> */
-    overflow: visible !important;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    max-width: 180px; /* Réduit légèrement pour tester */
-    position: relative; /* Assure un positionnement correct */
-    padding-right: 10px; /* Évite que le texte colle au bord */
-    }
-    .app-sidebar .nav-link p {
-    display: flex; /* Utilise flexbox pour aligner texte et flèche */
-    align-items: center; /* Centre verticalement */
-    justify-content: space-between; /* Met la flèche à droite avec un espace naturel */
-    width: 100%; /* Assure que le <p> prend toute la largeur disponible */
-    }
-
-    .nav-arrow {
-    margin-left: 10px; /* Ajoute un espace à gauche de la flèche */
-    }
-    /* Ajuster la distance de l’infobulle */
-    .tooltip {
-    z-index: 1050; /* S’assure qu’elle est au-dessus des autres éléments */
-    }
-
-    .tooltip .tooltip-inner {
-    max-width: 300px; /* Limite la largeur de l’infobulle */
-    padding: 5px 10px; /* Réduit le padding pour la rapprocher */
-    }
-
-
-    .app-sidebar .nav-link:hover,
-    .app-sidebar .nav-link.active {
-    color: #FFFFFF !important; /* Blanc au survol et actif */
-    }
-    .sidebar-brand {
-    background: #1e7e01;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .sidebar-brand:hover {
-    transform: scale(1.05); /* Légère expansion */
-    box-shadow: 0 4px 10px rgb(247, 109, 3); /* Ombre au survol */
-    }
-
-    .nav-link {
-    color: #f87511;
-    position: relative;
-    overflow: hidden;
-    transition: background-color 0.3s ease, padding-left 0.3s ease;
-    }
-
-    .nav-link::after {
-    content: '';
-    position: absolute;
-    left: -100%;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(2, 91, 6, 0.101); /* Survol orange translucide */
-    transition: left 0.3s ease;
-    }
-
-    .nav-link:hover, .nav-link.active {
-    background-color: #FF8C00;
-    padding-left: 25px; /* Décalage à gauche au survol */
-    }
-
-    .nav-link:hover::after {
-    left: 0; /* Glissement de l’effet */
-    }
-    /* Style de la navbar */
-    .app-header {
-        background-color: #FF6200; /* Orange pour la barre */
-        color: #FFFFFF;
-        border-bottom: 2px solid #FFFFFF; /* Séparation subtile */
-    }
-    .app-header .nav-link {
-        color: #FFFFFF;
-    }
-    .app-header .nav-link:hover {
-        background-color: #FF8C00; /* Orange moyen au survol */
-    }
-    .app-header .navbar-badge {
-        background-color: #FFFFFF; /* Badge blanc pour contraste */
-        color: #FF6200; /* Texte orange */
-    }
-    .app-header .dropdown-menu {
-        background-color: #FFFFFF; /* Fond blanc pour dropdowns */
-        color: #000000;
-    }
-    .app-header .dropdown-item:hover {
-        background-color: #FFF5E6; /* Orange pâle au survol */
-    }
-    /* Animation pour le conteneur du graphique */
-    #crossed-histogram {
-    overflow: hidden; /* Évite les débordements pendant l’animation */
-    }
-
-    /* Classe temporaire pour l’animation d’entrée */
-    .slide-from-left {
-    animation: slideFromLeft 0.5s ease-out forwards;
-    }
-
-    @keyframes slideFromLeft {
-    0% {
-        transform: translateX(-100%); /* Départ à gauche, hors écran */
-        opacity: 0;
-    }
-    100% {
-        transform: translateX(0); /* Arrivée à la position normale */
-        opacity: 1;
-    }
-    }
+{% block content %}
+<style>
+  #evolution-chart .apexcharts-line-series path {
+      stroke-width: 5px !important;
+      opacity: 1 !important;
+  }
+  #pie-chart, #bar-chart {
+      max-height: 300px;
+  }
+  #dataTable th {
+      cursor: pointer;
+      position: sticky;
+      top: 0;
+      background: #f9ecd1;
+      z-index: 1;
+  }
+  #dataTable th.asc::after {
+      content: ' ↑';
+  }
+  .table-responsive {
+      max-height: 400px;
+      overflow-y: auto;
+  }
+  /* Style des cartes KPI */
+  .card {
+      border: none;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  .card-body {
+      padding: 1rem;
+  }
+  .card-title {
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+  }
+  .card-text {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-bottom: 0.25rem;
+  }
+  .card small {
+      font-size: 0.9rem;
+  }
+  /* Style du tableau */
+  #dataTable {
+      border-collapse: separate;
+      border-spacing: 0;
+      background-color: #FFFFFF;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  #dataTable th {
+      cursor: pointer;
+      position: sticky;
+      top: 0;
+      background-color: #FF6200;
+      color: #FFFFFF;
+      border-bottom: 2px solid #FFFFFF;
+      padding: 10px;
+  }
+  #dataTable th.asc::after {
+      content: ' ↑';
+  }
+  #dataTable td {
+      padding: 8px;
+      border-bottom: 1px solid #F5F5F5;
+  }
+  #dataTable tr:hover {
+      background-color: #FFF5E6;
+  }
+  #dataTable tbody tr:nth-child(even) {
+      background-color: #F9FCF9;
+  }
+  .table-responsive {
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid #009A49;
+      border-radius: 4px;
+  }
+  /* Style de la sidebar */
+  .app-sidebar {
+      background: #ff6200db;
+      color: #FFFFFF !important;
+      transition: all 0.3s ease;
+  }
+  .app-sidebar .sidebar-brand .brand-link {
+      color: #FFFFFF !important;
+  }
+  .app-sidebar .sidebar-brand .brand-link span.brand-text {
+      color: #FFFFFF !important;
+  }
+  .app-sidebar .nav-link {
+      color: #FFFFFF !important;
+  }
+  .app-sidebar .nav-link p {
+      color: #FFFFFF !important;
+      overflow: visible !important;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      max-width: 180px;
+      position: relative;
+      padding-right: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+  }
+  .nav-arrow {
+      margin-left: 10px;
+  }
+  .tooltip .tooltip-inner {
+      max-width: 300px;
+      padding: 5px 10px;
+  }
+  .app-sidebar .nav-link:hover,
+  .app-sidebar .nav-link.active {
+      color: #FFFFFF !important;
+  }
+  .sidebar-brand {
+      background: #1e7e01;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .sidebar-brand:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 10px rgb(247, 109, 3);
+  }
+  .nav-link {
+      color: #f87511;
+      position: relative;
+      overflow: hidden;
+      transition: background-color 0.3s ease, padding-left 0.3s ease;
+  }
+  .nav-link::after {
+      content: '';
+      position: absolute;
+      left: -100%;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(2, 91, 6, 0.101);
+      transition: left 0.3s ease;
+  }
+  .nav-link:hover, .nav-link.active {
+      background-color: #FF8C00;
+      padding-left: 25px;
+  }
+  .nav-link:hover::after {
+      left: 0;
+  }
+  /* Animation pour histogramme croisé */
+  #crossed-histogram {
+      overflow: hidden;
+  }
+  .slide-from-left {
+      animation: slideFromLeft 0.5s ease-out forwards;
+  }
+  @keyframes slideFromLeft {
+      0% { transform: translateX(-100%); opacity: 0; }
+      100% { transform: translateX(0); opacity: 1; }
+  }
 </style>
-  </head>
-  <!--end::Head-->
-  <!--begin::Body-->
-  <body class="layout-fixed sidebar-expand-lg bg-body-tertiary">
-    <!--begin::App Wrapper-->
-    <div class="app-wrapper">
-      <!--begin::Header-->
-      <nav class="app-header navbar navbar-expand" style="background-color: #FF6200; color: #FFFFFF;">
-        <!--begin::Container-->
-        <div class="container-fluid">
-          <!--begin::Start Navbar Links-->
-          <ul class="navbar-nav">
-            <li class="nav-item">
-              <a class="nav-link" data-lte-toggle="sidebar" href="#" role="button">
-                <i class="bi bi-list"></i>
-              </a>
-            </li>
-            <li class="nav-item d-none d-md-block"><a href="{% url 'accueil' %}" class="nav-link">Page d'accueil</a></li>
-          </ul>
-          <!--end::Start Navbar Links-->
-          <!--begin::End Navbar Links-->
-          <!-- Ajouter le champ de recherche à droite -->
-          <ul class="navbar-nav ms-auto">
-            <li class="nav-item position-relative search-container">
-              <form id="navbar-search-form">
-                <input class="form-control" type="search" id="navbar-search" placeholder="Rechercher un tableau..." aria-label="Search">
-                <ul id="search-suggestions" class="dropdown-menu" style="display: none; width: 100%; max-height: 200px; overflow-y: auto;"></ul>
-              </form>
-            </li>
-          </ul>
-          <ul class="navbar-nav ms-auto">
 
-            <!--begin::Fullscreen Toggle-->
-            <li class="nav-item">
-              <a class="nav-link" href="#" data-lte-toggle="fullscreen">
-                <i data-lte-icon="maximize" class="bi bi-arrows-fullscreen"></i>
-                <i data-lte-icon="minimize" class="bi bi-fullscreen-exit" style="display: none"></i>
-              </a>
-            </li>
-            <!--end::Fullscreen Toggle-->
-            <!--begin::User Menu Dropdown-->
-            <li class="nav-item dropdown user-menu">
-              <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
-                <img
-                  src="{% static 'adminlte/dist/assets/img/istockphoto-1337144146-612x612.jpg' %}"
-                  class="user-image rounded-circle shadow"
-                  alt="User Image"
-                />
-                <span class="d-none d-md-inline">DPSE admin</span>
-              </a>
-              <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
-                <!--begin::User Image-->
-                <li class="user-header text-bg-primary">
-                    <img
-                    src="{% static 'adminlte\dist\assets\img\istockphoto-1337144146-612x612.jpg' %}"
-                    class="rounded-circle shadow"
-                    alt="User Image"
-                  />
-                  <p>
-                    Test user - DPSE
-                  </p>
-                </li>
-                <!--end::User Image-->
-
-                <!--begin::Menu Footer-->
-                <li class="user-footer">
-                  <a href="#" class="btn btn-default btn-flat">Profil</a>
-                  <a href="#" class="btn btn-default btn-flat float-end">Se déconnecter</a>
-                </li>
-                <!--end::Menu Footer-->
-              </ul>
-            </li>
-            <!--end::User Menu Dropdown-->
-          </ul>
-          <!--end::End Navbar Links-->
-        </div>
-        <!--end::Container-->
-      </nav>
-      <!--end::Header-->
-      <!--begin::Sidebar-->
-<!-- Sidebar -->
-<aside class="app-sidebar shadow"> <!-- Retire style="background-color: #009A49; color: #FFFFFF;" -->
-  <!-- Sidebar Brand -->
+<!--begin::Sidebar-->
+<aside class="app-sidebar shadow">
   <div class="sidebar-brand" style="background-color: #FF6200;">
-      <a href="#" class="brand-link">
-          <img
-              src="{% static 'adminlte/dist/assets/img/DPSE_logo_1 sans arrière plan.png' %}"
-              alt="AdminLTE Logo"
-              class="brand-image"
-          />
-          <span class="brand-text fw-light">Dashboard DPSE</span>
+      <a href="{% url 'dashboard_TOFE' %}" class="brand-link">
+          <img src="{% static 'adminlte/dist/assets/img/DPSE_logo_1 sans arrière plan.png' %}" alt="AdminLTE Logo" class="brand-image" />
+          <span class="brand-text fw-light">Stats MFB</span>
       </a>
   </div>
-  <!-- Sidebar Wrapper -->
   <div class="sidebar-wrapper">
       <nav class="mt-2">
-          <ul
-              class="nav sidebar-menu flex-column"
-              data-lte-toggle="treeview"
-              role="menu"
-              data-accordion="false"
-          >
-              <!-- Ton contenu de menu existant reste inchangé -->
+          <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="menu" data-accordion="false">
               <li class="nav-item menu-open">
                   <a href="#" class="nav-link active" style="background-color: #049639;">
                       <i class="nav-icon bi bi-speedometer"></i>
-                      <p>
-                          Dashboard
-                          <i class="nav-arrow bi bi-chevron-right"></i>
-                      </p>
+                      <p>Dashboard <i class="nav-arrow bi bi-chevron-right"></i></p>
                   </a>
                   <ul class="nav nav-treeview">
                       <li class="nav-item">
-                        <a href="{% url 'dashboard' %}" class="nav-link {% if request.path == '/stats/dashboard/' %}active{% endif %}">
+                          <a href="{% url 'dashboard_TOFE' %}" class="nav-link {% if request.path == '/Statistiques/TOFE/' %}active{% endif %}">
                               <i class="nav-icon bi bi-circle"></i>
                               <p>TOFE</p>
                           </a>
-                  <li class="nav-item {% if request.path == '/stats/financements_dashboard/' %}menu-open{% endif %}">
-                    <a href="{% url 'douanes_dashboard' %}" class="nav-link {% if request.path == '/stats/douanes_dashboard/' %}active{% endif %}" id="douanes-toggle" style="background-color:#388855">
-                      <i class="nav-icon bi bi-circle"></i>
-                      <p>
-                        Douanes<i class="nav-arrow bi bi-chevron-right"></i>
-                      </p>
-                    </a>
-                    <ul class="nav nav-treeview">
-                      {% for tableau in tableaux %}
-                        <li class="nav-item">
-                          <a href="#" class="nav-link tableau-link {% if forloop.first %}active{% endif %}" data-tableau-id="{{ tableau.id }}">
-                            <i class="nav-icon bi bi-table"></i>
-                            <p data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="{{ tableau.name|split:': '|slice:'1:'|join:'' }}">{{ tableau.name|split:": "|slice:"1:"|join:"" }}</p>
+                      </li>
+                      <li class="nav-item {% if request.path == '/Statistiques/Douanes/' %}menu-open{% endif %}">
+                          <a href="{% url 'douanes_dashboard' %}" class="nav-link {% if request.path == '/Statistiques/Douanes/' %}active{% endif %}" id="douanes-toggle" style="background-color:#388855">
+                              <i class="nav-icon bi bi-circle"></i>
+                              <p>Douanes <i class="nav-arrow bi bi-chevron-right"></i></p>
                           </a>
-                        </li>
-                      {% endfor %}
-                    </ul>
-                  </li>
-                  <li class="nav-item">
-                    <a href="{% url 'financements_dashboard' %}" class="nav-link {% if request.path == '/stats/financements_dashboard/' %}active{% endif %}">
-                      <i class="nav-icon bi bi-circle"></i>
-                      <p>Financements</p>
-                    </a>
-                  </li>
-                  <li class="nav-item">
-                    <a href="#" class="nav-link">
-                      <i class="nav-icon bi bi-circle"></i>
-                      <p>Marchés publics</p>
-                    </a>
-                  </li>
-                  <li class="nav-item">
-                    <a href="#" class="nav-link">
-                      <i class="nav-icon bi bi-circle"></i>
-                      <p>Suivi du PEF</p>
-                    </a>
-                  </li>
-                </ul>
+                          <ul class="nav nav-treeview">
+                              {% for tableau in tableaux %}
+                                  <li class="nav-item">
+                                      <a href="#" class="nav-link tableau-link {% if forloop.first %}active{% endif %}" data-tableau-id="{{ tableau.id }}">
+                                          <i class="nav-icon bi bi-table"></i>
+                                          <p data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="{{ tableau.name|split:': '|slice:'1:'|join:'' }}">{{ tableau.name|split:": "|slice:"1:"|join:"" }}</p>
+                                      </a>
+                                  </li>
+                              {% endfor %}
+                          </ul>
+                      </li>
+                      <li class="nav-item">
+                          <a href="{% url 'financements_dashboard' %}" class="nav-link {% if request.path == '/Statistiques/Financements/' %}active{% endif %}">
+                              <i class="nav-icon bi bi-circle"></i>
+                              <p>Financements</p>
+                          </a>
+                      </li>
+                      <li class="nav-item">
+                          <a href="#" class="nav-link">
+                              <i class="nav-icon bi bi-circle"></i>
+                              <p>Marchés publics</p>
+                          </a>
+                      </li>
+                      <li class="nav-item">
+                          <a href="#" class="nav-link">
+                              <i class="nav-icon bi bi-circle"></i>
+                              <p>Suivi du PEF</p>
+                          </a>
+                      </li>
+                  </ul>
               </li>
-            </ul>
-            <!--end::Sidebar Menu-->
-          </nav>
-        </div>
-        <!--end::Sidebar Wrapper-->
-      </aside>
-      <!-- Contenu principal -->
-      <main class="app-main">
-        <div class="app-content-header">
-          <div class="container-fluid">
-            <div class="row">
+          </ul>
+      </nav>
+  </div>
+</aside>
+<!--end::Sidebar-->
+
+<!-- Contenu principal -->
+<main class="app-main">
+  <div class="app-content-header">
+      <div class="container-fluid">
+          <div class="row">
               <div class="col-sm-6"><h3 class="mb-0">Dashboard Douanes</h3></div>
               <div class="col-sm-6">
-                <ol class="breadcrumb float-sm-end">
-                  <li class="breadcrumb-item"><a href="#">Home</a></li>
-                  <li class="breadcrumb-item active" aria-current="page">Dashboard Douanes</li>
-                </ol>
+                  <ol class="breadcrumb float-sm-end">
+                      <li class="breadcrumb-item"><a href="#">Home</a></li>
+                      <li class="breadcrumb-item active" aria-current="page">Dashboard Douanes</li>
+                  </ol>
               </div>
-            </div>
           </div>
-        </div>
+      </div>
+  </div>
 
-            <!-- Nouvelles cartes KPI -->
-            <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="card text" style="background-color: #dff3e7;"> <!-- Orange vif -->
-                    <div class="card-body">
-                        <h5>Recettes douanières 2023</h5>
-                        <p class="card-text">2 490,5 Mds FCFA</p>
-                        <small>
-                            <span class="text-success"><i class="fas fa-arrow-up"></i> +15,4%</span>
-                        </small>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text" style="background-color:#dff3e7;"> <!-- Vert foncé -->
-                    <div class="card-body">
-                        <h5>Importations 2023</h5>
-                        <p class="card-text">11 421,4 Mds FCFA</p>
-                        <small>
-                            <span class="text-success"><i class="fas fa-arrow-up"></i> +1,8%</span>
-                        </small>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text" style="background-color:#dff3e7;"> <!-- Orange vif -->
-                    <div class="card-body">
-                        <h5>Exportations 2023</h5>
-                        <p class="card-text">11 131,1 Mds FCFA</p>
-                        <small>
-                            <span class="text-success"><i class="fas fa-arrow-up"></i> +9,0%</span>
-                        </small>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text" style="background-color: #dff3e7;"> <!-- Vert foncé -->
-                    <div class="card-body">
-                        <h5>Nombre de saisies douanières</h5>
-                        <p class="card-text">1784</p>
-                        <small>
-                            <span class="text-danger"><i class="fas fa-arrow-minus"></i> -3,6%</span>
-                        </small>
-                    </div>
-                </div>
-            </div>
-            </div>
-            
-            <div class="app-content">
-            <div class="container-fluid">
+  <div class="app-content">
+      <div class="container-fluid">
+          <!-- Nouvelles cartes KPI -->
+          <div class="row mb-4">
+              <div class="col-md-3">
+                  <div class="card text" style="background-color: #dff3e7;">
+                      <div class="card-body">
+                          <h5>Recettes douanières 2023</h5>
+                          <p class="card-text">2 490,5 Mds FCFA</p>
+                          <small><span class="text-success"><i class="fas fa-arrow-up"></i> +15,4%</span></small>
+                      </div>
+                  </div>
+              </div>
+              <div class="col-md-3">
+                  <div class="card text" style="background-color:#dff3e7;">
+                      <div class="card-body">
+                          <h5>Importations 2023</h5>
+                          <p class="card-text">11 421,4 Mds FCFA</p>
+                          <small><span class="text-success"><i class="fas fa-arrow-up"></i> +1,8%</span></small>
+                      </div>
+                  </div>
+              </div>
+              <div class="col-md-3">
+                  <div class="card text" style="background-color:#dff3e7;">
+                      <div class="card-body">
+                          <h5>Exportations 2023</h5>
+                          <p class="card-text">11 131,1 Mds FCFA</p>
+                          <small><span class="text-success"><i class="fas fa-arrow-up"></i> +9,0%</span></small>
+                      </div>
+                  </div>
+              </div>
+              <div class="col-md-3">
+                  <div class="card text" style="background-color: #dff3e7;">
+                      <div class="card-body">
+                          <h5>Nombre de saisies douanières</h5>
+                          <p class="card-text">1784</p>
+                          <small><span class="text-danger"><i class="fas fa-arrow-down"></i> -3,6%</span></small>
+                      </div>
+                  </div>
+              </div>
+          </div>
 
-            <!-- Graphiques -->
-            <div class="row">
+          <!-- Graphiques -->
+          <div class="row">
               <div class="col-md-8">
-                <div class="card mb-4" style="border: 1px solid #FF6200;">
-                  <div class="card-header" style="background-color: #009A49; color: #FFFFFF;">
-                    <h3 class="card-title">Évolution des Indicateurs (2019-2023)</h3>
+                  <div class="card mb-4" style="border: 1px solid #FF6200;">
+                      <div class="card-header" style="background-color: #009A49; color: #FFFFFF;">
+                          <h3 class="card-title">Évolution des Indicateurs (2019-2023)</h3>
+                      </div>
+                      <div class="card-body">
+                          <div class="mb-3">
+                              <label for="variableSelector" class="form-label">Choisir les variables :</label>
+                              <select id="variableSelector" multiple class="form-select" size="6"></select>
+                              <small class="text-muted">Maintenez Ctrl (ou Cmd) pour sélectionner plusieurs variables.</small>
+                          </div>
+                          <div class="mb-3">
+                              <label for="typeSelector" class="form-label">Type de graphique :</label>
+                              <select id="typeSelector" class="form-select">
+                                  <option value="line" selected>Ligne</option>
+                                  <option value="area">Aire</option>
+                              </select>
+                          </div>
+                          <div id="evolution-chart" style="min-height: 300px;"></div>
+                      </div>
                   </div>
-                  <div class="card-body">
-                    <div class="mb-3">
-                      <label for="variableSelector" class="form-label">Choisir les variables :</label>
-                      <select id="variableSelector" multiple class="form-select" size="6"></select>
-                      <small class="text-muted">Maintenez Ctrl (ou Cmd) pour sélectionner plusieurs variables.</small>
-                    </div>
-                    <div class="mb-3">
-                      <label for="typeSelector" class="form-label">Type de graphique :</label>
-                      <select id="typeSelector" class="form-select">
-                        <option value="line" selected>Ligne</option>
-                        <option value="area">Aire</option>
-                      </select>
-                    </div>
-                    <div id="evolution-chart" style="min-height: 300px;"></div>
-                  </div>
-                </div>
               </div>
-
               <div class="col-md-4">
-                <div class="card mb-4" style="border: 1px solid #FF6200;">
-                  <div class="card-header" style="background-color: #009A49; color: #FFFFFF;">
-                    <h3 class="card-title">Répartition (2023)</h3>
-                  </div>
-                  <div class="card-body">
-                    <div class="mb-3">
-                      <label for="pieSelector" class="form-label">Choisir une variable :</label>
-                      <select id="pieSelector" class="form-select"></select>
-                    </div>
-                    <div id="pie-chart" style="min-height: 300px;"></div>
-                    <div id="bar-chart" style="height: 120px; margin-top: 55px;"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Histogramme croisé -->
-            <div class="row">
-              <div class="col-md-12">
-                <div class="card mt-4 mb-4" style="border: 1px solid #FF6200;">
-                  <div class="card-header" style="background-color: #009A49; color: #FFFFFF;">
-                    <h3 class="card-title">Histogramme Croisé à Deux Variables</h3>
-                  </div>
-                  <div class="card-body">
-                    <div class="row mb-3">
-                      <div class="col-md-4">
-                        <label for="xSelector" class="form-label">Variable X :</label>
-                        <select id="xSelector" class="form-select"></select>
+                  <div class="card mb-4" style="border: 1px solid #FF6200;">
+                      <div class="card-header" style="background-color: #009A49; color: #FFFFFF;">
+                          <h3 class="card-title">Répartition (2023)</h3>
                       </div>
-                      <div class="col-md-4">
-                        <label for="ySelector" class="form-label">Variable Y :</label>
-                        <select id="ySelector" class="form-select"></select>
+                      <div class="card-body">
+                          <div class="mb-3">
+                              <label for="pieSelector" class="form-label">Choisir une variable :</label>
+                              <select id="pieSelector" class="form-select"></select>
+                          </div>
+                          <div id="pie-chart" style="min-height: 300px;"></div>
+                          <div id="bar-chart" style="height: 120px; margin-top: 55px;"></div>
                       </div>
-                      <div class="col-md-4">
-                        <label for="stackSelector" class="form-label">Type d’affichage :</label>
-                        <select id="stackSelector" class="form-select">
-                          <option value="stacked" selected>Empilé</option>
-                          <option value="grouped">Étalé</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div id="crossed-histogram" style="min-height: 300px;"></div>
                   </div>
-                </div>
               </div>
-            </div>
-
-            <!-- Tableau -->
-            <div class="row">
-              <div class="col-md-12">
-                <div class="card mt-4" style="border: 1px solid #FF6200;">
-                  <div class="card-header" style="background-color: #009A49; color: #FFFFFF;">
-                    <h3 class="card-title" id="selected-tableau-title">Données du Tableau Sélectionné</h3>
-                  </div>
-                  <div class="card-body">
-                    <div class="mb-3">
-                      <input type="text" id="globalSearch" class="form-control" placeholder="Rechercher dans toutes les colonnes..." style="border-color: #FF6200;"></div>
-                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-                      <table id="dataTable" class="table table-hover">
-                        <thead>
-                          <tr id="tableHeader"></tr>
-                        </thead>
-                        <tbody id="tableBody"></tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
-        </div>
-      </main>
 
-      <!-- Footer -->
-      <footer class="app-footer">
-        <div class="float-end d-none d-sm-inline">Tous droits réservés.</div>
-        <strong>Copyright - Direction de la Planification et du Suivi-Evaluation du MFB Côte d'Ivoire © 2025 <a href="#" class="text-decoration-none">DPSE</a>.</strong>
-      </footer>
-    </div>
-    <!--begin::Third Party Plugin(OverlayScrollbars)-->
-    <script
-      src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.10.1/browser/overlayscrollbars.browser.es6.min.js"
-      integrity="sha256-dghWARbRe2eLlIJ56wNB+b760ywulqK3DzZYEpsg2fQ="
-      crossorigin="anonymous"
-    ></script>
-    <!--end::Third Party Plugin(OverlayScrollbars)--><!--begin::Required Plugin(popperjs for Bootstrap 5)-->
-    <script
-      src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
-      integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
-      crossorigin="anonymous"
-    ></script>
-    <!--end::Required Plugin(popperjs for Bootstrap 5)--><!--begin::Required Plugin(Bootstrap 5)-->
-    <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"
-      integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy"
-      crossorigin="anonymous"
-    ></script>
-    <!--end::Required Plugin(Bootstrap 5)--><!--begin::Required Plugin(AdminLTE)-->
-    <script src="{% static 'adminlte/dist/js/adminlte.js' %}"></script>
-    <script src="{% static 'adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-    <!--end::Required Plugin(AdminLTE)--><!--begin::OverlayScrollbars Configure-->
-    <script>
-      const SELECTOR_SIDEBAR_WRAPPER = '.sidebar-wrapper';
-      const Default = {
-        scrollbarTheme: 'os-theme-light',
-        scrollbarAutoHide: 'leave',
-        scrollbarClickScroll: true,
+          <!-- Histogramme croisé -->
+          <div class="row">
+              <div class="col-md-12">
+                  <div class="card mt-4 mb-4" style="border: 1px solid #FF6200;">
+                      <div class="card-header" style="background-color: #009A49; color: #FFFFFF;">
+                          <h3 class="card-title">Histogramme Croisé à Deux Variables</h3>
+                      </div>
+                      <div class="card-body">
+                          <div class="row mb-3">
+                              <div class="col-md-4">
+                                  <label for="xSelector" class="form-label">Variable X :</label>
+                                  <select id="xSelector" class="form-select"></select>
+                              </div>
+                              <div class="col-md-4">
+                                  <label for="ySelector" class="form-label">Variable Y :</label>
+                                  <select id="ySelector" class="form-select"></select>
+                              </div>
+                              <div class="col-md-4">
+                                  <label for="stackSelector" class="form-label">Type d’affichage :</label>
+                                  <select id="stackSelector" class="form-select">
+                                      <option value="stacked" selected>Empilé</option>
+                                      <option value="grouped">Étalé</option>
+                                  </select>
+                              </div>
+                          </div>
+                          <div id="crossed-histogram" style="min-height: 300px;"></div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+
+          <!-- Tableau -->
+          <div class="row">
+              <div class="col-md-12">
+                  <div class="card mt-4" style="border: 1px solid #FF6200;">
+                      <div class="card-header" style="background-color: #009A49; color: #FFFFFF;">
+                          <h3 class="card-title" id="selected-tableau-title">Données du Tableau Sélectionné</h3>
+                      </div>
+                      <div class="card-body">
+                          <div class="mb-3">
+                              <input type="text" id="globalSearch" class="form-control" placeholder="Rechercher dans toutes les colonnes..." style="border-color: #FF6200;">
+                          </div>
+                          <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                              <table id="dataTable" class="table table-hover">
+                                  <thead>
+                                      <tr id="tableHeader"></tr>
+                                  </thead>
+                                  <tbody id="tableBody"></tbody>
+                              </table>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+</main>
+
+<!-- Footer -->
+<footer class="app-footer">
+  <div class="float-end d-none d-sm-inline">Tous droits réservés.</div>
+  <strong>Copyright - Direction de la Planification et du Suivi-Evaluation du MFB Côte d'Ivoire © 2025 <a href="#" class="text-decoration-none">DPSE</a>.</strong>
+</footer>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.10.1/browser/overlayscrollbars.browser.es6.min.js" integrity="sha256-dghWARbRe2eLlIJ56wNB+b760ywulqK3DzZYEpsg2fQ=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
+<script src="{% static 'adminlte/dist/js/adminlte.js' %}"></script>
+<script src="{% static 'adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+<script>
+  const SELECTOR_SIDEBAR_WRAPPER = '.sidebar-wrapper';
+  const Default = {
+    scrollbarTheme: 'os-theme-light',
+    scrollbarAutoHide: 'leave',
+    scrollbarClickScroll: true,
+  };
+  document.addEventListener('DOMContentLoaded', function () {
+    const sidebarWrapper = document.querySelector(SELECTOR_SIDEBAR_WRAPPER);
+    if (sidebarWrapper && typeof OverlayScrollbarsGlobal?.OverlayScrollbars !== 'undefined') {
+      OverlayScrollbarsGlobal.OverlayScrollbars(sidebarWrapper, {
+        scrollbars: {
+          theme: Default.scrollbarTheme,
+          autoHide: Default.scrollbarAutoHide,
+          clickScroll: Default.scrollbarClickScroll,
+        },
+      });
+    }
+  });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js" integrity="sha256-ipiJrswvAR4VAx/th+6zWsdeYmVae0iJuiR+6OqHJHQ=" crossorigin="anonymous"></script>
+<script>
+  const connectedSortables = document.querySelectorAll('.connectedSortable');
+  connectedSortables.forEach((connectedSortable) => {
+    let sortable = new Sortable(connectedSortable, {
+      group: 'shared',
+      handle: '.card-header',
+    });
+  });
+  const cardHeaders = document.querySelectorAll('.connectedSortable .card-header');
+  cardHeaders.forEach((cardHeader) => {
+    cardHeader.style.cursor = 'move';
+  });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.37.1/dist/apexcharts.min.js" integrity="sha256-+vh8GkaU7C9/wbSLIcwq82tQ2wTf44aOHA8HlBMwRI8=" crossorigin="anonymous"></script>
+<script>
+  function loadTableauData(tableauId) {
+      fetch(`{% url 'get_tableau_data' %}?tableau_id=${tableauId}`)
+          .then(response => response.json())
+          .then(data => {
+              if (data.error) {
+                  console.error('Erreur:', data.error);
+                  return;
+              }
+              console.log(`Données pour tableau ${tableauId}:`, data);
+              updateVariableSelectors(data.all_data);
+              const defaultEvolutionVar = Object.keys(data.all_data)[0] || 'FINANCEMENTS TOTAUX';
+              const defaultPieVar = Object.keys(data.all_data)[0] || 'FINANCEMENTS TOTAUX';
+              const defaultXVar = Object.keys(data.all_data)[0] || 'FINANCEMENTS TOTAUX';
+              const defaultYVar = Object.keys(data.all_data)[1] || defaultXVar;
+              if (window.evolutionChart) window.evolutionChart.destroy();
+              if (window.pieChart) window.pieChart.destroy();
+              if (window.barChart) window.barChart.destroy();
+              if (window.crossedHistogram) window.crossedHistogram.destroy();
+              updateEvolutionChart([defaultEvolutionVar], 'line', data);
+              updatePieChart(defaultPieVar, data);
+              updateCrossedHistogram(defaultXVar, defaultYVar, 'stacked', data);
+              updateTable(data);
+              document.querySelectorAll('.tableau-link').forEach(link => {
+                  link.classList.remove('active');
+                  if (link.getAttribute('data-tableau-id') === tableauId) {
+                      link.classList.add('active');
+                      const tableauLabel = link.querySelector('p').textContent;
+                      document.getElementById('selected-tableau-title').textContent = tableauLabel;
+                  }
+              });
+          })
+          .catch(error => console.error('Erreur AJAX:', error));
+  }
+
+  function updateVariableSelectors(allData) {
+      const variableSelector = document.getElementById('variableSelector');
+      const pieSelector = document.getElementById('pieSelector');
+      const xSelector = document.getElementById('xSelector');
+      const ySelector = document.getElementById('ySelector');
+      variableSelector.innerHTML = '';
+      pieSelector.innerHTML = '';
+      xSelector.innerHTML = '';
+      ySelector.innerHTML = '';
+      Object.keys(allData).forEach((categorie, index) => {
+          const option = document.createElement('option');
+          option.value = categorie;
+          option.textContent = categorie;
+          if (index === 0) option.selected = true;
+          variableSelector.appendChild(option.cloneNode(true));
+          pieSelector.appendChild(option.cloneNode(true));
+          xSelector.appendChild(option.cloneNode(true));
+          if (index === 1) option.selected = true;
+          ySelector.appendChild(option.cloneNode(true));
+      });
+  }
+
+  function updateEvolutionChart(selectedVariables, chartType, data) {
+      const series = selectedVariables.map(variable => ({
+          name: variable,
+          data: data.all_data[variable] || []
+      }));
+      const isPercentage = selectedVariables.some(variable => variable.includes('%'));
+      const chartOptions = {
+          series: series,
+          chart: {
+              height: 300,
+              type: chartType,
+              toolbar: { show: true },
+              animations: {
+                  enabled: true,
+                  easing: 'linear',
+                  speed: 1000,
+                  animateGradually: { enabled: false },
+                  dynamicAnimation: { enabled: true, speed: 800 }
+              }
+          },
+          colors: ['#FF6200', '#009A49', '#FFD700', '#FF4500', '#1E90FF'],
+          stroke: { curve: 'smooth', width: 4, dashArray: 0 },
+          dataLabels: { enabled: true },
+          xaxis: { type: 'category', categories: data.years.map(String), title: { text: 'Années' }, labels: { rotate: -45, trim: false } },
+          yaxis: { title: { text: isPercentage ? 'Pourcentage (%)' : 'Milliards FCFA' } },
+          legend: { position: 'top' },
+          tooltip: { y: { formatter: val => isPercentage ? val.toFixed(2) + ' %' : val.toFixed(2) + ' Mds FCFA' } }
       };
-      document.addEventListener('DOMContentLoaded', function () {
-        const sidebarWrapper = document.querySelector(SELECTOR_SIDEBAR_WRAPPER);
-        if (sidebarWrapper && typeof OverlayScrollbarsGlobal?.OverlayScrollbars !== 'undefined') {
-          OverlayScrollbarsGlobal.OverlayScrollbars(sidebarWrapper, {
-            scrollbars: {
-              theme: Default.scrollbarTheme,
-              autoHide: Default.scrollbarAutoHide,
-              clickScroll: Default.scrollbarClickScroll,
-            },
-          });
-        }
+      window.evolutionChart = new ApexCharts(document.querySelector('#evolution-chart'), chartOptions);
+      window.evolutionChart.render();
+  }
+
+  function updatePieChart(selectedVariable, data) {
+      const pieData = (data.all_data[selectedVariable] || []).map(val => parseFloat(val) || 0);
+      const isPercentage = selectedVariable.includes('%');
+      const pieOptions = {
+          series: pieData,
+          chart: { height: 300, type: 'donut' },
+          labels: data.years.map(String),
+          colors: ['#FF6200', '#009A49', '#FFD700', '#FF4500', '#1E90FF'],
+          legend: { position: 'bottom' },
+          tooltip: { y: { formatter: val => isPercentage ? val.toFixed(2) + ' %' : val.toFixed(2) + ' Mds FCFA' } },
+          responsive: [{ breakpoint: 480, options: { chart: { width: 200 }, legend: { position: 'bottom' } } }]
+      };
+      if (window.pieChart) window.pieChart.destroy();
+      window.pieChart = new ApexCharts(document.querySelector('#pie-chart'), pieOptions);
+      window.pieChart.render();
+      updateBarChart(selectedVariable, data);
+  }
+
+  function updateBarChart(selectedVariable, data) {
+      const isPercentage = selectedVariable.includes('%');
+      const barOptions = {
+          series: [{ name: selectedVariable, data: data.all_data[selectedVariable] || [] }],
+          chart: { height: 200, type: 'bar' },
+          plotOptions: { bar: { horizontal: true, barHeight: '80%' } },
+          colors: ['#009A49'],
+          dataLabels: { enabled: false },
+          xaxis: { categories: data.years.map(String), title: { text: isPercentage ? 'Pourcentage (%)' : 'Milliards FCFA' } },
+          yaxis: { title: { text: 'Années' }, labels: { trim: false } },
+          tooltip: { y: { formatter: val => isPercentage ? val.toFixed(2) + ' %' : val.toFixed(2) + ' Mds FCFA' } }
+      };
+      window.barChart = new ApexCharts(document.querySelector('#bar-chart'), barOptions);
+      window.barChart.render();
+  }
+
+  function updateCrossedHistogram(xVariable, yVariable, stackType, data) {
+      const series = [
+          { name: xVariable, data: data.all_data[xVariable] || [] },
+          { name: yVariable, data: data.all_data[yVariable] || [] }
+      ];
+      const histOptions = {
+          series: series,
+          chart: {
+              height: 300,
+              type: 'bar',
+              stacked: stackType === 'stacked',
+              toolbar: { show: true },
+              animations: { enabled: true, easing: 'easeinout', speed: 500, animateGradually: { enabled: false }, dynamicAnimation: { enabled: true, speed: 500 } }
+          },
+          plotOptions: { bar: { horizontal: false, columnWidth: '55%' } },
+          colors: ['#FF6200', '#009A49'],
+          dataLabels: { enabled: false },
+          xaxis: { type: 'category', categories: data.years.map(String), title: { text: 'Années' }, labels: { rotate: -45, trim: false } },
+          yaxis: { title: { text: 'Milliards FCFA' } },
+          legend: { position: 'top' },
+          tooltip: { y: { formatter: val => val.toFixed(2) + " Mds FCFA" } }
+      };
+      const chartElement = document.querySelector('#crossed-histogram');
+      window.crossedHistogram = new ApexCharts(chartElement, histOptions);
+      window.crossedHistogram.render();
+  }
+
+  function updateTable(data) {
+      const thead = document.getElementById('tableHeader');
+      thead.innerHTML = `<th>Catégorie</th>${data.years.map(year => `<th>${year}</th>`).join('')}`;
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = '';
+      data.table_data.forEach(row => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${row[0]}</td>${row.slice(1).map(value => `<td>${value}</td>`).join('')}`;
+          tbody.appendChild(tr);
       });
-    </script>
-    <!--end::OverlayScrollbars Configure-->
-    <!-- OPTIONAL SCRIPTS -->
-    <!-- sortablejs -->
-    <script
-      src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"
-      integrity="sha256-ipiJrswvAR4VAx/th+6zWsdeYmVae0iJuiR+6OqHJHQ="
-      crossorigin="anonymous"
-    ></script>
-    <!-- sortablejs -->
-    <script>
-      const connectedSortables = document.querySelectorAll('.connectedSortable');
-      connectedSortables.forEach((connectedSortable) => {
-        let sortable = new Sortable(connectedSortable, {
-          group: 'shared',
-          handle: '.card-header',
-        });
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+      const urlParams = new URLSearchParams(window.location.search);
+      const tableauIdFromUrl = urlParams.get('tableau_id');
+      const initialTableauId = tableauIdFromUrl || document.querySelector('.tableau-link.active').getAttribute('data-tableau-id');
+      loadTableauData(initialTableauId);
+
+      const douanesToggle = document.getElementById('douanes-toggle');
+      douanesToggle.addEventListener('click', function (e) {
+          e.preventDefault();
       });
 
-      const cardHeaders = document.querySelectorAll('.connectedSortable .card-header');
-      cardHeaders.forEach((cardHeader) => {
-        cardHeader.style.cursor = 'move';
-      });
-    </script>
-    <!-- apexcharts -->
-    <script
-      src="https://cdn.jsdelivr.net/npm/apexcharts@3.37.1/dist/apexcharts.min.js"
-      integrity="sha256-+vh8GkaU7C9/wbSLIcwq82tQ2wTf44aOHA8HlBMwRI8="
-      crossorigin="anonymous"
-    ></script>
-    
-    <script>
-        function loadTableauData(tableauId) {
-            fetch(`{% url 'get_tableau_data' %}?tableau_id=${tableauId}`)
-                .then(response => response.json())
-                .then(data => {
-                if (data.error) {
-                    console.error('Erreur:', data.error);
-                    return;
-                }
-                console.log(`Données pour tableau ${tableauId}:`, data);
-
-                updateVariableSelectors(data.all_data);
-
-                const defaultEvolutionVar = Object.keys(data.all_data)[0] || 'FINANCEMENTS TOTAUX';
-                const defaultPieVar = Object.keys(data.all_data)[0] || 'FINANCEMENTS TOTAUX';
-                const defaultXVar = Object.keys(data.all_data)[0] || 'FINANCEMENTS TOTAUX';
-                const defaultYVar = Object.keys(data.all_data)[1] || defaultXVar;
-
-                if (window.evolutionChart) window.evolutionChart.destroy();
-                if (window.pieChart) window.pieChart.destroy();
-                if (window.barChart) window.barChart.destroy();
-                if (window.crossedHistogram) window.crossedHistogram.destroy();
-
-                updateEvolutionChart([defaultEvolutionVar], 'line', data);
-                updatePieChart(defaultPieVar, data);
-                updateCrossedHistogram(defaultXVar, defaultYVar, 'stacked', data);
-                updateTable(data);
-
-                // Mettre à jour l'état actif dans la sidebar
-                document.querySelectorAll('.tableau-link').forEach(link => {
-                    link.classList.remove('active');
-                    if (link.getAttribute('data-tableau-id') === tableauId) {
-                    link.classList.add('active');
-                    // Mettre à jour le titre avec le libellé du tableau actif, sans ID
-                    const tableauLabel = link.querySelector('p').textContent; // Maintenant sans ID grâce au HTML
-                    document.getElementById('selected-tableau-title').textContent = tableauLabel;
-                    }
-                });
-                })
-                .catch(error => console.error('Erreur AJAX:', error));
-            }
-      
-            function updateVariableSelectors(allData) {
-                const variableSelector = document.getElementById('variableSelector');
-                const pieSelector = document.getElementById('pieSelector');
-                const xSelector = document.getElementById('xSelector');
-                const ySelector = document.getElementById('ySelector');
-
-                variableSelector.innerHTML = '';
-                pieSelector.innerHTML = '';
-                xSelector.innerHTML = '';
-                ySelector.innerHTML = '';
-
-                Object.keys(allData).forEach((categorie, index) => {
-                    const option = document.createElement('option');
-                    option.value = categorie;
-                    option.textContent = categorie;
-                    if (index === 0) option.selected = true;
-                    variableSelector.appendChild(option.cloneNode(true));
-                    pieSelector.appendChild(option.cloneNode(true));
-                    xSelector.appendChild(option.cloneNode(true));
-                    if (index === 1) option.selected = true;
-                    ySelector.appendChild(option.cloneNode(true));
-                });
-                }
-      
-                function updateEvolutionChart(selectedVariables, chartType, data) {
-                    const series = selectedVariables.map(variable => ({
-                        name: variable,
-                        data: data.all_data[variable] || []
-                    }));
-
-                    // Déterminer si une variable est en pourcentage
-                    const isPercentage = selectedVariables.some(variable => variable.includes('%'));
-
-                    const chartOptions = {
-                        series: series,
-                        chart: { 
-                        height: 300, 
-                        type: chartType, 
-                        toolbar: { show: true },
-                        animations: {
-                            enabled: true,
-                            easing: 'linear',
-                            speed: 1000,
-                            animateGradually: { enabled: false },
-                            dynamicAnimation: { enabled: true, speed: 800 }
-                        }
-                        },
-                        colors: ['#FF6200', '#009A49', '#FFD700', '#FF4500', '#1E90FF'],
-                        stroke: { 
-                        curve: 'smooth', 
-                        width: 4,
-                        dashArray: 0 
-                        },
-                        dataLabels: { enabled: true },
-                        xaxis: { 
-                        type: 'category', 
-                        categories: data.years.map(String),
-                        title: { text: 'Années' },
-                        labels: { rotate: -45, trim: false, formatter: function(val) { return val; } }
-                        },
-                        yaxis: { 
-                        title: { text: isPercentage ? 'Pourcentage (%)' : 'Milliards FCFA' }
-                        },
-                        legend: { position: 'top' },
-                        tooltip: { 
-                        y: { 
-                            formatter: val => isPercentage ? val.toFixed(2) + ' %' : val.toFixed(2) + ' Mds FCFA' 
-                        } 
-                        },
-                        animations: {
-                        initialAnimation: {
-                            enabled: true,
-                            easing: 'linear',
-                            speed: 1000,
-                            animatePaths: true
-                        }
-                        }
-                    };
-
-                    window.evolutionChart = new ApexCharts(document.querySelector('#evolution-chart'), chartOptions);
-                    window.evolutionChart.render();
-                    }
-      
-                function updatePieChart(selectedVariable, data) {
-                    const pieData = (data.all_data[selectedVariable] || []).map(val => {
-                        const num = parseFloat(val);
-                        return isNaN(num) ? 0 : num;
-                    });
-                    
-                    console.log('Données pour pie-chart:', { variable: selectedVariable, series: pieData, labels: data.years });
-
-                    // Déterminer si la variable est en pourcentage
-                    const isPercentage = selectedVariable.includes('%');
-
-                    const pieOptions = {
-                        series: pieData,
-                        chart: { height: 300, type: 'donut' },
-                        labels: data.years.map(String),
-                        colors: ['#FF6200', '#009A49', '#FFD700', '#FF4500', '#1E90FF'],
-                        legend: { position: 'bottom' },
-                        tooltip: { 
-                        y: { 
-                            formatter: val => isPercentage ? val.toFixed(2) + ' %' : val.toFixed(2) + ' Mds FCFA' 
-                        } 
-                        },
-                        responsive: [{ breakpoint: 480, options: { chart: { width: 200 }, legend: { position: 'bottom' } } }]
-                    };
-
-                    if (window.pieChart) window.pieChart.destroy();
-                    window.pieChart = new ApexCharts(document.querySelector('#pie-chart'), pieOptions);
-                    window.pieChart.render();
-
-                    updateBarChart(selectedVariable, data);
-                    }
-      
-        function updateBarChart(selectedVariable, data) {
-            // Déterminer si la variable est en pourcentage
-            const isPercentage = selectedVariable.includes('%');
-
-            const barOptions = {
-                series: [{ name: selectedVariable, data: data.all_data[selectedVariable] || [] }],
-                chart: { height: 200, type: 'bar' },
-                plotOptions: { bar: { horizontal: true, barHeight: '80%' } },
-                colors: ['#009A49'],
-                dataLabels: { enabled: false },
-                xaxis: { 
-                categories: data.years.map(String), 
-                title: { text: isPercentage ? 'Pourcentage (%)' : 'Milliards FCFA' }
-                },
-                yaxis: { 
-                title: { text: 'Années' }, 
-                labels: { trim: false, formatter: function(val) { return val; } }
-                },
-                tooltip: { 
-                y: { 
-                    formatter: val => isPercentage ? val.toFixed(2) + ' %' : val.toFixed(2) + ' Mds FCFA' 
-                } 
-                }
-            };
-
-            window.barChart = new ApexCharts(document.querySelector('#bar-chart'), barOptions);
-            window.barChart.render();
-            }
-      
-        function updateCrossedHistogram(xVariable, yVariable, stackType, data) {
-          const series = [
-            { name: xVariable, data: data.all_data[xVariable] || [] },
-            { name: yVariable, data: data.all_data[yVariable] || [] }
-          ];
-      
-          const histOptions = {
-            series: series,
-            chart: { height: 300, type: 'bar', stacked: stackType === 'stacked', toolbar: { show: true },
-              animations: { enabled: true, easing: 'easeinout', speed: 500, animateGradually: { enabled: false }, dynamicAnimation: { enabled: true, speed: 500, easing: 'easeinout' } }
-            },
-            plotOptions: { bar: { horizontal: false, columnWidth: '55%' } },
-            colors: ['#FF6200', '#009A49'],
-            dataLabels: { enabled: false },
-            xaxis: { type: 'category', categories: data.years.map(String), title: { text: 'Années' }, labels: { rotate: -45, trim: false, formatter: function(val) { return val; } } },
-            yaxis: { title: { text: 'Milliards FCFA' } },
-            legend: { position: 'top' },
-            tooltip: { y: { formatter: val => val.toFixed(2) + " Mds FCFA" } }
-          };
-      
-          const chartElement = document.querySelector('#crossed-histogram');
-          window.crossedHistogram = new ApexCharts(chartElement, histOptions);
-          window.crossedHistogram.render();
-        }
-      
-        function updateTable(data) {
-          const thead = document.getElementById('tableHeader');
-          thead.innerHTML = `<th>Catégorie</th>${data.years.map(year => `<th>${year}</th>`).join('')}`;
-          const tbody = document.getElementById('tableBody');
-          tbody.innerHTML = '';
-          data.table_data.forEach(row => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${row[0]}</td>${row.slice(1).map(value => `<td>${value}</td>`).join('')}`;
-            tbody.appendChild(tr);
-          });
-        }
-      
-        document.addEventListener('DOMContentLoaded', function () {
-            const urlParams = new URLSearchParams(window.location.search);
-            const tableauIdFromUrl = urlParams.get('tableau_id');
-            const initialTableauId1 = tableauIdFromUrl || document.querySelector('.tableau-link.active').getAttribute('data-tableau-id');
-            loadTableauData(initialTableauId1);
-          // Empêcher la navigation sur le lien "Dashboard Douanes"
-          const douanesToggle = document.getElementById('douanes-toggle');
-          douanesToggle.addEventListener('click', function (e) {
-            e.preventDefault(); // Empêche le rechargement de la page
-            // AdminLTE gère automatiquement le pliage/dépliage via data-lte-toggle
-          });
-      
-          // Écouteur pour les liens des tableaux
-          const tableauLinks = document.querySelectorAll('.tableau-link');
-          tableauLinks.forEach(link => {
-            link.addEventListener('click', function (e) {
+      const tableauLinks = document.querySelectorAll('.tableau-link');
+      tableauLinks.forEach(link => {
+          link.addEventListener('click', function (e) {
               e.preventDefault();
               const tableauId = this.getAttribute('data-tableau-id');
               loadTableauData(tableauId);
-            });
           });
-      
-          // Charger le premier tableau actif par défaut
-          const initialTableauId = document.querySelector('.tableau-link.active').getAttribute('data-tableau-id');
-          loadTableauData(initialTableauId);
-      
-          // Écouteurs pour les sélecteurs de graphiques
-          document.getElementById('variableSelector').addEventListener('change', function () {
-            const selectedOptions = Array.from(this.selectedOptions).map(option => option.value);
-            const chartType = document.getElementById('typeSelector').value;
-            const tableauId = document.querySelector('.tableau-link.active').getAttribute('data-tableau-id');
-            fetch(`{% url 'get_tableau_data' %}?tableau_id=${tableauId}`)
-              .then(response => response.json())
-              .then(data => {
-                if (window.evolutionChart) window.evolutionChart.destroy();
-                updateEvolutionChart(selectedOptions, chartType, data);
-              });
-          });
-      
-          document.getElementById('typeSelector').addEventListener('change', function () {
-            const selectedOptions = Array.from(document.getElementById('variableSelector').selectedOptions).map(option => option.value);
-            const chartType = this.value;
-            const tableauId = document.querySelector('.tableau-link.active').getAttribute('data-tableau-id');
-            fetch(`{% url 'get_tableau_data' %}?tableau_id=${tableauId}`)
-              .then(response => response.json())
-              .then(data => {
-                if (window.evolutionChart) window.evolutionChart.destroy();
-                updateEvolutionChart(selectedOptions, chartType, data);
-              });
-          });
-      
-          document.getElementById('pieSelector').addEventListener('change', function () {
-            const tableauId = document.querySelector('.tableau-link.active').getAttribute('data-tableau-id');
-            fetch(`{% url 'get_tableau_data' %}?tableau_id=${tableauId}`)
-              .then(response => response.json())
-              .then(data => {
-                if (window.pieChart) window.pieChart.destroy();
-                if (window.barChart) window.barChart.destroy();
-                updatePieChart(this.value, data);
-              });
-          });
-      
-          document.getElementById('xSelector').addEventListener('change', function () {
-            const xVariable = this.value;
-            const yVariable = document.getElementById('ySelector').value;
-            const stackType = document.getElementById('stackSelector').value;
-            const tableauId = document.querySelector('.tableau-link.active').getAttribute('data-tableau-id');
-            fetch(`{% url 'get_tableau_data' %}?tableau_id=${tableauId}`)
-              .then(response => response.json())
-              .then(data => {
-                if (window.crossedHistogram) window.crossedHistogram.destroy();
-                updateCrossedHistogram(xVariable, yVariable, stackType, data);
-              });
-          });
-      
-          document.getElementById('ySelector').addEventListener('change', function () {
-            const xVariable = document.getElementById('xSelector').value;
-            const yVariable = this.value;
-            const stackType = document.getElementById('stackSelector').value;
-            const tableauId = document.querySelector('.tableau-link.active').getAttribute('data-tableau-id');
-            fetch(`{% url 'get_tableau_data' %}?tableau_id=${tableauId}`)
-              .then(response => response.json())
-              .then(data => {
-                if (window.crossedHistogram) window.crossedHistogram.destroy();
-                updateCrossedHistogram(xVariable, yVariable, stackType, data);
-              });
-          });
-      
-          document.getElementById('stackSelector').addEventListener('change', function () {
-            const xVariable = document.getElementById('xSelector').value;
-            const yVariable = document.getElementById('ySelector').value;
-            const stackType = this.value;
-            const tableauId = document.querySelector('.tableau-link.active').getAttribute('data-tableau-id');
-            fetch(`{% url 'get_tableau_data' %}?tableau_id=${tableauId}`)
-              .then(response => response.json())
-              .then(data => {
-                if (window.crossedHistogram) window.crossedHistogram.destroy();
-                updateCrossedHistogram(xVariable, yVariable, stackType, data);
-              });
-          });
-      
-          const table = document.getElementById('dataTable');
-          const globalSearch = document.getElementById('globalSearch');
-      
-          function filterTable() {
-            const rows = Array.from(table.querySelectorAll('tbody tr'));
-            const searchText = globalSearch.value.toLowerCase();
+      });
 
-            rows.forEach(row => {
-                const cells = row.querySelectorAll('td');
-                const rowText = Array.from(cells).map(cell => cell.textContent.toLowerCase()).join(' ');
+      document.getElementById('variableSelector').addEventListener('change', function () {
+          const selectedOptions = Array.from(this.selectedOptions).map(option => option.value);
+          const chartType = document.getElementById('typeSelector').value;
+          const tableauId = document.querySelector('.tableau-link.active').getAttribute('data-tableau-id');
+          fetch(`{% url 'get_tableau_data' %}?tableau_id=${tableauId}`).then(response => response.json()).then(data => {
+              if (window.evolutionChart) window.evolutionChart.destroy();
+              updateEvolutionChart(selectedOptions, chartType, data);
+          });
+      });
 
-                const matchesSearch = rowText.includes(searchText);
-                row.style.display = matchesSearch ? '' : 'none';
-            });
-            }
-      
-          globalSearch.addEventListener('input', filterTable);
-      
-          table.addEventListener('click', function (e) {
-            const header = e.target.closest('th');
-            if (!header) return;
-            const rows = Array.from(table.querySelectorAll('tbody tr'));
-            const isAscending = header.classList.toggle('asc');
-            const columnIndex = Array.from(header.parentElement.children).indexOf(header);
-      
-            rows.sort((a, b) => {
+      document.getElementById('typeSelector').addEventListener('change', function () {
+          const selectedOptions = Array.from(document.getElementById('variableSelector').selectedOptions).map(option => option.value);
+          const chartType = this.value;
+          const tableauId = document.querySelector('.tableau-link.active').getAttribute('data-tableau-id');
+          fetch(`{% url 'get_tableau_data' %}?tableau_id=${tableauId}`).then(response => response.json()).then(data => {
+              if (window.evolutionChart) window.evolutionChart.destroy();
+              updateEvolutionChart(selectedOptions, chartType, data);
+          });
+      });
+
+      document.getElementById('pieSelector').addEventListener('change', function () {
+          const tableauId = document.querySelector('.tableau-link.active').getAttribute('data-tableau-id');
+          fetch(`{% url 'get_tableau_data' %}?tableau_id=${tableauId}`).then(response => response.json()).then(data => {
+              if (window.pieChart) window.pieChart.destroy();
+              if (window.barChart) window.barChart.destroy();
+              updatePieChart(this.value, data);
+          });
+      });
+
+      document.getElementById('xSelector').addEventListener('change', function () {
+          const xVariable = this.value;
+          const yVariable = document.getElementById('ySelector').value;
+          const stackType = document.getElementById('stackSelector').value;
+          const tableauId = document.querySelector('.tableau-link.active').getAttribute('data-tableau-id');
+          fetch(`{% url 'get_tableau_data' %}?tableau_id=${tableauId}`).then(response => response.json()).then(data => {
+              if (window.crossedHistogram) window.crossedHistogram.destroy();
+              updateCrossedHistogram(xVariable, yVariable, stackType, data);
+          });
+      });
+
+      document.getElementById('ySelector').addEventListener('change', function () {
+          const xVariable = document.getElementById('xSelector').value;
+          const yVariable = this.value;
+          const stackType = document.getElementById('stackSelector').value;
+          const tableauId = document.querySelector('.tableau-link.active').getAttribute('data-tableau-id');
+          fetch(`{% url 'get_tableau_data' %}?tableau_id=${tableauId}`).then(response => response.json()).then(data => {
+              if (window.crossedHistogram) window.crossedHistogram.destroy();
+              updateCrossedHistogram(xVariable, yVariable, stackType, data);
+          });
+      });
+
+      document.getElementById('stackSelector').addEventListener('change', function () {
+          const xVariable = document.getElementById('xSelector').value;
+          const yVariable = document.getElementById('ySelector').value;
+          const stackType = this.value;
+          const tableauId = document.querySelector('.tableau-link.active').getAttribute('data-tableau-id');
+          fetch(`{% url 'get_tableau_data' %}?tableau_id=${tableauId}`).then(response => response.json()).then(data => {
+              if (window.crossedHistogram) window.crossedHistogram.destroy();
+              updateCrossedHistogram(xVariable, yVariable, stackType, data);
+          });
+      });
+
+      const table = document.getElementById('dataTable');
+      const globalSearch = document.getElementById('globalSearch');
+      function filterTable() {
+          const rows = Array.from(table.querySelectorAll('tbody tr'));
+          const searchText = globalSearch.value.toLowerCase();
+          rows.forEach(row => {
+              const cells = row.querySelectorAll('td');
+              const rowText = Array.from(cells).map(cell => cell.textContent.toLowerCase()).join(' ');
+              row.style.display = rowText.includes(searchText) ? '' : 'none';
+          });
+      }
+      globalSearch.addEventListener('input', filterTable);
+
+      table.addEventListener('click', function (e) {
+          const header = e.target.closest('th');
+          if (!header) return;
+          const rows = Array.from(table.querySelectorAll('tbody tr'));
+          const isAscending = header.classList.toggle('asc');
+          const columnIndex = Array.from(header.parentElement.children).indexOf(header);
+          rows.sort((a, b) => {
               const aValue = a.cells[columnIndex].textContent;
               const bValue = b.cells[columnIndex].textContent;
               if (columnIndex === 0) {
-                return isAscending ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+                  return isAscending ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
               } else {
-                return isAscending ? parseFloat(aValue) - parseFloat(bValue) : parseFloat(bValue) - parseFloat(aValue);
+                  return isAscending ? parseFloat(aValue) - parseFloat(bValue) : parseFloat(bValue) - parseFloat(aValue);
               }
-            });
-      
-            rows.forEach(row => table.querySelector('tbody').appendChild(row));
-            Array.from(table.querySelectorAll('th')).forEach(h => h.classList.remove('asc'));
-            header.classList.add('asc');
           });
+          rows.forEach(row => table.querySelector('tbody').appendChild(row));
+          Array.from(table.querySelectorAll('th')).forEach(h => h.classList.remove('asc'));
+          header.classList.add('asc');
+      });
 
-            // Gestion de la recherche avec autocomplétion
-            const searchForm = document.getElementById('navbar-search-form');
-            const searchInput = document.getElementById('navbar-search');
-            const suggestionsList = document.getElementById('search-suggestions');
+      const searchForm = document.getElementById('navbar-search-form');
+      const searchInput = document.getElementById('navbar-search');
+      const suggestionsList = document.getElementById('search-suggestions');
+      const sidebarLinks = document.querySelectorAll('.app-sidebar .nav-link, .app-sidebar .tableau-link');
+      const suggestionsData = Array.from(sidebarLinks).map(link => {
+          const label = link.querySelector('p')?.textContent.trim() || '';
+          const tableauId = link.getAttribute('data-tableau-id');
+          const url = link.getAttribute('href') === '#' ? null : link.getAttribute('href');
+          let parentDashboard = null;
+          const parentItem = link.closest('.nav-item');
+          if (parentItem) {
+              const parentLink = parentItem.parentElement.previousElementSibling;
+              if (parentLink && parentLink.classList.contains('nav-link')) {
+                  const parentLabel = parentLink.querySelector('p').textContent.toLowerCase();
+                  if (parentLabel.includes('douanes')) parentDashboard = 'douanes';
+                  else if (parentLabel.includes('financements')) parentDashboard = 'financements';
+                  else if (parentLabel.includes('tofe')) parentDashboard = 'tofe';
+              }
+          }
+          if (!parentDashboard && !tableauId) {
+              if (label.toLowerCase().includes('douanes')) parentDashboard = 'douanes';
+              else if (label.toLowerCase().includes('financements')) parentDashboard = 'financements';
+              else if (label.toLowerCase().includes('tofe')) parentDashboard = 'tofe';
+          }
+          return { label, tableauId, url, parentDashboard };
+      });
 
-            // Liste des éléments de la sidebar pour suggestions
-            const sidebarLinks = document.querySelectorAll('.app-sidebar .nav-link, .app-sidebar .tableau-link'); // Inclut explicitement .tableau-link
-            const suggestionsData = Array.from(sidebarLinks).map(link => {
-            const label = link.querySelector('p')?.textContent.trim() || '';
-            const tableauId = link.getAttribute('data-tableau-id');
-            const url = link.getAttribute('href') === '#' ? null : link.getAttribute('href');
-            
-            // Déterminer le dashboard parent
-            let parentDashboard = null;
-            const parentItem = link.closest('.nav-item');
-            if (parentItem) {
-                const parentLink = parentItem.parentElement.previousElementSibling;
-                if (parentLink && parentLink.classList.contains('nav-link')) {
-                const parentLabel = parentLink.querySelector('p').textContent.toLowerCase();
-                if (parentLabel.includes('douanes')) parentDashboard = 'douanes';
-                else if (parentLabel.includes('financements')) parentDashboard = 'financements';
-                else if (parentLabel.includes('tofe')) parentDashboard = 'tofe';
-                }
-            }
-            if (!parentDashboard && !tableauId) {
-                if (label.toLowerCase().includes('douanes')) parentDashboard = 'douanes';
-                else if (label.toLowerCase().includes('financements')) parentDashboard = 'financements';
-                else if (label.toLowerCase().includes('tofe')) parentDashboard = 'tofe';
-            }
+      console.log('Suggestions détectées:', suggestionsData);
 
-            return { label, tableauId, url, parentDashboard };
-            });
+      searchInput.addEventListener('input', function () {
+          const searchTerm = this.value.trim().toLowerCase();
+          suggestionsList.innerHTML = '';
+          if (searchTerm.length < 1) {
+              suggestionsList.style.display = 'none';
+              return;
+          }
+          const matches = suggestionsData.filter(item => item.label.toLowerCase().includes(searchTerm));
+          if (matches.length > 0) {
+              matches.forEach(match => {
+                  const li = document.createElement('li');
+                  li.textContent = match.label;
+                  li.dataset.tableauId = match.tableauId || '';
+                  li.dataset.url = match.url || '';
+                  li.dataset.parentDashboard = match.parentDashboard || '';
+                  li.addEventListener('click', function () {
+                      const tableauId = this.dataset.tableauId;
+                      const url = this.dataset.url;
+                      const parentDashboard = this.dataset.parentDashboard;
+                      console.log('Clic:', { label: match.label, tableauId, url, parentDashboard });
+                      if (url && url !== '' && !tableauId) {
+                          window.location.href = url;
+                      } else if (tableauId && parentDashboard) {
+                          let targetUrl;
+                          if (parentDashboard === 'douanes') targetUrl = '{% url "douanes_dashboard" %}';
+                          else if (parentDashboard === 'financements') targetUrl = '{% url "financements_dashboard" %}';
+                          else if (parentDashboard === 'tofe') targetUrl = '{% url "dashboard_TOFE" %}';
+                          if (window.location.pathname === targetUrl) {
+                              loadTableauData(tableauId);
+                          } else {
+                              window.location.href = `${targetUrl}?tableau_id=${tableauId}`;
+                          }
+                      }
+                      suggestionsList.style.display = 'none';
+                      searchInput.value = match.label;
+                  });
+                  suggestionsList.appendChild(li);
+              });
+              suggestionsList.style.display = 'block';
+          } else {
+              suggestionsList.style.display = 'none';
+          }
+      });
 
-            // Debug : voir toutes les suggestions détectées
-            console.log('Suggestions détectées:', suggestionsData);
+      document.addEventListener('click', function (e) {
+          if (!searchForm.contains(e.target)) {
+              suggestionsList.style.display = 'none';
+          }
+      });
 
-            searchInput.addEventListener('input', function () {
-            const searchTerm = this.value.trim().toLowerCase();
-            suggestionsList.innerHTML = '';
-
-            if (searchTerm.length < 1) {
-                suggestionsList.style.display = 'none';
-                return;
-            }
-
-            const matches = suggestionsData.filter(item => item.label.toLowerCase().includes(searchTerm));
-            
-            if (matches.length > 0) {
-                matches.forEach(match => {
-                const li = document.createElement('li');
-                li.textContent = match.label;
-                li.dataset.tableauId = match.tableauId || '';
-                li.dataset.url = match.url || '';
-                li.dataset.parentDashboard = match.parentDashboard || '';
-                li.addEventListener('click', function () {
-                    const tableauId = this.dataset.tableauId;
-                    const url = this.dataset.url;
-                    const parentDashboard = this.dataset.parentDashboard;
-
-                    console.log('Clic:', { label: match.label, tableauId, url, parentDashboard });
-
-                    if (url && url !== '' && !tableauId) { // Niveau supérieur
-                    window.location.href = url;
-                    } else if (tableauId && parentDashboard) { // Sous-élément
-                    let targetUrl;
-                    if (parentDashboard === 'douanes') targetUrl = '{% url "douanes_dashboard" %}';
-                    else if (parentDashboard === 'financements') targetUrl = '{% url "financements_dashboard" %}';
-                    else if (parentDashboard === 'tofe') targetUrl = '{% url "dashboard" %}';
-
-                    if (window.location.pathname === targetUrl) {
-                        loadTableauData(tableauId);
-                    } else {
-                        window.location.href = `${targetUrl}?tableau_id=${tableauId}`;
-                    }
-                    }
-                    suggestionsList.style.display = 'none';
-                    searchInput.value = match.label;
-                });
-                suggestionsList.appendChild(li);
-                });
-                suggestionsList.style.display = 'block';
-            } else {
-                suggestionsList.style.display = 'none';
-            }
-            });
-
-            // Cacher les suggestions quand on clique ailleurs
-            document.addEventListener('click', function (e) {
-            if (!searchForm.contains(e.target)) {
-                suggestionsList.style.display = 'none';
-            }
-            });
-            // Initialiser les tooltips Bootstrap avec options
-            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl, {
-            trigger: 'hover', // Infobulle visible au survol uniquement
-            delay: { show:30 , hide: 700 }, // Délai : apparition après 100ms, disparition après 500ms
-            boundary: 'window' // Empêche l’infobulle de sortir de la fenêtre
-            }));
-            
-        });
-      </script>
-  </body>
-</html>
+      const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+      const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl, {
+          trigger: 'hover',
+          delay: { show: 30, hide: 700 },
+          boundary: 'window'
+      }));
+  });
+</script>
+{% endblock %}

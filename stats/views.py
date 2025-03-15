@@ -6,7 +6,7 @@ import json
 from django.http import JsonResponse
 from django.conf import settings
 
-def dashboard(request):
+def dashboard_TOFE(request):
     # Chemin vers le fichier Excel (TOFE, inchangé)
     file_path = os.path.join(os.path.dirname(__file__), 'data', 'tofe.xlsx')
     
@@ -72,7 +72,7 @@ def dashboard(request):
         'table_data': table_data,
         'years': years,
     }
-    return render(request, 'stats/dashboard.html', context)
+    return render(request, 'stats/dashboard_TOFE.html', context)
 
 
 # Vue pour le dashboard des douanes

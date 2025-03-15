@@ -157,7 +157,7 @@
           <li class="dropdown">
             <a href="#"><span>Stats MFB</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
             <ul>
-              <li><a href="{% url 'dashboard' %}">Dashboard TOFE</a></li>
+              <li><a href="{% url 'dashboard_TOFE' %}">Dashboard TOFE</a></li>
               <li><a href="{% url 'douanes_dashboard' %}">Dashboard Douanes</a></li>
               <li><a href="{% url 'financements_dashboard' %}">Dashboard Financements</a></li>
             </ul>
@@ -171,6 +171,7 @@
               <li><a href="{% url 'glossaire' %}">Glossaire du MFB</a></li>
             </ul>
           </li>
+          
           <!-- Username dans le menu pour mobile et tablette -->
           {% if request.user.is_authenticated %}
           <li class="mobile-only">
