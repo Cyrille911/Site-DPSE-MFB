@@ -1026,7 +1026,6 @@ section,
 # Services Section
 --------------------------------------------------------------*/
 .services .service-item {
-  background-color: #d9e6e3b4;
   color: #797979;
   text-align: center;
   border: 2px solid color-mix(in srgb, var(--heading-color), transparent 85%);

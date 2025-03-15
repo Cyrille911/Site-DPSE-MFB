@@ -1,136 +1,154 @@
 {% extends 'index.html' %}
 
+{% load planning_filters %}
 {% block title %}
-Modification du Plan d'Action
+Modification d'un Plan d'Action - {{ plan_action.reference }}
 {% endblock %}
 
 {% block content %}
     <div class="container mt-5">
-        <h1 class="text-center mb-4 text-primary fw-bold">Modification du Plan d'Action : {{ plan.titre }}</h1>
+        <h1 class="text-center mb-4 text-primary fw-bold">Modification d'un Plan d'Action ({{ plan_action.reference }})</h1>
 
-        {% if error %}
-            <div class="alert alert-danger">{{ error }}</div>
-        {% endif %}
-
-        <form action="{% url 'edit_plan_action' plan.id %}" method="POST" id="edit-plan-action">
+        <form action="{% url 'edit_plan_action' plan_action.id %}" method="POST" id="edit-plan-action">
             {% csrf_token %}
-            <!-- Informations du Plan -->
+            <!-- 1. Informations sur le Plan d'Action -->
             <div class="card shadow-lg p-5 mb-5 bg-gradient rounded-4 border border-primary">
-                <h3 class="text-primary mb-4">Informations du Plan d'Action</h3>
+                <h3 class="text-primary mb-4">Informations sur le Plan d'Action</h3>
                 <div class="row">
                     <div class="col-md-4 mb-3">
-                        <label for="titre" class="form-label">Titre</label>
-                        <input type="text" class="form-control shadow-sm border-primary" id="titre" name="titre" value="{{ plan.titre }}" required>
+                        <label for="titre" class="form-label">Titre du Plan d'Action</label>
+                        <input type="text" class="form-control shadow-sm border-primary" id="titre" name="titre" value="{{ plan_action.titre }}" placeholder="Entrez le titre du plan" required>
                     </div>
                     <div class="col-md-4 mb-3">
                         <label for="annee_depart" class="form-label">Année de Départ</label>
-                        <input type="number" class="form-control shadow-sm border-primary" id="annee_depart" name="annee_depart" value="{{ plan.annee_debut }}" required min="2010">
+                        <input type="number" class="form-control shadow-sm border-primary" id="annee_depart" name="annee_depart" value="{{ plan_action.annee_debut }}" required min="2010">
                     </div>
                     <div class="col-md-4 mb-3">
                         <label for="horizon" class="form-label">Horizon</label>
-                        <input type="number" class="form-control shadow-sm border-primary" id="horizon" name="horizon" value="{{ plan.horizon }}" required min="1">
+                        <input type="number" class="form-control shadow-sm border-primary" id="horizon" name="horizon" value="{{ plan_action.horizon }}" required min="1">
                     </div>
                 </div>
                 <div class="mb-3">
                     <label for="impact" class="form-label">Impact</label>
-                    <textarea class="form-control shadow-sm border-primary" id="impact" name="impact" rows="3" required>{{ plan.impact }}</textarea>
-                </div>
+                    <textarea class="form-control shadow-sm border-primary" id="impact" name="impact" rows="3" placeholder="Impact du plan" required>{{ plan_action.impact }}</textarea>
+                </div>  
+
                 <div class="d-flex justify-content-center">
                     <button type="button" class="btn btn-outline-warning me-3 shadow-sm" onclick="ajouterEffet()">Ajouter un effet</button>
-                    <button type="submit" class="btn btn-success shadow-sm">Mettre à jour le plan</button>
+                    <button type="submit" class="btn btn-success shadow-sm">Enregistrer les modifications</button>
                 </div>
             </div>
 
             <!-- Zone des effets -->
             <div id="effets" class="mb-4">
                 {% for effet in effets %}
-                    <div class="card shadow-lg p-4 mb-4 border border-success rounded-3 bg-light" id="effet_{{ forloop.counter }}">
-                        <h4 class="text-success" id="effet_id_{{ forloop.counter }}">Effet {{ forloop.counter }}</h4>
+                    <div class="card shadow-lg p-4 mb-4 border border-success rounded-3 bg-light" id="effet_{{ effet.reference }}">
+                        <h4 class="text-success" id="effet_id_{{ effet.reference }}">Effet {{ effet.reference }}</h4>
                         <div class="mb-3">
-                            <label for="effet_titre_{{ forloop.counter }}" class="form-label" id="effet_label_{{ forloop.counter }}">Intitulé de l'effet {{ forloop.counter }}</label>
-                            <input type="text" class="form-control shadow-sm border-success" id="effet_titre_{{ forloop.counter }}" name="effet_titre_{{ forloop.counter }}" value="{{ effet.titre }}" required>
+                            <label for="effet_titre_{{ effet.reference }}" class="form-label" id="effet_label_{{ effet.reference }}">Intitulé de l'effet {{ effet.reference }}</label>
+                            <input type="text" class="form-control shadow-sm border-success" id="effet_titre_{{ effet.reference }}" name="effet_titre_{{ effet.reference }}" value="{{ effet.titre }}" required>
                         </div>
-                        <div id="produits_effet_{{ forloop.counter }}" class="ps-4">
-                            {% for produit in effet.effet_produit.all %}
-                                <div class="card shadow-lg p-4 mb-4 border border-warning rounded-3 bg-light" id="produit_{{ forloop.parentloop.counter }}.{{ forloop.counter }}">
-                                    <h5 class="text-warning" id="produit_id_{{ forloop.parentloop.counter }}.{{ forloop.counter }}">Produit {{ forloop.parentloop.counter }}.{{ forloop.counter }}</h5>
-                                    <div class="mb-3">
-                                        <label for="produit_titre_{{ forloop.parentloop.counter }}.{{ forloop.counter }}" class="form-label" id="produit_label_{{ forloop.parentloop.counter }}.{{ forloop.counter }}">Intitulé du produit</label>
-                                        <input type="text" class="form-control shadow-sm border-warning" id="produit_titre_{{ forloop.parentloop.counter }}.{{ forloop.counter }}" name="produit_titre_{{ forloop.parentloop.counter }}.{{ forloop.counter }}" value="{{ produit.titre }}" required>
-                                    </div>
-                                    <div id="actions_produit_{{ forloop.parentloop.counter }}.{{ forloop.counter }}" class="ps-4">
-                                        {% for action in produit.produit_action.all %}
-                                            <div class="card shadow-lg p-4 mb-4 border border-info rounded-3 bg-light" id="action_{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}">
-                                                <h6 class="text-info" id="action_id_{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}">Action {{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}</h6>
-                                                <div class="mb-3">
-                                                    <label for="action_titre_{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" class="form-label" id="action_label_{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}">Intitulé de l'action</label>
-                                                    <input type="text" class="form-control shadow-sm border-info" id="action_titre_{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" name="action_titre_{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" value="{{ action.titre }}" required>
-                                                </div>
-                                                <div id="activites_action_{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" class="ps-4">
-                                                    {% for activite in action.action_activite.all %}
-                                                        <div class="card shadow-lg p-3 mb-2 border border-primary rounded-3 bg-light activite-container" id="activite_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}">
-                                                            <h6 class="text-primary" id="activite_id_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}">Activité {{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}</h6>
-                                                            <div class="mb-3">
-                                                                <label for="activite_titre_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" class="form-label">Intitulé</label>
-                                                                <input type="text" class="form-control shadow-sm border-primary" id="activite_titre_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" name="activite_titre_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" value="{{ activite.titre }}" required>
-                                                            </div>
-                                                            <div class="mb-3">
-                                                                <label for="activite_type_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" class="form-label">Type</label>
-                                                                <select class="form-control shadow-sm border-primary" id="activite_type_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" name="activite_type_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" required>
-                                                                    <option value="Réforme" {% if activite.type == "Réforme" %}selected{% endif %}>Réforme</option>
-                                                                    <option value="Investissement" {% if activite.type == "Investissement" %}selected{% endif %}>Investissement</option>
-                                                                    <option value="Etude" {% if activite.type == "Etude" %}selected{% endif %}>Étude</option>
-                                                                    <option value="Texte" {% if activite.type == "Texte" %}selected{% endif %}>Texte</option>
-                                                                    <option value="Activité ordinaire" {% if activite.type == "Activité ordinaire" %}selected{% endif %}>Activité ordinaire</option>
-                                                                </select>
-                                                            </div>
-                                                            <div class="mb-3">
-                                                                <label for="indicateur_label_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" class="form-label">Libellé indicateur</label>
-                                                                <input type="text" class="form-control shadow-sm border-primary" id="indicateur_label_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" name="indicateur_label_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" value="{{ activite.indicateur_label }}" required>
-                                                            </div>
-                                                            <div class="mb-3">
-                                                                <label for="indicateur_reference_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" class="form-label">Référence indicateur</label>
-                                                                <input type="text" class="form-control shadow-sm border-primary" id="indicateur_reference_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" name="indicateur_reference_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" value="{{ activite.indicateur_reference }}" required>
-                                                            </div>
-                                                            <div class="mb-3">
-                                                                <label class="form-label">Cibles</label>
-                                                                <div id="cibles_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}">
-                                                                    {% for cible in activite.cibles %}
-                                                                        <input type="text" class="form-control shadow-sm border-primary mb-2" name="cible_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}[{{ forloop.counter }}]" value="{{ cible }}" placeholder="Cible {{ plan.annee_debut|add:forloop.counter0 }}">
-                                                                    {% endfor %}
-                                                                </div>
-                                                            </div>
-                                                            <div class="mb-3">
-                                                                <label class="form-label">Coûts</label>
-                                                                <div id="couts_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}">
-                                                                    {% for cout in activite.couts %}
-                                                                        <input type="number" class="form-control shadow-sm border-primary mb-2" name="cout_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}[{{ forloop.counter }}]" value="{{ cout }}" placeholder="Coût {{ plan.annee_debut|add:forloop.counter0 }}">
-                                                                    {% endfor %}
-                                                                </div>
-                                                            </div>
-                                                            <div class="d-flex justify-content-end">
-                                                                <button type="button" class="btn btn-outline-danger mt-2 shadow-sm" id="supprimer_activite_{{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" onclick="supprimerActivite({{ forloop.parentloop.parentloop.parentloop.counter }}, {{ forloop.parentloop.parentloop.counter }}, {{ forloop.parentloop.counter }}, {{ forloop.counter }})">Supprimer</button>
-                                                            </div>
+                        <div id="produits_effet_{{ effet.reference }}" class="ps-4">
+                            {% for produit in produits %}
+                                {% if produit.effet.id == effet.id %}
+                                    <div class="card shadow-lg p-4 mb-4 border border-warning rounded-3 bg-light" id="produit_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}">
+                                        <h5 class="text-warning" id="produit_id_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}">Produit {{ produit.reference }}</h5>
+                                        <div class="mb-3">
+                                            <label for="produit_titre_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}" class="form-label" id="produit_label_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}">Intitulé du produit {{ produit.reference }}</label>
+                                            <input type="text" class="form-control shadow-sm border-warning" id="produit_titre_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}" name="produit_titre_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}" value="{{ produit.titre }}" required>
+                                        </div>
+                                        <div id="actions_produit_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}" class="ps-4">
+                                            {% for action in actions %}
+                                                {% if action.produit.id == produit.id %}
+                                                    <div class="card shadow-lg p-4 mb-4 border border-info rounded-3 bg-light" id="action_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}">
+                                                        <h6 class="text-info" id="action_id_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}">Action {{ action.reference }}</h6>
+                                                        <div class="mb-3">
+                                                            <label for="action_titre_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}" class="form-label" id="action_label_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}">Intitulé de l'action {{ action.reference }}</label>
+                                                            <input type="text" class="form-control shadow-sm border-info" id="action_titre_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}" name="action_titre_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}" value="{{ action.titre }}" required>
                                                         </div>
-                                                    {% endfor %}
-                                                </div>
-                                                <div class="d-flex justify-content-end">
-                                                    <button type="button" class="btn btn-outline-info me-2 shadow-sm" id="ajouter_activite_{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" onclick="ajouterActivite({{ forloop.parentloop.parentloop.counter }}, {{ forloop.parentloop.counter }}, {{ forloop.counter }})">Ajouter une activité</button>
-                                                    <button type="button" class="btn btn-outline-danger shadow-sm" id="supprimer_action_{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}" onclick="supprimerAction({{ forloop.parentloop.parentloop.counter }}, {{ forloop.parentloop.counter }}, {{ forloop.counter }})">Supprimer</button>
-                                                </div>
-                                            </div>
-                                        {% endfor %}
+                                                        <div id="activites_action_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}" class="ps-4">
+                                                            {% for activite in activites %}
+                                                                {% if activite.action.id == action.id %}
+                                                                    <div class="card shadow-lg p-3 mb-2 border border-primary rounded-3 bg-light activite-container" id="activite_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}">
+                                                                        <h6 class="text-primary" id="activite_id_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}">Activité {{ activite.reference }}</h6>
+                                                                        <div class="mb-3">
+                                                                            <label for="activite_titre_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}" class="form-label">Intitulé de l'activité</label>
+                                                                            <input type="text" class="form-control shadow-sm border-primary" id="activite_titre_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}" name="activite_titre_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}" value="{{ activite.titre }}" required>
+                                                                        </div>
+                                                                        <div class="mb-3">
+                                                                            <label for="activite_type_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}" class="form-label">Type d'activité</label>
+                                                                            <select class="form-control shadow-sm border-primary" id="activite_type_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}" name="activite_type_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}" required>
+                                                                                <option value="Réforme" {% if activite.type == "Réforme" %}selected{% endif %}>Réforme</option>
+                                                                                <option value="Investissement" {% if activite.type == "Investissement" %}selected{% endif %}>Investissement</option>
+                                                                                <option value="Etude" {% if activite.type == "Etude" %}selected{% endif %}>Étude</option>
+                                                                                <option value="Texte" {% if activite.type == "Texte" %}selected{% endif %}>Texte</option>
+                                                                                <option value="Activité ordinaire" {% if activite.type == "Activité ordinaire" %}selected{% endif %}>Activité ordinaire</option>
+                                                                            </select>
+                                                                        </div>
+                                                                        <div class="mb-3">
+                                                                            <label for="indicateur_label_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}" class="form-label">Libellé de l'indicateur</label>
+                                                                            <input type="text" class="form-control shadow-sm border-primary" id="indicateur_label_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}" name="indicateur_label_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}" value="{{ activite.indicateur_label }}" required>
+                                                                        </div>
+                                                                        <div class="mb-3">
+                                                                            <label for="indicateur_reference_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}" class="form-label">Référence de l'indicateur</label>
+                                                                            <input type="text" class="form-control shadow-sm border-primary" id="indicateur_reference_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}" name="indicateur_reference_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}" value="{{ activite.indicateur_reference }}" required>
+                                                                        </div>
+                                                                        <div class="mb-3">
+                                                                            <label class="form-label fw-bold text-primary">Cibles, Périodes d'exécution et Coûts</label>
+                                                                            <div id="cibles_periodes_couts_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}" class="bg-light p-2 rounded">
+                                                                                {% for i in plan_action.horizon|times %}
+                                                                                    {% with year=plan_action.annee_debut|add:i %}
+                                                                                        <div class="row mb-3 p-3 border rounded bg-white shadow-sm">
+                                                                                            <div class="col-md-4">
+                                                                                                <label class="form-label fw-bold text-primary">Cible {{ year }}</label>
+                                                                                                <textarea class="form-control border-primary shadow-sm cible-textarea" id="cible_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}_{{ i }}" name="cible_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}_{{ i }}">{{ activite.cibles|index:i|default:'' }}</textarea>
+                                                                                            </div>
+                                                                                            <div class="col-md-3">
+                                                                                                <label class="form-label fw-bold text-primary">Coût {{ year }}</label>
+                                                                                                <input type="number" class="form-control border-primary shadow-sm" name="cout_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}_{{ i }}" value="{{ activite.couts|index:i|default:'0' }}" step="0.01" min="0">
+                                                                                            </div>
+                                                                                            <div class="col-md-5">
+                                                                                                <label class="form-label fw-bold text-primary">Trimestres {{ year }}</label>
+                                                                                                <div class="d-flex justify-content-between">
+                                                                                                    {% for trimestre in "1234" %}
+                                                                                                        <div class="form-check">
+                                                                                                            <input type="checkbox" class="form-check-input" id="periode_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}_{{ i }}_{{ trimestre }}" name="periode_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}_{{ i }}_T{{ trimestre }}" value="T{{ trimestre }}" {% if "T"|add:trimestre in activite.periodes_execution|index:i %}checked{% endif %}>
+                                                                                                            <label class="form-check-label" for="periode_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}_{{ i }}_{{ trimestre }}">T{{ trimestre }}</label>
+                                                                                                        </div>
+                                                                                                    {% endfor %}
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    {% endwith %}
+                                                                                {% endfor %}
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="d-flex justify-content-end">
+                                                                            <button type="button" class="btn btn-outline-danger mt-2 shadow-sm" id="supprimer_activite_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}" onclick="supprimerActivite('{{ effet.reference }}', '{{ produit.reference|cut:effet.reference|cut:'.' }}', '{{ action.reference|cut:produit.reference|cut:'.' }}', '{{ activite.reference|cut:action.reference|cut:'.' }}')">Supprimer l'activité</button>
+                                                                        </div>
+                                                                    </div>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                        </div>
+                                                        <div class="d-flex justify-content-end">
+                                                            <button type="button" class="btn btn-outline-info me-2 shadow-sm" id="ajouter_activite_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}" onclick="ajouterActivite('{{ effet.reference }}', '{{ produit.reference|cut:effet.reference|cut:'.' }}', '{{ action.reference|cut:produit.reference|cut:'.' }}')">Ajouter une activité</button>
+                                                            <button type="button" class="btn btn-outline-danger shadow-sm" id="supprimer_action_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}" onclick="supprimerAction('{{ effet.reference }}', '{{ produit.reference|cut:effet.reference|cut:'.' }}', '{{ action.reference|cut:produit.reference|cut:'.' }}')">Supprimer l'action</button>
+                                                        </div>
+                                                    </div>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                        <div class="d-flex justify-content-end">
+                                            <button type="button" class="btn btn-outline-info me-2 shadow-sm" id="ajouter_action_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}" onclick="ajouterAction('{{ effet.reference }}', '{{ produit.reference|cut:effet.reference|cut:'.' }}')">Ajouter une action</button>
+                                            <button type="button" class="btn btn-outline-danger shadow-sm" id="supprimer_produit_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}" onclick="supprimerProduit('{{ effet.reference }}', '{{ produit.reference|cut:effet.reference|cut:'.' }}')">Supprimer le produit</button>
+                                        </div>
                                     </div>
-                                    <div class="d-flex justify-content-end">
-                                        <button type="button" class="btn btn-outline-info me-2 shadow-sm" id="ajouter_action_{{ forloop.parentloop.counter }}.{{ forloop.counter }}" onclick="ajouterAction({{ forloop.parentloop.counter }}, {{ forloop.counter }})">Ajouter une action</button>
-                                        <button type="button" class="btn btn-outline-danger shadow-sm" id="supprimer_produit_{{ forloop.parentloop.counter }}.{{ forloop.counter }}" onclick="supprimerProduit({{ forloop.parentloop.counter }}, {{ forloop.counter }})">Supprimer</button>
-                                    </div>
-                                </div>
+                                {% endif %}
                             {% endfor %}
                         </div>
                         <div class="d-flex justify-content-end">
-                            <button type="button" class="btn btn-outline-success me-2 shadow-sm" id="ajouter_produit_{{ forloop.counter }}" onclick="ajouterProduit({{ forloop.counter }})">Ajouter un produit</button>
-                            <button type="button" class="btn btn-outline-danger shadow-sm" id="supprimer_effet_{{ forloop.counter }}" onclick="supprimerEffet({{ forloop.counter }})">Supprimer</button>
+                            <button type="button" class="btn btn-outline-success me-2 shadow-sm" id="ajouter_produit_{{ effet.reference }}" onclick="ajouterProduit('{{ effet.reference }}')">Ajouter un produit</button>
+                            <button type="button" class="btn btn-outline-danger shadow-sm" id="supprimer_effet_{{ effet.reference }}" onclick="supprimerEffet('{{ effet.reference }}')">Supprimer l'effet</button>
                         </div>
                     </div>
                 {% endfor %}
@@ -138,35 +156,52 @@ Modification du Plan d'Action
         </form>
     </div>
 
-    <script>
-        // Réutilisation des mêmes fonctions JavaScript que dans add_plan_action.html
-        // Copiez ici tout le script de add_plan_action.html (les fonctions ajouterEffet, supprimerEffet, etc...)
+    <style>
+        .cible-textarea {
+            transition: height 0.4s ease-in-out, padding 0.4s ease-in-out;
+            height: 38px;
+            min-height: 38px;
+            resize: vertical;
+            overflow: hidden;
+            padding: 6px 12px;
+        }
+        .cible-textarea:focus {
+            height: auto;
+            padding: 10px 12px;
+        }
+    </style>
 
-        // Initialisation des compteurs avec les données existantes
-        let effetCount = {{ effets.count }};
+    <script>
+        let effetCount = {{ effets|length }};
         let produitCounts = {};
         let actionCounts = {};
         let activiteCounts = {};
 
         {% for effet in effets %}
-            produitCounts['{{ forloop.counter }}'] = {{ effet.effet_produit.count }};
-            {% for produit in effet.effet_produit.all %}
-                actionCounts['{{ forloop.parentloop.counter }}.{{ forloop.counter }}'] = {{ produit.produit_action.count }};
-                {% for action in produit.produit_action.all %}
-                    activiteCounts['{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}'] = {{ action.action_activite.count }};
-                {% endfor %}
+            produitCounts['{{ effet.reference }}'] = {{ produits|filter_by_effet:effet|length }};
+            {% for produit in produits %}
+                {% if produit.effet.id == effet.id %}
+                    actionCounts['{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}'] = {{ actions|filter_by_produit:produit|length }};
+                    {% for action in actions %}
+                        {% if action.produit.id == produit.id %}
+                            activiteCounts['{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}'] = {{ activites|filter_by_action:action|length }};
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
             {% endfor %}
         {% endfor %}
 
         // Met à jour les compteurs dans l'interface utilisateur
         function mettreAJourStatistiques() {
-            document.getElementById('effet_count').innerText = effetCount;
-            document.getElementById('produit_count').innerText = Object.values(produitCounts).reduce((a, b) => a + b, 0);
-            document.getElementById('action_count').innerText = Object.values(actionCounts).reduce((a, b) => a + b, 0);
-            document.getElementById('activite_count').innerText = Object.values(activiteCounts).reduce((a, b) => a + b, 0);
+            if (document.getElementById('effet_count')) {
+                document.getElementById('effet_count').innerText = effetCount;
+                document.getElementById('produit_count').innerText = Object.values(produitCounts).reduce((a, b) => a + b, 0);
+                document.getElementById('action_count').innerText = Object.values(actionCounts).reduce((a, b) => a + b, 0);
+                document.getElementById('activite_count').innerText = Object.values(activiteCounts).reduce((a, b) => a + b, 0);
+            }
         }
 
-        // Fonction pour ajouter un effet
+        // Ajouter un effet
         function ajouterEffet() {
             effetCount++;
             const effetNum = effetCount;
@@ -191,18 +226,17 @@ Modification du Plan d'Action
             mettreAJourStatistiques();
         }
 
-        // Fonction pour supprimer un effet
+        // Supprimer un effet
         function supprimerEffet(effetNum) {
             const confirmation = confirm(`Êtes-vous sûr de vouloir supprimer l'effet ${effetNum} ?`);
-            effetNum = Number(effetNum)
+            effetNum = Number(effetNum);
 
             if (confirmation) {
                 const effet = document.getElementById(`effet_${effetNum}`);
                 effet.parentNode.removeChild(effet);
 
-                // Réajuster les IDs et réinitialiser les éléments après la suppression
                 for (let i = effetNum + 1; i <= effetCount; i++) {
-                    document.getElementById(`effet_${i}`).id=`effet_${i - 1}`;
+                    document.getElementById(`effet_${i}`).id = `effet_${i - 1}`;
                     document.getElementById(`effet_id_${i}`).id = `effet_id_${i - 1}`;
                     document.getElementById(`effet_id_${i - 1}`).textContent = `Effet ${i - 1}`;
                     document.getElementById(`effet_label_${i}`).id = `effet_label_${i - 1}`;
@@ -215,292 +249,236 @@ Modification du Plan d'Action
                     document.getElementById(`supprimer_effet_${i}`).id = `supprimer_effet_${i - 1}`;
                     document.getElementById(`supprimer_effet_${i - 1}`).setAttribute('onclick', `supprimerEffet(${i - 1})`);
                     produitCounts[`${i - 1}`] = produitCounts[`${i}`];
-                    
-                    for (let j = 1; j <= produitCounts[`${i}`] ; j++) { 
-                        document.getElementById(`produit_${i}.${j}`).id = `produit_${i-1}.${j}`;
-                        document.getElementById(`produit_id_${i}.${j}`).id = `produit_id_${i-1}.${j}`;
-                        document.getElementById(`produit_id_${i-1}.${j}`).textContent = `Produit ${i-1}.${j}`;
-                        document.getElementById(`produit_label_${i}.${j}`).id = `produit_label_${i-1}.${j}`;
-                        document.getElementById(`produit_label_${i-1}.${j}`).textContent = `Intitulé du produit ${i-1}.${j}`;
-                        document.getElementById(`produit_titre_${i}.${j}`).id = `produit_titre_${i-1}.${j}`;
-                        document.getElementById(`produit_titre_${i-1}.${j}`).name = `produit_titre_${i-1}.${j}`;
-                        document.getElementById(`actions_produit_${i}.${j}`).id = `actions_produit_${i-1}.${j}`;
-                        document.getElementById(`ajouter_action_${i}.${j}`).id = `ajouter_action_${i-1}.${j}`;
-                        document.getElementById(`ajouter_action_${i-1}.${j}`).setAttribute('onclick', `ajouterAction(${i-1}, ${j})`);
-                        document.getElementById(`supprimer_produit_${i}.${j}`).id = `supprimer_produit_${i-1}.${j}`;
-                        document.getElementById(`supprimer_produit_${i-1}.${j}`).setAttribute('onclick', `supprimerProduit(${i-1}, ${j})`);
-                        
-                        for (let k = 1; k <= actionCounts[`${i}.${j}`]; k++) {
-                            document.getElementById(`action_${i}.${j}.${k}`).id = `action_${i-1}.${j}.${k}`;
-                            document.getElementById(`action_id_${i}.${j}.${k}`).id = `action_id_${i-1}.${j}.${k}`;
-                            document.getElementById(`action_id_${i-1}.${j}.${k}`).textContent = `Action ${i-1}.${j}.${k}`;
-                            document.getElementById(`action_label_${i}.${j}.${k}`).id = `action_label_${i-1}.${j}.${k}`;
-                            document.getElementById(`action_label_${i-1}.${j}.${k}`).textContent = `Intitulé de l'action ${effetNum}.${j}.${k}`;
-                            document.getElementById(`action_titre_${i}.${j}.${k}`).id = `action_titre_${i-1}.${j}.${k}`;
-                            document.getElementById(`action_titre_${i-1}.${j}.${k}`).name = `action_titre_${i-1}.${j}.${k}`;
-                            document.getElementById(`activites_action_${i}.${j}.${k}`).id = `activites_action_${i-1}.${j}.${k}`;
-                            document.getElementById(`ajouter_activite_${i}.${j}.${k}`).id = `ajouter_activite_${i-1}.${j}.${k}`;
-                            document.getElementById(`ajouter_activite_${i-1}.${j}.${k}`).setAttribute('onclick', `ajouterActivite(${i-1}, ${j}, ${k})`);
-                            document.getElementById(`supprimer_action_${i}.${j}.${k}`).id = `supprimer_action_${i-1}.${j}.${k}`;
-                            document.getElementById(`supprimer_action_${i-1}.${j}.${k}`).setAttribute('onclick', `supprimerAction(${i-1}, ${j}, ${k})`);
-                            
-                            for (let l = 1; l <= activiteCounts[`${i}.${j}.${k}`]; l++) {
-                                document.getElementById(`activite_${i}.${j}.${k}.${l}`).id = `activite_${i-1}.${j}.${k}.${l}`;
-                                document.getElementById(`activite_id_${i}.${j}.${k}.${l}`).id = `activite_id_${i-1}.${j}.${k}.${l}`;
-                                document.getElementById(`activite_id_${i-1}.${j}.${k}.${l}`).textContent = `Activité ${i-1}.${j}.${k}.${l}`;
-                                document.getElementById(`activite_label_${i}.${j}.${k}.${l}`).id = `activite_label_${i-1}.${j}.${k}.${l}`;
-                                document.getElementById(`activite_label_${i-1}.${j}.${k}.${l}`).textContent = `Intitulé de l'activité ${i-1}.${j}.${k}.${l}`;
-                                document.getElementById(`activite_titre_${i}.${j}.${k}.${l}`).id = `activite_titre_${i-1}.${j}.${k}.${l}`;
-                                document.getElementById(`activite_titre_${i-1}.${j}.${k}.${l}`).name = `activite_titre_${i-1}.${j}.${k}.${l}`;
-                                document.getElementById(`supprimer_activite_${i}.${j}.${k}.${l}`).id = `supprimer_activite_${i-1}.${j}.${k}.${l}`;
-                                document.getElementById(`supprimer_activite_${i-1}.${j}.${k}.${l}`).setAttribute('onclick', `supprimerActivite(${i-1}, ${j}, ${k}, ${l})`);
+
+                    for (let j = 1; j <= produitCounts[`${i}`]; j++) { 
+                        document.getElementById(`produit_${i}_${j}`).id = `produit_${i-1}_${j}`;
+                        document.getElementById(`produit_id_${i}_${j}`).id = `produit_id_${i-1}_${j}`;
+                        document.getElementById(`produit_id_${i-1}_${j}`).textContent = `Produit ${i-1}.${j}`;
+                        document.getElementById(`produit_label_${i}_${j}`).id = `produit_label_${i-1}_${j}`;
+                        document.getElementById(`produit_label_${i-1}_${j}`).textContent = `Intitulé du produit ${i-1}.${j}`;
+                        document.getElementById(`produit_titre_${i}_${j}`).id = `produit_titre_${i-1}_${j}`;
+                        document.getElementById(`produit_titre_${i-1}_${j}`).name = `produit_titre_${i-1}_${j}`;
+                        document.getElementById(`actions_produit_${i}_${j}`).id = `actions_produit_${i-1}_${j}`;
+                        document.getElementById(`ajouter_action_${i}_${j}`).id = `ajouter_action_${i-1}_${j}`;
+                        document.getElementById(`ajouter_action_${i-1}_${j}`).setAttribute('onclick', `ajouterAction(${i-1}, ${j})`);
+                        document.getElementById(`supprimer_produit_${i}_${j}`).id = `supprimer_produit_${i-1}_${j}`;
+                        document.getElementById(`supprimer_produit_${i-1}_${j}`).setAttribute('onclick', `supprimerProduit(${i-1}, ${j})`);
+
+                        for (let k = 1; k <= actionCounts[`${i}_${j}`]; k++) {
+                            document.getElementById(`action_${i}_${j}_${k}`).id = `action_${i-1}_${j}_${k}`;
+                            document.getElementById(`action_id_${i}_${j}_${k}`).id = `action_id_${i-1}_${j}_${k}`;
+                            document.getElementById(`action_id_${i-1}_${j}_${k}`).textContent = `Action ${i-1}.${j}.${k}`;
+                            document.getElementById(`action_label_${i}_${j}_${k}`).id = `action_label_${i-1}_${j}_${k}`;
+                            document.getElementById(`action_label_${i-1}_${j}_${k}`).textContent = `Intitulé de l'action ${i-1}.${j}.${k}`;
+                            document.getElementById(`action_titre_${i}_${j}_${k}`).id = `action_titre_${i-1}_${j}_${k}`;
+                            document.getElementById(`action_titre_${i-1}_${j}_${k}`).name = `action_titre_${i-1}_${j}_${k}`;
+                            document.getElementById(`activites_action_${i}_${j}_${k}`).id = `activites_action_${i-1}_${j}_${k}`;
+                            document.getElementById(`ajouter_activite_${i}_${j}_${k}`).id = `ajouter_activite_${i-1}_${j}_${k}`;
+                            document.getElementById(`ajouter_activite_${i-1}_${j}_${k}`).setAttribute('onclick', `ajouterActivite(${i-1}, ${j}, ${k})`);
+                            document.getElementById(`supprimer_action_${i}_${j}_${k}`).id = `supprimer_action_${i-1}_${j}_${k}`;
+                            document.getElementById(`supprimer_action_${i-1}_${j}_${k}`).setAttribute('onclick', `supprimerAction(${i-1}, ${j}, ${k})`);
+
+                            for (let l = 1; l <= activiteCounts[`${i}_${j}_${k}`]; l++) {
+                                document.getElementById(`activite_${i}_${j}_${k}_${l}`).id = `activite_${i-1}_${j}_${k}_${l}`;
+                                document.getElementById(`activite_id_${i}_${j}_${k}_${l}`).id = `activite_id_${i-1}_${j}_${k}_${l}`;
+                                document.getElementById(`activite_id_${i-1}_${j}_${k}_${l}`).textContent = `Activité ${i-1}.${j}.${k}.${l}`;
+                                document.getElementById(`activite_label_${i}_${j}_${k}_${l}`).id = `activite_label_${i-1}_${j}_${k}_${l}`;
+                                document.getElementById(`activite_label_${i-1}_${j}_${k}_${l}`).textContent = `Intitulé de l'activité ${i-1}.${j}.${k}.${l}`;
+                                document.getElementById(`activite_titre_${i}_${j}_${k}_${l}`).id = `activite_titre_${i-1}_${j}_${k}_${l}`;
+                                document.getElementById(`activite_titre_${i-1}_${j}_${k}_${l}`).name = `activite_titre_${i-1}_${j}_${k}_${l}`;
+                                document.getElementById(`supprimer_activite_${i}_${j}_${k}_${l}`).id = `supprimer_activite_${i-1}_${j}_${k}_${l}`;
+                                document.getElementById(`supprimer_activite_${i-1}_${j}_${k}_${l}`).setAttribute('onclick', `supprimerActivite(${i-1}, ${j}, ${k}, ${l})`);
+                                document.getElementById(`cibles_periodes_couts_${i}_${j}_${k}_${l}`).id = `cibles_periodes_couts_${i-1}_${j}_${k}_${l}`;
                             }
                         }
                     }
                 }
-                
-                // Décrémentation du compteur des effets
+
                 effetCount--;
-
-                // Suppression de l'effet supprimé et de ses dépendances
-                if (produitCounts[`${effetNum}`]) {
-                    for (let k = 1; k <= produitCounts[`${effetNum}`]; k++) {
-                        if (actionCounts[`${effetNum}.${k}`]) {
-                            for (let l = 1; l <= actionCounts[`${effetNum}.${k}`]; l++) {
-                                delete activiteCounts[`${effetNum}.${k}.${l}`];
-                            }
-                            delete actionCounts[`${effetNum}.${k}`];
-                        }
-                    }
-                }
                 delete produitCounts[`${effetNum}`];
-
-                // Décalage des indices après suppression
                 for (let j = effetNum; j < effetCount; j++) {
                     produitCounts[`${j}`] = produitCounts[`${j+1}`] || 0;
                     delete produitCounts[`${j+1}`];
-
-                    for (let k = 1; k <= (produitCounts[`${j}`] || 0); k++) {
-                        actionCounts[`${j}.${k}`] = actionCounts[`${j+1}.${k}`] || 0;
-                        delete actionCounts[`${j+1}.${k}`];
-
-                        for (let l = 1; l <= (actionCounts[`${j}.${k}`] || 0); l++) {
-                            activiteCounts[`${j}.${k}.${l}`] = activiteCounts[`${j+1}.${k}.${l}`] || 0;
-                            delete activiteCounts[`${j+1}.${k}.${l}`];
+                    for (let k = 1; k <= produitCounts[`${j}`]; k++) {
+                        actionCounts[`${j}_${k}`] = actionCounts[`${j+1}_${k}`] || 0;
+                        delete actionCounts[`${j+1}_${k}`];
+                        for (let l = 1; l <= actionCounts[`${j}_${k}`]; l++) {
+                            activiteCounts[`${j}_${k}_${l}`] = activiteCounts[`${j+1}_${k}_${l}`] || 0;
+                            delete activiteCounts[`${j+1}_${k}_${l}`];
                         }
                     }
                 }
-
-                // Mise à jour des statistiques
                 mettreAJourStatistiques();
             }
         }
 
-        // Fonction pour ajouter un produit
+        // Ajouter un produit
         function ajouterProduit(effetNum) {
             produitCounts[`${effetNum}`]++;
-            produitNum = produitCounts[`${effetNum}`]
-            actionCounts[`${effetNum}.${produitNum}`] = 0;
+            const produitNum = produitCounts[`${effetNum}`];
+            actionCounts[`${effetNum}_${produitNum}`] = 0;
 
             const produitContainer = document.createElement('div');
             produitContainer.className = 'card shadow-lg p-4 mb-4 border border-warning rounded-3 bg-light';
-            produitContainer.id = `produit_${effetNum}.${produitNum}`;
+            produitContainer.id = `produit_${effetNum}_${produitNum}`;
             produitContainer.innerHTML = `
-                <h5 class="text-warning" id="produit_id_${effetNum}.${produitNum}">Produit ${effetNum}.${produitNum}</h5>
+                <h5 class="text-warning" id="produit_id_${effetNum}_${produitNum}">Produit ${effetNum}.${produitNum}</h5>
                 <div class="mb-3">
-                    <label for="produit_titre_${effetNum}.${produitNum}" class="form-label" id="produit_label_${effetNum}.${produitNum}">Intitulé du produit ${effetNum}.${produitNum}</label>
-                    <input type="text" class="form-control shadow-sm border-warning" id="produit_titre_${effetNum}.${produitNum}" name="produit_titre_${effetNum}.${produitNum}" required>
+                    <label for="produit_titre_${effetNum}_${produitNum}" class="form-label" id="produit_label_${effetNum}_${produitNum}">Intitulé du produit ${effetNum}.${produitNum}</label>
+                    <input type="text" class="form-control shadow-sm border-warning" id="produit_titre_${effetNum}_${produitNum}" name="produit_titre_${effetNum}_${produitNum}" required>
                 </div>
-                <div id="actions_produit_${effetNum}.${produitNum}" class="ps-4"></div>
+                <div id="actions_produit_${effetNum}_${produitNum}" class="ps-4"></div>
                 <div class="d-flex justify-content-end">
-                    <button type="button" class="btn btn-outline-info me-2 shadow-sm" id="ajouter_action_${effetNum}.${produitNum}" onclick="ajouterAction(${effetNum}, ${produitNum})">Ajouter une action</button>
-                    <button type="button" class="btn btn-outline-danger shadow-sm" id="supprimer_produit_${effetNum}.${produitNum}" onclick="supprimerProduit(${effetNum}, ${produitNum})">Supprimer le produit</button>
+                    <button type="button" class="btn btn-outline-info me-2 shadow-sm" id="ajouter_action_${effetNum}_${produitNum}" onclick="ajouterAction(${effetNum}, ${produitNum})">Ajouter une action</button>
+                    <button type="button" class="btn btn-outline-danger shadow-sm" id="supprimer_produit_${effetNum}_${produitNum}" onclick="supprimerProduit(${effetNum}, ${produitNum})">Supprimer le produit</button>
                 </div>
             `;
             document.getElementById(`produits_effet_${effetNum}`).appendChild(produitContainer);
             mettreAJourStatistiques();
         }
 
-        // Fonction pour supprimer un produit
+        // Supprimer un produit
         function supprimerProduit(effetNum, produitNum) {
             const confirmation = confirm(`Êtes-vous sûr de vouloir supprimer le produit ${effetNum}.${produitNum} ?`);
+            effetNum = Number(effetNum);
+            produitNum = Number(produitNum);
 
             if (confirmation) {
-                const produit = document.getElementById(`produit_${effetNum}.${produitNum}`);
+                const produit = document.getElementById(`produit_${effetNum}_${produitNum}`);
                 produit.parentNode.removeChild(produit);
-                effetNum = Number(effetNum)
-                produitNum = Number(produitNum)
 
-                // Réajuster les IDs après suppression
                 for (let j = produitNum + 1; j <= produitCounts[`${effetNum}`]; j++) { 
-                    document.getElementById(`produit_${effetNum}.${j}`).id = `produit_${effetNum}.${j - 1}`;
-                    document.getElementById(`produit_id_${effetNum}.${j}`).id = `produit_id_${effetNum}.${j - 1}`;
-                    document.getElementById(`produit_id_${effetNum}.${j - 1}`).textContent = `Produit ${effetNum}.${j - 1}`;
-                    document.getElementById(`produit_label_${effetNum}.${j}`).id = `produit_label_${effetNum}.${j - 1}`;
-                    document.getElementById(`produit_label_${effetNum}.${j - 1}`).textContent = `Intitulé du produit ${effetNum}.${j - 1}`;
-                    document.getElementById(`produit_titre_${effetNum}.${j}`).id = `produit_titre_${effetNum}.${j - 1}`;
-                    document.getElementById(`produit_titre_${effetNum}.${j - 1}`).name = `produit_titre_${effetNum}.${j - 1}`;
-                    document.getElementById(`actions_produit_${effetNum}.${j}`).id = `actions_produit_${effetNum}.${j - 1}`;
-                    document.getElementById(`ajouter_action_${effetNum}.${j}`).id = `ajouter_action_${effetNum}.${j - 1}`;
-                    document.getElementById(`ajouter_action_${effetNum}.${j - 1}`).setAttribute('onclick', `ajouterAction(${effetNum}, ${j - 1})`);
-                    document.getElementById(`supprimer_produit_${effetNum}.${j}`).id = `supprimer_produit_${effetNum}.${j - 1}`;
-                    document.getElementById(`supprimer_produit_${effetNum}.${j - 1}`).setAttribute('onclick', `supprimerProduit(${effetNum}, ${j - 1})`);
-                    
-                    for (let k = 1; k <= actionCounts[`${effetNum}.${j}`]; k++) {
-                        document.getElementById(`action_${effetNum}.${j}.${k}`).id = `action_${effetNum}.${j-1}.${k}`;
-                        document.getElementById(`action_id_${effetNum}.${j}.${k}`).id = `action_id_${effetNum}.${j-1}.${k}`;
-                        document.getElementById(`action_id_${effetNum}.${j-1}.${k}`).textContent = `Action ${effetNum}.${j-1}.${k}`;
-                        document.getElementById(`action_label_${effetNum}.${j}.${k}`).id = `action_label_${effetNum}.${j-1}.${k}`;
-                        document.getElementById(`action_label_${effetNum}.${j-1}.${k}`).textContent = `Intitulé de l'action ${effetNum}.${j-1}.${k}`;
-                        document.getElementById(`action_titre_${effetNum}.${j}.${k}`).id = `action_titre_${effetNum}.${j-1}.${k}`;
-                        document.getElementById(`action_titre_${effetNum}.${j-1}.${k}`).name = `action_titre_${effetNum}.${j-1}.${k}`;
-                        document.getElementById(`activites_action_${effetNum}.${j}.${k}`).id = `activites_action_${effetNum}.${j-1}.${k}`;
-                        document.getElementById(`ajouter_activite_${effetNum}.${j}.${k}`).id = `ajouter_activite_${effetNum}.${j-1}.${k}`;
-                        document.getElementById(`ajouter_activite_${effetNum}.${j-1}.${k}`).setAttribute('onclick', `ajouterActivite(${effetNum}, ${j-1}, ${k})`);
-                        document.getElementById(`supprimer_action_${effetNum}.${j}.${k}`).id = `supprimer_action_${effetNum}.${j-1}.${k}`;
-                        document.getElementById(`supprimer_action_${effetNum}.${j-1}.${k}`).setAttribute('onclick', `supprimerAction(${effetNum}, ${j-1}, ${k})`);
-                        
-                        for (let l = activiteNum + 1; l <= activiteCounts[`${effetNum}.${j}.${k}`]; l++) {
-                            document.getElementById(`activite_${effetNum}.${j}.${k}.${l}`).id = `activite_${effetNum}.${j-1}.${k}.${l}`;
-                            document.getElementById(`activite_id_${effetNum}.${j}.${k}.${l}`).id = `activite_id_${effetNum}.${j-1}.${k}.${l}`;
-                            document.getElementById(`activite_id_${effetNum}.${j-1}.${k}.${l}`).textContent = `Activité ${effetNum}.${j-1}.${k}.${l}`;
-                            document.getElementById(`activite_label_${effetNum}.${j}.${k}.${l}`).id = `activite_label_${effetNum}.${j-1}.${k}.${l}`;
-                            document.getElementById(`activite_label_${effetNum}.${j-1}.${k}.${l}`).textContent = `Intitulé de l'activité ${effetNum}.${j-1}.${k}.${l}`;
-                            document.getElementById(`activite_titre_${effetNum}.${j}.${k}.${l}`).id = `activite_titre_${effetNum}.${j-1}.${k}.${l}`;
-                            document.getElementById(`activite_titre_${effetNum}.${j-1}.${k}.${l}`).name = `activite_titre_${effetNum}.${j-1}.${k}.${l}`;
-                            document.getElementById(`supprimer_activite_${effetNum}.${j}.${k}.${l}`).id = `supprimer_activite_${effetNum}.${j-1}.${k}.${l}`;
-                            document.getElementById(`supprimer_activite_${effetNum}.${j-1}.${k}.${l}`).setAttribute('onclick', `supprimerActivite(${effetNum}, ${j-1}, ${k}, ${l})`);
-                        }
-                    }
-                }
-                // Décalage des indices après suppression
-                for (let j = effetNum; j < effetCount - 1; j++) {
-                    produitCounts[`${j}`] = produitCounts[`${j+1}`] || 0;
+                    document.getElementById(`produit_${effetNum}_${j}`).id = `produit_${effetNum}_${j - 1}`;
+                    document.getElementById(`produit_id_${effetNum}_${j}`).id = `produit_id_${effetNum}_${j - 1}`;
+                    document.getElementById(`produit_id_${effetNum}_${j - 1}`).textContent = `Produit ${effetNum}.${j - 1}`;
+                    document.getElementById(`produit_label_${effetNum}_${j}`).id = `produit_label_${effetNum}_${j - 1}`;
+                    document.getElementById(`produit_label_${effetNum}_${j - 1}`).textContent = `Intitulé du produit ${effetNum}.${j - 1}`;
+                    document.getElementById(`produit_titre_${effetNum}_${j}`).id = `produit_titre_${effetNum}_${j - 1}`;
+                    document.getElementById(`produit_titre_${effetNum}_${j - 1}`).name = `produit_titre_${effetNum}_${j - 1}`;
+                    document.getElementById(`actions_produit_${effetNum}_${j}`).id = `actions_produit_${effetNum}_${j - 1}`;
+                    document.getElementById(`ajouter_action_${effetNum}_${j}`).id = `ajouter_action_${effetNum}_${j - 1}`;
+                    document.getElementById(`ajouter_action_${effetNum}_${j - 1}`).setAttribute('onclick', `ajouterAction(${effetNum}, ${j - 1})`);
+                    document.getElementById(`supprimer_produit_${effetNum}_${j}`).id = `supprimer_produit_${effetNum}_${j - 1}`;
+                    document.getElementById(`supprimer_produit_${effetNum}_${j - 1}`).setAttribute('onclick', `supprimerProduit(${effetNum}, ${j - 1})`);
 
-                    for (let k = 1; k <= (produitCounts[`${j+1}`] || 0); k++) {
-                        actionCounts[`${j}.${k}`] = actionCounts[`${j+1}.${k}`] || 0;
+                    for (let k = 1; k <= actionCounts[`${effetNum}_${j}`]; k++) {
+                        document.getElementById(`action_${effetNum}_${j}_${k}`).id = `action_${effetNum}_${j-1}_${k}`;
+                        document.getElementById(`action_id_${effetNum}_${j}_${k}`).id = `action_id_${effetNum}_${j-1}_${k}`;
+                        document.getElementById(`action_id_${effetNum}_${j-1}_${k}`).textContent = `Action ${effetNum}.${j-1}.${k}`;
+                        document.getElementById(`action_label_${effetNum}_${j}_${k}`).id = `action_label_${effetNum}_${j-1}_${k}`;
+                        document.getElementById(`action_label_${effetNum}_${j-1}_${k}`).textContent = `Intitulé de l'action ${effetNum}.${j-1}.${k}`;
+                        document.getElementById(`action_titre_${effetNum}_${j}_${k}`).id = `action_titre_${effetNum}_${j-1}_${k}`;
+                        document.getElementById(`action_titre_${effetNum}_${j-1}_${k}`).name = `action_titre_${effetNum}_${j-1}_${k}`;
+                        document.getElementById(`activites_action_${effetNum}_${j}_${k}`).id = `activites_action_${effetNum}_${j-1}_${k}`;
+                        document.getElementById(`ajouter_activite_${effetNum}_${j}_${k}`).id = `ajouter_activite_${effetNum}_${j-1}_${k}`;
+                        document.getElementById(`ajouter_activite_${effetNum}_${j-1}_${k}`).setAttribute('onclick', `ajouterActivite(${effetNum}, ${j-1}, ${k})`);
+                        document.getElementById(`supprimer_action_${effetNum}_${j}_${k}`).id = `supprimer_action_${effetNum}_${j-1}_${k}`;
+                        document.getElementById(`supprimer_action_${effetNum}_${j-1}_${k}`).setAttribute('onclick', `supprimerAction(${effetNum}, ${j-1}, ${k})`);
 
-                        for (let l = 1; l <= (actionCounts[`${j+1}.${k}`] || 0); l++) {
-                            activiteCounts[`${j}.${k}.${l}`] = activiteCounts[`${j+1}.${k}.${l}`] || 0;
-                        }
-
-                        // Suppression des actions excédentaires si nécessaire
-                        if (actionCounts[`${j}.${k}`] > actionCounts[`${j+1}.${k}`]) {
-                            for (let m = actionCounts[`${j+1}.${k}`] + 1; m <= actionCounts[`${j}.${k}`]; m++) {
-                                delete activiteCounts[`${j}.${m}`];
-                            }
-                        }
-                    }
-
-                    // Suppression des produits excédentaires si nécessaire
-                    if (produitCounts[`${j}`] > produitCounts[`${j+1}`]) {
-                        for (let k = produitCounts[`${j+1}`] + 1; k <= produitCounts[`${j}`]; k++) {
-                            delete actionCounts[`${j}.${k}`];
+                        for (let l = 1; l <= activiteCounts[`${effetNum}_${j}_${k}`]; l++) {
+                            document.getElementById(`activite_${effetNum}_${j}_${k}_${l}`).id = `activite_${effetNum}_${j-1}_${k}_${l}`;
+                            document.getElementById(`activite_id_${effetNum}_${j}_${k}_${l}`).id = `activite_id_${effetNum}_${j-1}_${k}_${l}`;
+                            document.getElementById(`activite_id_${effetNum}_${j-1}_${k}_${l}`).textContent = `Activité ${effetNum}.${j-1}.${k}.${l}`;
+                            document.getElementById(`activite_label_${effetNum}_${j}_${k}_${l}`).id = `activite_label_${effetNum}_${j-1}_${k}_${l}`;
+                            document.getElementById(`activite_label_${effetNum}_${j-1}_${k}_${l}`).textContent = `Intitulé de l'activité ${effetNum}.${j-1}.${k}.${l}`;
+                            document.getElementById(`activite_titre_${effetNum}_${j}_${k}_${l}`).id = `activite_titre_${effetNum}_${j-1}_${k}_${l}`;
+                            document.getElementById(`activite_titre_${effetNum}_${j-1}_${k}_${l}`).name = `activite_titre_${effetNum}_${j-1}_${k}_${l}`;
+                            document.getElementById(`supprimer_activite_${effetNum}_${j}_${k}_${l}`).id = `supprimer_activite_${effetNum}_${j-1}_${k}_${l}`;
+                            document.getElementById(`supprimer_activite_${effetNum}_${j-1}_${k}_${l}`).setAttribute('onclick', `supprimerActivite(${effetNum}, ${j-1}, ${k}, ${l})`);
+                            document.getElementById(`cibles_periodes_couts_${effetNum}_${j}_${k}_${l}`).id = `cibles_periodes_couts_${effetNum}_${j-1}_${k}_${l}`;
                         }
                     }
                 }
 
-                // Décrémentation du compteur
-                effetCount--;
-
-                // Mise à jour des statistiques
-                mettreAJourStatistiques();
+                produitCounts[`${effetNum}`]--;
+                delete actionCounts[`${effetNum}_${produitNum}`];
+                for (let j = produitNum; j < produitCounts[`${effetNum}`]; j++) {
+                    actionCounts[`${effetNum}_${j}`] = actionCounts[`${effetNum}_${j+1}`] || 0;
+                    delete actionCounts[`${effetNum}_${j+1}`];
+                    for (let k = 1; k <= actionCounts[`${effetNum}_${j}`]; k++) {
+                        activiteCounts[`${effetNum}_${j}_${k}`] = activiteCounts[`${effetNum}_${j+1}_${k}`] || 0;
+                        delete activiteCounts[`${effetNum}_${j+1}_${k}`];
+                    }
+                }
                 mettreAJourStatistiques();
             }
         }
 
-        // Ajout d'une action
+        // Ajouter une action
         function ajouterAction(effetNum, produitNum) {
-            actionCounts[`${effetNum}.${produitNum}`]++;
-            const actionNum = actionCounts[`${effetNum}.${produitNum}`];
-            activiteCounts[`${effetNum}.${produitNum}.${actionNum}`] = 0;
+            actionCounts[`${effetNum}_${produitNum}`]++;
+            const actionNum = actionCounts[`${effetNum}_${produitNum}`];
+            activiteCounts[`${effetNum}_${produitNum}_${actionNum}`] = 0;
 
             const actionContainer = document.createElement('div');
             actionContainer.className = 'card shadow-lg p-4 mb-4 border border-info rounded-3 bg-light';
-            actionContainer.id = `action_${effetNum}.${produitNum}.${actionNum}`;
+            actionContainer.id = `action_${effetNum}_${produitNum}_${actionNum}`;
             actionContainer.innerHTML = `
-                <h6 class="text-info" id="action_id_${effetNum}.${produitNum}.${actionNum}">Action ${effetNum}.${produitNum}.${actionNum}</h6>
+                <h6 class="text-info" id="action_id_${effetNum}_${produitNum}_${actionNum}">Action ${effetNum}.${produitNum}.${actionNum}</h6>
                 <div class="mb-3">
-                    <label for="action_titre_${effetNum}.${produitNum}.${actionNum}" class="form-label" id="action_label_${effetNum}.${produitNum}.${actionNum}">Intitulé de l'action ${effetNum}.${produitNum}.${actionNum}</label>
-                    <input type="text" class="form-control shadow-sm border-info" id="action_titre_${effetNum}.${produitNum}.${actionNum}" name="action_titre_${effetNum}.${produitNum}.${actionNum}" required>
+                    <label for="action_titre_${effetNum}_${produitNum}_${actionNum}" class="form-label" id="action_label_${effetNum}_${produitNum}_${actionNum}">Intitulé de l'action ${effetNum}.${produitNum}.${actionNum}</label>
+                    <input type="text" class="form-control shadow-sm border-info" id="action_titre_${effetNum}_${produitNum}_${actionNum}" name="action_titre_${effetNum}_${produitNum}_${actionNum}" required>
                 </div>
-                <div id="activites_action_${effetNum}.${produitNum}.${actionNum}" class="ps-4"></div>
+                <div id="activites_action_${effetNum}_${produitNum}_${actionNum}" class="ps-4"></div>
                 <div class="d-flex justify-content-end">
-                    <button type="button" class="btn btn-outline-info me-2 shadow-sm" id="ajouter_activite_${effetNum}.${produitNum}.${actionNum}" onclick="ajouterActivite(${effetNum}, ${produitNum}, ${actionNum})">Ajouter une activité</button>
-                    <button type="button" class="btn btn-outline-danger shadow-sm" id="supprimer_action_${effetNum}.${produitNum}.${actionNum}" onclick="supprimerAction(${effetNum}, ${produitNum}, ${actionNum})">Supprimer l'action</button>
+                    <button type="button" class="btn btn-outline-info me-2 shadow-sm" id="ajouter_activite_${effetNum}_${produitNum}_${actionNum}" onclick="ajouterActivite(${effetNum}, ${produitNum}, ${actionNum})">Ajouter une activité</button>
+                    <button type="button" class="btn btn-outline-danger shadow-sm" id="supprimer_action_${effetNum}_${produitNum}_${actionNum}" onclick="supprimerAction(${effetNum}, ${produitNum}, ${actionNum})">Supprimer l'action</button>
                 </div>
             `;
-            document.getElementById(`actions_produit_${effetNum}.${produitNum}`).appendChild(actionContainer);
+            document.getElementById(`actions_produit_${effetNum}_${produitNum}`).appendChild(actionContainer);
             mettreAJourStatistiques();
         }
 
-        // Fonction de suppression d'une action
+        // Supprimer une action
         function supprimerAction(effetNum, produitNum, actionNum) {
             const confirmation = confirm(`Êtes-vous sûr de vouloir supprimer l'action ${effetNum}.${produitNum}.${actionNum} ?`);
+            effetNum = Number(effetNum);
+            produitNum = Number(produitNum);
+            actionNum = Number(actionNum);
 
             if (confirmation) {
-                const action = document.getElementById(`action_${effetNum}.${produitNum}.${actionNum}`);
+                const action = document.getElementById(`action_${effetNum}_${produitNum}_${actionNum}`);
                 action.parentNode.removeChild(action);
-                effetNum = Number(effetNum)
-                produitNum = Number(produitNum)
-                actionNum = Number(actionNum)
 
-                // Réajuster les IDs après suppression
-                for (let k = actionNum + 1; k <= actionCounts[`${effetNum}.${produitNum}`]; k++) {
-                    document.getElementById(`action_${effetNum}.${produitNum}.${k}`).id = `action_${effetNum}.${produitNum}.${k - 1}`;
-                    document.getElementById(`action_id_${effetNum}.${produitNum}.${k}`).id = `action_id_${effetNum}.${produitNum}.${k - 1}`;
-                    document.getElementById(`action_id_${effetNum}.${produitNum}.${k - 1}`).textContent = `Action ${effetNum}.${produitNum}.${k - 1}`;
-                    document.getElementById(`action_label_${effetNum}.${produitNum}.${k}`).id = `action_label_${effetNum}.${produitNum}.${k - 1}`;
-                    document.getElementById(`action_label_${effetNum}.${produitNum}.${k - 1}`).textContent = `Intitulé de l'action ${effetNum}.${produitNum}.${k - 1}`;
-                    document.getElementById(`action_titre_${effetNum}.${produitNum}.${k}`).id = `action_titre_${effetNum}.${produitNum}.${k - 1}`;
-                    document.getElementById(`action_titre_${effetNum}.${produitNum}.${k - 1}`).name = `action_titre_${effetNum}.${produitNum}.${k - 1}`;
-                    document.getElementById(`activites_action_${effetNum}.${produitNum}.${k}`).id = `activites_action_${effetNum}.${produitNum}.${k - 1}`;
-                    document.getElementById(`ajouter_activite_${effetNum}.${produitNum}.${k}`).id = `ajouter_activite_${effetNum}.${produitNum}.${k - 1}`;
-                    document.getElementById(`ajouter_activite_${effetNum}.${produitNum}.${k - 1}`).setAttribute('onclick', `ajouterActivite(${effetNum}, ${produitNum}, ${k - 1})`);
-                    document.getElementById(`supprimer_action_${effetNum}.${produitNum}.${k}`).id = `supprimer_action_${effetNum}.${produitNum}.${k - 1}`;
-                    document.getElementById(`supprimer_action_${effetNum}.${produitNum}.${k - 1}`).setAttribute('onclick', `supprimerAction(${effetNum}, ${produitNum}, ${k - 1})`);
-                    
-                    for (let l = activiteNum + 1; l <= activiteCounts[`${effetNum}.${produitNum}.${k}`]; l++) {
-                        document.getElementById(`activite_${effetNum}.${produitNum}.${k}.${l}`).id = `activite_${effetNum}.${produitNum}.${k-1}.${l}`;
-                        document.getElementById(`activite_id_${effetNum}.${produitNum}.${k-1}.${l}`).id = `activite_id_${effetNum}.${produitNum}.${k-1}.${l}`;
-                        document.getElementById(`activite_id_${effetNum}.${produitNum}.${k}.${l}`).textContent = `Activité ${effetNum}.${produitNum}.${k-1}.${l}`;
-                        document.getElementById(`activite_label_${effetNum}.${produitNum}.${k}.${l}`).id = `activite_label_${effetNum}.${produitNum}.${k-1}.${l}`;
-                        document.getElementById(`activite_label_${effetNum}.${produitNum}.${k-1}.${l}`).textContent = `Intitulé de l'activité ${effetNum}.${produitNum}.${k-1}.${l}`;
-                        document.getElementById(`activite_titre_${effetNum}.${produitNum}.${k}.${l}`).id = `activite_titre_${effetNum}.${produitNum}.${k-1}.${l - 1}`;
-                        document.getElementById(`activite_titre_${effetNum}.${produitNum}.${k-1}.${l}`).name = `activite_titre_${effetNum}.${produitNum}.${k-1}.${l}`;
-                        document.getElementById(`supprimer_activite_${effetNum}.${produitNum}.${k}.${l}`).id = `supprimer_activite_${effetNum}.${produitNum}.${k-1}.${l}`;
-                        document.getElementById(`supprimer_activite_${effetNum}.${produitNum}.${k-1}.${l}`).setAttribute('onclick', `supprimerActivite(${effetNum}, ${produitNum}, ${k-1}, ${l})`);
-                    }
-                }
-                
-                // Décalage des indices après suppression de l'action
-                for (let k = actionNum; k < produitCounts[`${effetNum}`]; k++) {
-                    actionCounts[`${effetNum}.${k}`] = actionCounts[`${effetNum}.${k+1}`] || 0;
+                for (let k = actionNum + 1; k <= actionCounts[`${effetNum}_${produitNum}`]; k++) {
+                    document.getElementById(`action_${effetNum}_${produitNum}_${k}`).id = `action_${effetNum}_${produitNum}_${k - 1}`;
+                    document.getElementById(`action_id_${effetNum}_${produitNum}_${k}`).id = `action_id_${effetNum}_${produitNum}_${k - 1}`;
+                    document.getElementById(`action_id_${effetNum}_${produitNum}_${k - 1}`).textContent = `Action ${effetNum}.${produitNum}.${k - 1}`;
+                    document.getElementById(`action_label_${effetNum}_${produitNum}_${k}`).id = `action_label_${effetNum}_${produitNum}_${k - 1}`;
+                    document.getElementById(`action_label_${effetNum}_${produitNum}_${k - 1}`).textContent = `Intitulé de l'action ${effetNum}.${produitNum}.${k - 1}`;
+                    document.getElementById(`action_titre_${effetNum}_${produitNum}_${k}`).id = `action_titre_${effetNum}_${produitNum}_${k - 1}`;
+                    document.getElementById(`action_titre_${effetNum}_${produitNum}_${k - 1}`).name = `action_titre_${effetNum}_${produitNum}_${k - 1}`;
+                    document.getElementById(`activites_action_${effetNum}_${produitNum}_${k}`).id = `activites_action_${effetNum}_${produitNum}_${k - 1}`;
+                    document.getElementById(`ajouter_activite_${effetNum}_${produitNum}_${k}`).id = `ajouter_activite_${effetNum}_${produitNum}_${k - 1}`;
+                    document.getElementById(`ajouter_activite_${effetNum}_${produitNum}_${k - 1}`).setAttribute('onclick', `ajouterActivite(${effetNum}, ${produitNum}, ${k - 1})`);
+                    document.getElementById(`supprimer_action_${effetNum}_${produitNum}_${k}`).id = `supprimer_action_${effetNum}_${produitNum}_${k - 1}`;
+                    document.getElementById(`supprimer_action_${effetNum}_${produitNum}_${k - 1}`).setAttribute('onclick', `supprimerAction(${effetNum}, ${produitNum}, ${k - 1})`);
 
-                    for (let l = 1; l <= (actionCounts[`${effetNum}.${k+1}`] || 0); l++) {
-                        activiteCounts[`${effetNum}.${k}.${l}`] = activiteCounts[`${effetNum}.${k+1}.${l}`] || 0;
-                    }
-
-                    // Suppression des activités excédentaires si nécessaire
-                    if (actionCounts[`${effetNum}.${k}`] > actionCounts[`${effetNum}.${k+1}`]) {
-                        for (let m = actionCounts[`${effetNum}.${k+1}`] + 1; m <= actionCounts[`${effetNum}.${k}`]; m++) {
-                            delete activiteCounts[`${effetNum}.${k}.${m}`];
-                        }
+                    for (let l = 1; l <= activiteCounts[`${effetNum}_${produitNum}_${k}`]; l++) {
+                        document.getElementById(`activite_${effetNum}_${produitNum}_${k}_${l}`).id = `activite_${effetNum}_${produitNum}_${k-1}_${l}`;
+                        document.getElementById(`activite_id_${effetNum}_${produitNum}_${k}_${l}`).id = `activite_id_${effetNum}_${produitNum}_${k-1}_${l}`;
+                        document.getElementById(`activite_id_${effetNum}_${produitNum}_${k-1}_${l}`).textContent = `Activité ${effetNum}.${produitNum}.${k-1}.${l}`;
+                        document.getElementById(`activite_label_${effetNum}_${produitNum}_${k}_${l}`).id = `activite_label_${effetNum}_${produitNum}_${k-1}_${l}`;
+                        document.getElementById(`activite_label_${effetNum}_${produitNum}_${k-1}_${l}`).textContent = `Intitulé de l'activité ${effetNum}.${produitNum}.${k-1}.${l}`;
+                        document.getElementById(`activite_titre_${effetNum}_${produitNum}_${k}_${l}`).id = `activite_titre_${effetNum}_${produitNum}_${k-1}_${l}`;
+                        document.getElementById(`activite_titre_${effetNum}_${produitNum}_${k-1}_${l}`).name = `activite_titre_${effetNum}_${produitNum}_${k-1}_${l}`;
+                        document.getElementById(`supprimer_activite_${effetNum}_${produitNum}_${k}_${l}`).id = `supprimer_activite_${effetNum}_${produitNum}_${k-1}_${l}`;
+                        document.getElementById(`supprimer_activite_${effetNum}_${produitNum}_${k-1}_${l}`).setAttribute('onclick', `supprimerActivite(${effetNum}, ${produitNum}, ${k-1}, ${l})`);
+                        document.getElementById(`cibles_periodes_couts_${effetNum}_${produitNum}_${k}_${l}`).id = `cibles_periodes_couts_${effetNum}_${produitNum}_${k-1}_${l}`;
                     }
                 }
 
-                // Suppression de la dernière action devenue vide
-                delete actionCounts[`${effetNum}.${produitCounts[`${effetNum}`]}`];
-
-                // Mise à jour du compteur des actions pour cet effet
-                produitCounts[`${effetNum}`]--;
-
-                // Mise à jour des statistiques après suppression
+                actionCounts[`${effetNum}_${produitNum}`]--;
+                delete activiteCounts[`${effetNum}_${produitNum}_${actionNum}`];
+                for (let k = actionNum; k < actionCounts[`${effetNum}_${produitNum}`]; k++) {
+                    activiteCounts[`${effetNum}_${produitNum}_${k}`] = activiteCounts[`${effetNum}_${produitNum}_${k+1}`] || 0;
+                    delete activiteCounts[`${effetNum}_${produitNum}_${k+1}`];
+                }
                 mettreAJourStatistiques();
             }
         }
-        
-        // Générer dynamiquement les champs cibles et couts
+
+        // Générer dynamiquement les champs cibles, périodes et coûts combinés
         document.addEventListener("DOMContentLoaded", () => {
             document.getElementById("horizon").addEventListener("input", updateResults);
             document.getElementById("annee_depart").addEventListener("input", updateResults);
@@ -515,153 +493,191 @@ Modification du Plan d'Action
 
             if (horizon > 0 && anneeDepart > 0) {
                 document.querySelectorAll(".activite-container").forEach((activite) => {
-                    const ids = activite.id.split("_")[1].split(".");
+                    const ids = activite.id.split("_").slice(1).join("_").split("_");
                     const [effetNum, produitNum, actionNum, activiteNum] = ids.map(Number);
-                    generateCiblesCouts(anneeDepart, horizon, effetNum, produitNum, actionNum, activiteNum);
+                    generateCiblesPeriodesCouts(anneeDepart, horizon, effetNum, produitNum, actionNum, activiteNum);
                 });
             }
         }
 
-        function generateCiblesCouts(anneeDepart, horizon, effetNum, produitNum, actionNum, activiteNum) {
-            let ciblesContainer = document.getElementById(`cibles_${effetNum}.${produitNum}.${actionNum}.${activiteNum}`);
-            let coutsContainer = document.getElementById(`couts_${effetNum}.${produitNum}.${actionNum}.${activiteNum}`);
+        function generateCiblesPeriodesCouts(anneeDepart, horizon, effetNum, produitNum, actionNum, activiteNum) {
+            let ciblesPeriodesCoutsContainer = document.getElementById(`cibles_periodes_couts_${effetNum}_${produitNum}_${actionNum}_${activiteNum}`);
+            ciblesPeriodesCoutsContainer.innerHTML = "";
 
-            ciblesContainer.innerHTML = "";
-            coutsContainer.innerHTML = "";
+            for (let i = 0; i < horizon; i++) {
+                let yearContainer = document.createElement("div");
+                yearContainer.className = "row mb-3 p-3 border rounded bg-white shadow-sm";
 
-            for (let i = 1; i <= horizon; i++) {
-                let cibleInput = document.createElement("input");
-                cibleInput.type = "text";
-                cibleInput.classList.add("form-control", "shadow-sm", "border-primary", "mb-2");
-                cibleInput.name = `cible_${effetNum}.${produitNum}.${actionNum}.${activiteNum}[${i}]`;
-                cibleInput.placeholder = `Cible ${anneeDepart + i - 1}`;
-                ciblesContainer.appendChild(cibleInput);
+                // Colonne pour la cible (toujours un textarea)
+                let cibleCol = document.createElement("div");
+                cibleCol.className = "col-md-4";
+                cibleCol.innerHTML = `
+                    <label class="form-label fw-bold text-primary">Cible ${anneeDepart + i}</label>
+                    <textarea class="form-control border-primary shadow-sm cible-textarea" 
+                        id="cible_${effetNum}_${produitNum}_${actionNum}_${activiteNum}_${i}" 
+                        name="cible_${effetNum}_${produitNum}_${actionNum}_${activiteNum}_${i}" 
+                        placeholder="Cible ${anneeDepart + i}"></textarea>
+                `;
 
-                let coutInput = document.createElement("input");
-                coutInput.type = "number";
-                coutInput.classList.add("form-control", "shadow-sm", "border-primary", "mb-2");
-                coutInput.name = `cout_${effetNum}.${produitNum}.${actionNum}.${activiteNum}[${i}]`;
-                coutInput.placeholder = `Coût ${anneeDepart + i - 1}`;
-                coutsContainer.appendChild(coutInput);
+                // Colonne pour le coût
+                let coutCol = document.createElement("div");
+                coutCol.className = "col-md-3";
+                coutCol.innerHTML = `
+                    <label class="form-label fw-bold text-primary">Coût ${anneeDepart + i}</label>
+                    <input type="number" class="form-control border-primary shadow-sm" 
+                        name="cout_${effetNum}_${produitNum}_${actionNum}_${activiteNum}_${i}" 
+                        placeholder="Coût ${anneeDepart + i}" step="0.01" min="0">
+                `;
+
+                // Colonne pour les trimestres
+                let periodesCol = document.createElement("div");
+                periodesCol.className = "col-md-5";
+                periodesCol.innerHTML = `
+                    <label class="form-label fw-bold text-primary">Trimestres ${anneeDepart + i}</label>
+                    <div class="d-flex justify-content-between">
+                        ${[1, 2, 3, 4].map(trimestre => `
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" 
+                                    id="periode_${effetNum}_${produitNum}_${actionNum}_${activiteNum}_${i}_${trimestre}" 
+                                    name="periode_${effetNum}_${produitNum}_${actionNum}_${activiteNum}_${i}_T${trimestre}" 
+                                    value="T${trimestre}">
+                                <label class="form-check-label" for="periode_${effetNum}_${produitNum}_${actionNum}_${activiteNum}_${i}_${trimestre}">T${trimestre}</label>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+
+                yearContainer.appendChild(cibleCol);
+                yearContainer.appendChild(coutCol);
+                yearContainer.appendChild(periodesCol);
+                ciblesPeriodesCoutsContainer.appendChild(yearContainer);
             }
+
+            // Ajuster dynamiquement la hauteur des textareas
+            document.querySelectorAll(".cible-textarea").forEach(textarea => {
+                textarea.addEventListener("input", function() {
+                    this.style.height = "auto";
+                    this.style.height = `${this.scrollHeight}px`;
+                });
+
+                textarea.addEventListener("focus", function() {
+                    if (this.value === "") {
+                        this.style.height = "38px";
+                    }
+                });
+
+                textarea.addEventListener("blur", function() {
+                    if (this.value === "") {
+                        this.style.height = "38px";
+                    }
+                });
+            });
         }
 
+        // Ajouter une activité
         function ajouterActivite(effetNum, produitNum, actionNum) {
-            activiteCounts[`${effetNum}.${produitNum}.${actionNum}`]++;
-            const activiteNum = activiteCounts[`${effetNum}.${produitNum}.${actionNum}`];
+            activiteCounts[`${effetNum}_${produitNum}_${actionNum}`]++;
+            const activiteNum = activiteCounts[`${effetNum}_${produitNum}_${actionNum}`];
 
             const activiteContainer = document.createElement("div");
             activiteContainer.className = "card shadow-lg p-3 mb-2 border border-primary rounded-3 bg-light activite-container";
-            activiteContainer.id = `activite_${effetNum}.${produitNum}.${actionNum}.${activiteNum}`;
+            activiteContainer.id = `activite_${effetNum}_${produitNum}_${actionNum}_${activiteNum}`;
 
             activiteContainer.innerHTML = `
-            <h6 class="text-primary" id="activite_id_${effetNum}.${produitNum}.${actionNum}.${activiteNum}">Activité ${effetNum}.${produitNum}.${actionNum}.${activiteNum}</h6>
+                <h6 class="text-primary" id="activite_id_${effetNum}_${produitNum}_${actionNum}_${activiteNum}">Activité ${effetNum}.${produitNum}.${actionNum}.${activiteNum}</h6>
 
-            <div class="mb-3">
-                <label for="activite_titre_${effetNum}.${produitNum}.${actionNum}.${activiteNum}" class="form-label" id="activite_label_${effetNum}.${produitNum}.${actionNum}.${activiteNum}">
-                    Intitulé de l'activité
-                </label>
-                <input type="text" class="form-control shadow-sm border-primary" 
-                    id="activite_titre_${effetNum}.${produitNum}.${actionNum}.${activiteNum}" 
-                    name="activite_titre_${effetNum}.${produitNum}.${actionNum}.${activiteNum}" 
-                    required>
-            </div>
-
-            <div class="mb-3">
-                <label for="activite_type_${effetNum}.${produitNum}.${actionNum}.${activiteNum}" class="form-label" id="activite_type_label_${effetNum}.${produitNum}.${actionNum}.${activiteNum}">
-                    Type d'activité
-                </label>
-                <select class="form-control shadow-sm border-primary" 
-                    id="activite_type_${effetNum}.${produitNum}.${actionNum}.${activiteNum}" 
-                    name="activite_type_${effetNum}.${produitNum}.${actionNum}.${activiteNum}" 
-                    required>
-                    <option value="Réforme">Réforme</option>
-                    <option value="Investissement">Investissement</option>
-                    <option value="Etude">Étude</option>
-                    <option value="Texte">Texte</option>
-                    <option value="Activité ordinaire">Activité ordinaire</option>
-                </select>
-            </div>
-
-            <div class="mb-3">
-                <label for="indicateur_label_${effetNum}.${produitNum}.${actionNum}.${activiteNum}" class="form-label" id="activite_indicateur_label_${effetNum}.${produitNum}.${actionNum}.${activiteNum}">
-                    Libellé de l'indicateur
-                </label>
-                <input type="text" class="form-control shadow-sm border-primary" 
-                    id="indicateur_label_${effetNum}.${produitNum}.${actionNum}.${activiteNum}" 
-                    name="indicateur_label_${effetNum}.${produitNum}.${actionNum}.${activiteNum}" 
-                    required>
-            </div>
-
-            <div class="mb-3">
-                <label for="indicateur_reference_${effetNum}.${produitNum}.${actionNum}.${activiteNum}" class="form-label" id="activite_indicateur_reference_${effetNum}.${produitNum}.${actionNum}.${activiteNum}">
-                    Référence de l'indicateur
-                </label>
-                <input type="text" class="form-control shadow-sm border-primary" 
-                    id="indicateur_reference_${effetNum}.${produitNum}.${actionNum}.${activiteNum}" 
-                    name="indicateur_reference_${effetNum}.${produitNum}.${actionNum}.${activiteNum}" 
-                    required>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label" id="activite_cibles_label_${effetNum}.${produitNum}.${actionNum}.${activiteNum}">
-                    Cibles
-                </label>
-                <div id="cibles_${effetNum}.${produitNum}.${actionNum}.${activiteNum}">
-                    <!-- Afficher dynamiquement les cibles ici -->
+                <div class="mb-3">
+                    <label for="activite_titre_${effetNum}_${produitNum}_${actionNum}_${activiteNum}" class="form-label" id="activite_label_${effetNum}_${produitNum}_${actionNum}_${activiteNum}">
+                        Intitulé de l'activité
+                    </label>
+                    <input type="text" class="form-control shadow-sm border-primary" 
+                        id="activite_titre_${effetNum}_${produitNum}_${actionNum}_${activiteNum}" 
+                        name="activite_titre_${effetNum}_${produitNum}_${actionNum}_${activiteNum}" 
+                        required>
                 </div>
-            </div>
 
-            <div class="mb-3">
-                <label class="form-label" id="activite_couts_label_${effetNum}.${produitNum}.${actionNum}.${activiteNum}">
-                    Coûts
-                </label>
-                <div id="couts_${effetNum}.${produitNum}.${actionNum}.${activiteNum}">
-                    <!-- Afficher dynamiquement les coûts ici -->
+                <div class="mb-3">
+                    <label for="activite_type_${effetNum}_${produitNum}_${actionNum}_${activiteNum}" class="form-label" id="activite_type_label_${effetNum}_${produitNum}_${actionNum}_${activiteNum}">
+                        Type d'activité
+                    </label>
+                    <select class="form-control shadow-sm border-primary" 
+                        id="activite_type_${effetNum}_${produitNum}_${actionNum}_${activiteNum}" 
+                        name="activite_type_${effetNum}_${produitNum}_${actionNum}_${activiteNum}" 
+                        required>
+                        <option value="Réforme">Réforme</option>
+                        <option value="Investissement">Investissement</option>
+                        <option value="Etude">Étude</option>
+                        <option value="Texte">Texte</option>
+                        <option value="Activité ordinaire">Activité ordinaire</option>
+                    </select>
                 </div>
-            </div>
 
-            <div class="d-flex justify-content-end">
-                <button type="button" class="btn btn-outline-danger mt-2 shadow-sm" 
-                    id="supprimer_activite_${effetNum}.${produitNum}.${actionNum}.${activiteNum}" 
-                    onclick="supprimerActivite(${effetNum}, ${produitNum}, ${actionNum}, ${activiteNum})">
-                    Supprimer l'activité
-                </button>
-            </div>
+                <div class="mb-3">
+                    <label for="indicateur_label_${effetNum}_${produitNum}_${actionNum}_${activiteNum}" class="form-label" id="activite_indicateur_label_${effetNum}_${produitNum}_${actionNum}_${activiteNum}">
+                        Libellé de l'indicateur
+                    </label>
+                    <input type="text" class="form-control shadow-sm border-primary" 
+                        id="indicateur_label_${effetNum}_${produitNum}_${actionNum}_${activiteNum}" 
+                        name="indicateur_label_${effetNum}_${produitNum}_${actionNum}_${activiteNum}" 
+                        required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="indicateur_reference_${effetNum}_${produitNum}_${actionNum}_${activiteNum}" class="form-label" id="activite_indicateur_reference_${effetNum}_${produitNum}_${actionNum}_${activiteNum}">
+                        Référence de l'indicateur
+                    </label>
+                    <input type="text" class="form-control shadow-sm border-primary" 
+                        id="indicateur_reference_${effetNum}_${produitNum}_${actionNum}_${activiteNum}" 
+                        name="indicateur_reference_${effetNum}_${produitNum}_${actionNum}_${activiteNum}" 
+                        required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-primary">Cibles, Périodes d'exécution et Coûts</label>
+                    <div id="cibles_periodes_couts_${effetNum}_${produitNum}_${actionNum}_${activiteNum}" class="bg-light p-2 rounded">
+                        <!-- Afficher dynamiquement les cibles, périodes et coûts ici -->
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end">
+                    <button type="button" class="btn btn-outline-danger mt-2 shadow-sm" 
+                        id="supprimer_activite_${effetNum}_${produitNum}_${actionNum}_${activiteNum}" 
+                        onclick="supprimerActivite(${effetNum}, ${produitNum}, ${actionNum}, ${activiteNum})">
+                        Supprimer l'activité
+                    </button>
+                </div>
             `;
 
-            document.getElementById(`activites_action_${effetNum}.${produitNum}.${actionNum}`).appendChild(activiteContainer);
-
+            document.getElementById(`activites_action_${effetNum}_${produitNum}_${actionNum}`).appendChild(activiteContainer);
             updateResults();
+            mettreAJourStatistiques();
         }
 
-        // Fonction de suppression d'une activité
+        // Supprimer une activité
         function supprimerActivite(effetNum, produitNum, actionNum, activiteNum) {
             const confirmation = confirm(`Êtes-vous sûr de vouloir supprimer l'activité ${effetNum}.${produitNum}.${actionNum}.${activiteNum} ?`);
+            effetNum = Number(effetNum);
+            produitNum = Number(produitNum);
+            actionNum = Number(actionNum);
+            activiteNum = Number(activiteNum);
 
             if (confirmation) {
-                document.getElementById(`activite_${effetNum}.${produitNum}.${actionNum}.${activiteNum}`).remove();
-                effetNum = Number(effetNum)
-                produitNum = Number(produitNum)
-                actionNum = Number(actionNum)
-                activiteNum = Number(activiteNum)
-                // Réajuster les IDs après suppression
-                for (let l = activiteNum + 1; l <= activiteCounts[`${effetNum}.${produitNum}.${actionNum}`]; l++) {
-                    document.getElementById(`activite_${effetNum}.${produitNum}.${actionNum}.${l}`).id = `activite_${effetNum}.${produitNum}.${actionNum}.${l - 1}`;
-                    document.getElementById(`activite_id_${effetNum}.${produitNum}.${actionNum}.${l}`).id = `activite_id_${effetNum}.${produitNum}.${actionNum}.${l - 1}`;
-                    document.getElementById(`activite_id_${effetNum}.${produitNum}.${actionNum}.${l - 1}`).textContent = `Activité ${effetNum}.${produitNum}.${actionNum}.${l - 1}`;
-                    document.getElementById(`activite_label_${effetNum}.${produitNum}.${actionNum}.${l}`).id = `activite_label_${effetNum}.${produitNum}.${actionNum}.${l - 1}`;
-                    document.getElementById(`activite_label_${effetNum}.${produitNum}.${actionNum}.${l - 1}`).textContent = `Intitulé de l'activité ${effetNum}.${produitNum}.${actionNum}.${l - 1}`;
-                    document.getElementById(`activite_titre_${effetNum}.${produitNum}.${actionNum}.${l}`).id = `activite_titre_${effetNum}.${produitNum}.${actionNum}.${l - 1}`;
-                    document.getElementById(`activite_titre_${effetNum}.${produitNum}.${actionNum}.${l}`).name = `activite_titre_${effetNum}.${produitNum}.${actionNum}.${l - 1}`;
-                    document.getElementById(`supprimer_activite_${effetNum}.${produitNum}.${actionNum}.${l}`).id = `supprimer_activite_${effetNum}.${produitNum}.${actionNum}.${l - 1}`;                    
-                    document.getElementById(`supprimer_activite_${effetNum}.${produitNum}.${actionNum}.${l - 1}`).setAttribute('onclick', `supprimerActivite(${effetNum}, ${produitNum}, ${actionNum}, ${l - 1})`);
+                document.getElementById(`activite_${effetNum}_${produitNum}_${actionNum}_${activiteNum}`).remove();
 
-                    document.getElementById(`cibles_${effetNum}.${produitNum}.${actionNum}.${l}`).id = `cibles_${effetNum}.${produitNum}.${actionNum}.${l - 1}`;
-                    document.getElementById(`couts_${effetNum}.${produitNum}.${actionNum}.${l}`).id = `couts_${effetNum}.${produitNum}.${actionNum}.${l - 1}`;
+                for (let l = activiteNum + 1; l <= activiteCounts[`${effetNum}_${produitNum}_${actionNum}`]; l++) {
+                    document.getElementById(`activite_${effetNum}_${produitNum}_${actionNum}_${l}`).id = `activite_${effetNum}_${produitNum}_${actionNum}_${l - 1}`;
+                    document.getElementById(`activite_id_${effetNum}_${produitNum}_${actionNum}_${l}`).id = `activite_id_${effetNum}_${produitNum}_${actionNum}_${l - 1}`;
+                    document.getElementById(`activite_id_${effetNum}_${produitNum}_${actionNum}_${l - 1}`).textContent = `Activité ${effetNum}.${produitNum}.${actionNum}.${l - 1}`;
+                    document.getElementById(`activite_label_${effetNum}_${produitNum}_${actionNum}_${l}`).id = `activite_label_${effetNum}_${produitNum}_${actionNum}_${l - 1}`;
+                    document.getElementById(`activite_label_${effetNum}_${produitNum}_${actionNum}_${l - 1}`).textContent = `Intitulé de l'activité ${effetNum}.${produitNum}.${actionNum}.${l - 1}`;
+                    document.getElementById(`activite_titre_${effetNum}_${produitNum}_${actionNum}_${l}`).id = `activite_titre_${effetNum}_${produitNum}_${actionNum}_${l - 1}`;
+                    document.getElementById(`activite_titre_${effetNum}_${produitNum}_${actionNum}_${l - 1}`).name = `activite_titre_${effetNum}_${produitNum}_${actionNum}_${l - 1}`;
+                    document.getElementById(`supprimer_activite_${effetNum}_${produitNum}_${actionNum}_${l}`).id = `supprimer_activite_${effetNum}_${produitNum}_${actionNum}_${l - 1}`;                    
+                    document.getElementById(`supprimer_activite_${effetNum}_${produitNum}_${actionNum}_${l - 1}`).setAttribute('onclick', `supprimerActivite(${effetNum}, ${produitNum}, ${actionNum}, ${l - 1})`);
+                    document.getElementById(`cibles_periodes_couts_${effetNum}_${produitNum}_${actionNum}_${l}`).id = `cibles_periodes_couts_${effetNum}_${produitNum}_${actionNum}_${l - 1}`;
                 }
 
-                activiteCounts[`${effetNum}.${produitNum}.${actionNum}`]--;
+                activiteCounts[`${effetNum}_${produitNum}_${actionNum}`]--;
                 mettreAJourStatistiques();
             }
         }

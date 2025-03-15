@@ -11,6 +11,9 @@ from django.core.paginator import Paginator
 from .forms import PaoStatusForm  # Import du formulaire
 from django.core.exceptions import ValidationError
 from django.db import transaction
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 
@@ -149,9 +152,9 @@ def plan_action_detail(request, id):
         'horizon': plan.horizon
     })
 
-
 def add_plan_action(request):
     if request.method == 'POST':
+        logger.debug(f"Contenu complet de request.POST : {request.POST}")
         try:
             with transaction.atomic():
                 # 1. Création du PlanAction
@@ -159,224 +162,334 @@ def add_plan_action(request):
                 impact = request.POST.get('impact')
                 annee_debut = int(request.POST.get('annee_depart', 2025))
                 horizon = int(request.POST.get('horizon', 1))
+                logger.debug(f"PlanAction - titre: {titre}, impact: {impact}, annee_debut: {annee_debut}, horizon: {horizon}")
 
                 if not titre or not impact:
                     raise ValueError("Le titre et l'impact sont requis.")
+                if horizon <= 0:
+                    raise ValueError("L'horizon doit être un nombre positif.")
+
+                # Calcul de la référence pour PlanAction (ex: PA1, PA2, etc.)
+                last_plan = PlanAction.objects.order_by('-id').first()
+                plan_ref_number = int(last_plan.reference[2:]) + 1 if last_plan and last_plan.reference else 1
+                plan_reference = f"PA{plan_ref_number}"
 
                 plan_action = PlanAction(
                     titre=titre,
                     impact=impact,
                     annee_debut=annee_debut,
                     horizon=horizon,
+                    reference=plan_reference,  # Attribution explicite
                 )
-                plan_action.save()  # Sauvegarde initiale pour générer l'ID ou la référence
+                plan_action.save()
+                logger.debug(f"PlanAction créé avec ID: {plan_action.id}, reference: {plan_action.reference}, couts: {plan_action.couts}")
 
                 # 2. Traitement des Effets
                 effet_count = 0
                 while f'effet_titre_{effet_count + 1}' in request.POST:
                     effet_count += 1
                     effet_titre = request.POST.get(f'effet_titre_{effet_count}')
+                    logger.debug(f"Effet {effet_count} - titre: {effet_titre}")
                     if not effet_titre:
                         raise ValueError(f"Le titre de l'effet {effet_count} est requis.")
                     
-                    effet = Effet(plan=plan_action, titre=effet_titre)
+                    # Référence pour Effet (ex: 1, 2, etc. sous PA1)
+                    effet_reference = str(effet_count)
+
+                    effet = Effet(
+                        plan=plan_action,
+                        titre=effet_titre,
+                        reference=effet_reference,  # Attribution explicite
+                    )
                     effet.save()
+                    logger.debug(f"Effet {effet_count} créé avec ID: {effet.id}, reference: {effet.reference}, couts: {effet.couts}")
 
                     # 3. Traitement des Produits
                     produit_count = 0
-                    while f'produit_titre_{effet_count}.{produit_count + 1}' in request.POST:
+                    while f'produit_titre_{effet_count}_{produit_count + 1}' in request.POST:
                         produit_count += 1
-                        produit_titre = request.POST.get(f'produit_titre_{effet_count}.{produit_count}')
+                        produit_titre = request.POST.get(f'produit_titre_{effet_count}_{produit_count}')
+                        logger.debug(f"Produit {effet_count}.{produit_count} - titre: {produit_titre}")
                         if not produit_titre:
                             raise ValueError(f"Le titre du produit {effet_count}.{produit_count} est requis.")
                         
-                        produit = Produit(effet=effet, titre=produit_titre)
+                        # Référence pour Produit (ex: 1.1, 1.2, etc.)
+                        produit_reference = f"{effet.reference}.{produit_count}"
+
+                        produit = Produit(
+                            effet=effet,
+                            titre=produit_titre,
+                            reference=produit_reference,  # Attribution explicite
+                        )
                         produit.save()
+                        logger.debug(f"Produit {effet_count}.{produit_count} créé avec ID: {produit.id}, reference: {produit.reference}, couts: {produit.couts}")
 
                         # 4. Traitement des Actions
                         action_count = 0
-                        while f'action_titre_{effet_count}.{produit_count}.{action_count + 1}' in request.POST:
+                        while f'action_titre_{effet_count}_{produit_count}_{action_count + 1}' in request.POST:
                             action_count += 1
-                            action_titre = request.POST.get(f'action_titre_{effet_count}.{produit_count}.{action_count}')
+                            action_titre = request.POST.get(f'action_titre_{effet_count}_{produit_count}_{action_count}')
+                            logger.debug(f"Action {effet_count}.{produit_count}.{action_count} - titre: {action_titre}")
                             if not action_titre:
                                 raise ValueError(f"Le titre de l'action {effet_count}.{produit_count}.{action_count} est requis.")
                             
-                            action = Action(produit=produit, titre=action_titre)
+                            # Référence pour Action (ex: 1.1.1, 1.1.2, etc.)
+                            action_reference = f"{produit.reference}.{action_count}"
+
+                            action = Action(
+                                produit=produit,
+                                titre=action_titre,
+                                reference=action_reference,  # Attribution explicite
+                            )
                             action.save()
+                            logger.debug(f"Action {effet_count}.{produit_count}.{action_count} créé avec ID: {action.id}, reference: {action.reference}, couts: {action.couts}")
 
                             # 5. Traitement des Activités
                             activite_count = 0
-                            while f'activite_titre_{effet_count}.{produit_count}.{action_count}.{activite_count + 1}' in request.POST:
+                            while f'activite_titre_{effet_count}_{produit_count}_{action_count}_{activite_count + 1}' in request.POST:
                                 activite_count += 1
-                                activite_titre = request.POST.get(f'activite_titre_{effet_count}.{produit_count}.{action_count}.{activite_count}')
-                                activite_type = request.POST.get(f'activite_type_{effet_count}.{produit_count}.{action_count}.{activite_count}')
-                                indicateur_label = request.POST.get(f'indicateur_label_{effet_count}.{produit_count}.{action_count}.{activite_count}')
-                                indicateur_reference = request.POST.get(f'indicateur_reference_{effet_count}.{produit_count}.{action_count}.{activite_count}')
+                                activite_titre = request.POST.get(f'activite_titre_{effet_count}_{produit_count}_{action_count}_{activite_count}')
+                                activite_type = request.POST.get(f'activite_type_{effet_count}_{produit_count}_{action_count}_{activite_count}')
+                                indicateur_label = request.POST.get(f'indicateur_label_{effet_count}_{produit_count}_{action_count}_{activite_count}')
+                                indicateur_reference = request.POST.get(f'indicateur_reference_{effet_count}_{produit_count}_{action_count}_{activite_count}')
+                                logger.debug(f"Activité {effet_count}.{produit_count}.{action_count}.{activite_count} - titre: {activite_titre}, type: {activite_type}, indicateur_label: {indicateur_label}, indicateur_reference: {indicateur_reference}")
 
                                 if not all([activite_titre, activite_type, indicateur_label, indicateur_reference]):
                                     raise ValueError(f"Les champs de l'activité {effet_count}.{produit_count}.{action_count}.{activite_count} doivent être remplis.")
 
-                                # Initialisation des champs JSON avec horizon années
-                                cibles = [None] * horizon
-                                realisation = [""] * horizon
-                                couts = [0.0] * horizon
-                                periodes_execution = [[] for _ in range(horizon)]
-                                etat_avancement = [""] * horizon
-                                commentaire = [""] * horizon
-                                commentaire_se = [""] * horizon
-                                pending_changes = [{}] * horizon
-                                status = ["Non entamée"] * horizon
-                                matrix_status = ["En cours"] * horizon
+                                # Référence pour Activité (ex: 1.1.1.1, 1.1.1.2, etc.)
+                                activite_reference = f"{action.reference}.{activite_count}"
 
-                                # Remplissage des champs dynamiques
+                                # Récupération des cibles, coûts et périodes
+                                activite_couts = []
+                                activite_cibles = []
+                                activite_periodes = []
                                 for i in range(horizon):
-                                    cible_key = f'cible_{effet_count}.{produit_count}.{action_count}.{activite_count}[{i + 1}]'
-                                    cout_key = f'cout_{effet_count}.{produit_count}.{action_count}.{activite_count}[{i + 1}]'
-                                    
-                                    cibles[i] = request.POST.get(cible_key) or None
-                                    couts[i] = float(request.POST.get(cout_key, 0.0) or 0.0)
-
-                                    # Périodes d'exécution (trimestres)
+                                    cout = request.POST.get(f'cout_{effet_count}_{produit_count}_{action_count}_{activite_count}_{i}', '0')
+                                    activite_couts.append(float(cout) if cout else 0.0)
+                                    cible = request.POST.get(f'cible_{effet_count}_{produit_count}_{action_count}_{activite_count}_{i}', '')
+                                    activite_cibles.append(cible if cible else None)
                                     periodes = []
-                                    for trimestre in range(1, 5):
-                                        periode_key = f'periode_{effet_count}.{produit_count}.{action_count}.{activite_count}[{i}][{trimestre}]'
-                                        if periode_key in request.POST:
-                                            periodes.append(f"T{trimestre}")
-                                    periodes_execution[i] = periodes
-                                    if periodes:
-                                        etat_avancement[i] = f"Planifié pour {', '.join(periodes)}"
+                                    for t in range(1, 5):
+                                        if request.POST.get(f'periode_{effet_count}_{produit_count}_{action_count}_{activite_count}_{i}_T{t}'):
+                                            periodes.append(f'T{t}')
+                                    activite_periodes.append(periodes)
 
-                                # Création de l'activité
                                 activite = Activite(
                                     action=action,
                                     titre=activite_titre,
                                     type=activite_type,
                                     indicateur_label=indicateur_label,
                                     indicateur_reference=indicateur_reference,
-                                    cibles=cibles,
-                                    realisation=realisation,
-                                    couts=couts,
-                                    periodes_execution=periodes_execution,
                                     point_focal=request.user,
                                     responsable=None,  # À ajuster selon votre logique
-                                    etat_avancement=etat_avancement,
-                                    commentaire=commentaire,
-                                    commentaire_se=commentaire_se,
-                                    pending_changes=pending_changes,
-                                    status=status,
-                                    matrix_status=matrix_status
+                                    couts=activite_couts,
+                                    cibles=activite_cibles,
+                                    periodes_execution=activite_periodes,
+                                    reference=activite_reference,  # Attribution explicite
                                 )
-                                activite.save(user=request.user)  # Supposant une méthode save personnalisée
-
-                            # Mise à jour des calculs pour l'action
-                            action.calculer_couts()
-                            action.calculer_nombres()
-
-                        # Mise à jour des calculs pour le produit
-                        produit.calculer_couts()
-                        produit.calculer_nombres()
-
-                    # Mise à jour des calculs pour l'effet
-                    effet.calculer_couts()
-                    effet.calculer_nombres()
-
-                # Mise à jour des calculs pour le plan d'action
-                plan_action.calculer_couts()
-                plan_action.calculer_nombres()
+                                activite.save(user=request.user)
+                                logger.debug(f"Activité {effet_count}.{produit_count}.{action_count}.{activite_count} créé avec ID: {activite.id}, reference: {activite.reference}, couts: {activite.couts}, cibles: {activite.cibles}, periodes: {activite.periodes_execution}")
 
                 messages.success(request, f"Plan d'action '{plan_action.titre}' créé avec succès (Référence: {plan_action.reference}).")
-                return redirect('plan_action_list')  # Assurez-vous que cette URL existe
+                logger.debug("Plan d'action créé avec succès, redirection vers 'plan_action_list'")
+                return redirect('plan_action_list')
 
         except ValueError as ve:
+            logger.error(f"Erreur de validation : {str(ve)}")
             messages.error(request, f"Erreur de validation : {str(ve)}")
             return render(request, 'planning/add_plan_action.html', {})
         except Exception as e:
+            logger.error(f"Erreur inattendue : {str(e)}", exc_info=True)
             messages.error(request, f"Erreur lors de la création du plan d'action : {str(e)}")
             return render(request, 'planning/add_plan_action.html', {})
-
-    # Si méthode GET, afficher le formulaire vide
+        
+    logger.debug("Requête GET : Affichage du formulaire vide")
     return render(request, 'planning/add_plan_action.html', {})
 
 def edit_plan_action(request, id):
-    plan = get_object_or_404(PlanAction, id=id)
-    
+    plan_action = get_object_or_404(PlanAction, id=id)
+
     if request.method == 'POST':
-        # Mise à jour des informations du plan
-        plan.titre = request.POST.get('titre')
-        plan.horizon = int(request.POST.get('horizon'))
-        plan.impact = request.POST.get('impact')
-        
+        logger.debug(f"Contenu complet de request.POST : {request.POST}")
         try:
-            horizon = int(plan.horizon)
-            if horizon <= 0:
-                raise ValueError("L'horizon doit être un entier positif.")
-        except ValueError:
-            return render(request, 'planning/edit_plan_action.html', {
-                'plan': plan,
-                'error': "L'horizon doit être un entier positif."
-            })
-        
-        plan.save()
+            with transaction.atomic():
+                # 1. Mise à jour du PlanAction
+                titre = request.POST.get('titre')
+                impact = request.POST.get('impact')
+                annee_debut = int(request.POST.get('annee_depart', plan_action.annee_debut))
+                horizon = int(request.POST.get('horizon', plan_action.horizon))
+                logger.debug(f"PlanAction - titre: {titre}, impact: {impact}, annee_debut: {annee_debut}, horizon: {horizon}")
 
-        # Suppression des anciens effets pour les recréer
-        plan.plan_effet.all().delete()
+                if not titre or not impact:
+                    raise ValueError("Le titre et l'impact sont requis.")
+                if horizon <= 0:
+                    raise ValueError("L'horizon doit être un nombre positif.")
 
-        # Gestion des effets, produits, actions et activités
-        effet_index = 1
-        while f"effet_titre_{effet_index}" in request.POST:
-            effet_titre = request.POST.get(f"effet_titre_{effet_index}")
-            effet = Effet.objects.create(plan=plan, titre=effet_titre)
+                plan_action.titre = titre
+                plan_action.impact = impact
+                plan_action.annee_debut = annee_debut
+                plan_action.horizon = horizon
+                plan_action.save()
+                logger.debug(f"PlanAction mis à jour avec ID: {plan_action.id}, reference: {plan_action.reference}, couts: {plan_action.couts}")
 
-            produit_index = 1
-            while f"produit_titre_{effet_index}.{produit_index}" in request.POST:
-                produit_titre = request.POST.get(f"produit_titre_{effet_index}.{produit_index}")
-                produit = Produit.objects.create(effet=effet, titre=produit_titre)
+                # 2. Traitement des Effets
+                effet_count = 0
+                existing_effets = {effet.reference: effet for effet in Effet.objects.filter(plan=plan_action)}
 
-                action_index = 1
-                while f"action_titre_{effet_index}.{produit_index}.{action_index}" in request.POST:
-                    action_titre = request.POST.get(f"action_titre_{effet_index}.{produit_index}.{action_index}")
-                    action = Action.objects.create(produit=produit, titre=action_titre)
+                while f'effet_titre_{effet_count + 1}' in request.POST:
+                    effet_count += 1
+                    effet_titre = request.POST.get(f'effet_titre_{effet_count}')
+                    effet_ref = str(effet_count)
+                    logger.debug(f"Effet {effet_count} - titre: {effet_titre}")
+                    if not effet_titre:
+                        raise ValueError(f"Le titre de l'effet {effet_count} est requis.")
 
-                    activite_index = 1
-                    while f"activite_titre_{effet_index}.{produit_index}.{action_index}.{activite_index}" in request.POST:
-                        activite_titre = request.POST.get(f"activite_titre_{effet_index}.{produit_index}.{action_index}.{activite_index}")
-                        activite_type = request.POST.get(f"activite_type_{effet_index}.{produit_index}.{action_index}.{activite_index}")
-                        indicateur_label = request.POST.get(f"indicateur_label_{effet_index}.{produit_index}.{action_index}.{activite_index}")
-                        indicateur_reference = request.POST.get(f"indicateur_reference_{effet_index}.{produit_index}.{action_index}.{activite_index}")
-
-                        cibles = []
-                        couts = []
-                        for i in range(1, horizon + 1):
-                            cible_valeur = request.POST.get(f"cible_{effet_index}.{produit_index}.{action_index}.{activite_index}[{i}]", None)
-                            cout_valeur = request.POST.get(f"cout_{effet_index}.{produit_index}.{action_index}.{activite_index}[{i}]", '0')
-                            
-                            cibles.append(cible_valeur if cible_valeur else '')
-                            couts.append(float(cout_valeur) if cout_valeur else 0.0)
-
-                        point_focal = request.user
-                        Activite.objects.create(
-                            action=action,
-                            titre=activite_titre,
-                            type=activite_type,
-                            indicateur_label=indicateur_label,
-                            indicateur_reference=indicateur_reference,
-                            cibles=cibles,
-                            couts=couts,
-                            point_focal=point_focal
+                    if effet_ref in existing_effets:
+                        effet = existing_effets[effet_ref]
+                        effet.titre = effet_titre
+                        effet.save()
+                        logger.debug(f"Effet {effet_count} mis à jour avec ID: {effet.id}, reference: {effet.reference}")
+                    else:
+                        effet = Effet(
+                            plan=plan_action,
+                            titre=effet_titre,
+                            reference=effet_ref,
                         )
-                        activite_index += 1
-                    action_index += 1
-                produit_index += 1
-            effet_index += 1
+                        effet.save()
+                        logger.debug(f"Effet {effet_count} créé avec ID: {effet.id}, reference: {effet.reference}")
 
-        return redirect('plan_action_list')
+                    # 3. Traitement des Produits
+                    produit_count = 0
+                    existing_produits = {produit.reference: produit for produit in Produit.objects.filter(effet=effet)}
 
-    # Pré-remplissage des données existantes pour le GET
+                    while f'produit_titre_{effet_count}_{produit_count + 1}' in request.POST:
+                        produit_count += 1
+                        produit_titre = request.POST.get(f'produit_titre_{effet_count}_{produit_count}')
+                        produit_ref = f"{effet_ref}.{produit_count}"
+                        logger.debug(f"Produit {effet_count}.{produit_count} - titre: {produit_titre}")
+                        if not produit_titre:
+                            raise ValueError(f"Le titre du produit {effet_count}.{produit_count} est requis.")
+
+                        if produit_ref in existing_produits:
+                            produit = existing_produits[produit_ref]
+                            produit.titre = produit_titre
+                            produit.save()
+                            logger.debug(f"Produit {effet_count}.{produit_count} mis à jour avec ID: {produit.id}, reference: {produit.reference}")
+                        else:
+                            produit = Produit(
+                                effet=effet,
+                                titre=produit_titre,
+                                reference=produit_ref,
+                            )
+                            produit.save()
+                            logger.debug(f"Produit {effet_count}.{produit_count} créé avec ID: {produit.id}, reference: {produit.reference}")
+
+                        # 4. Traitement des Actions
+                        action_count = 0
+                        existing_actions = {action.reference: action for action in Action.objects.filter(produit=produit)}
+
+                        while f'action_titre_{effet_count}_{produit_count}_{action_count + 1}' in request.POST:
+                            action_count += 1
+                            action_titre = request.POST.get(f'action_titre_{effet_count}_{produit_count}_{action_count}')
+                            action_ref = f"{produit_ref}.{action_count}"
+                            logger.debug(f"Action {effet_count}.{produit_count}.{action_count} - titre: {action_titre}")
+                            if not action_titre:
+                                raise ValueError(f"Le titre de l'action {effet_count}.{produit_count}.{action_count} est requis.")
+
+                            if action_ref in existing_actions:
+                                action = existing_actions[action_ref]
+                                action.titre = action_titre
+                                action.save()
+                                logger.debug(f"Action {effet_count}.{produit_count}.{action_count} mis à jour avec ID: {action.id}, reference: {action.reference}")
+                            else:
+                                action = Action(
+                                    produit=produit,
+                                    titre=action_titre,
+                                    reference=action_ref,
+                                )
+                                action.save()
+                                logger.debug(f"Action {effet_count}.{produit_count}.{action_count} créé avec ID: {action.id}, reference: {action.reference}")
+
+                            # 5. Traitement des Activités
+                            activite_count = 0
+                            existing_activites = {activite.reference: activite for activite in Activite.objects.filter(action=action)}
+
+                            while f'activite_titre_{effet_count}_{produit_count}_{action_count}_{activite_count + 1}' in request.POST:
+                                activite_count += 1
+                                activite_titre = request.POST.get(f'activite_titre_{effet_count}_{produit_count}_{action_count}_{activite_count}')
+                                activite_type = request.POST.get(f'activite_type_{effet_count}_{produit_count}_{action_count}_{activite_count}')
+                                indicateur_label = request.POST.get(f'indicateur_label_{effet_count}_{produit_count}_{action_count}_{activite_count}')
+                                indicateur_reference = request.POST.get(f'indicateur_reference_{effet_count}_{produit_count}_{action_count}_{activite_count}')
+                                activite_ref = f"{action_ref}.{activite_count}"
+                                logger.debug(f"Activité {effet_count}.{produit_count}.{action_count}.{activite_count} - titre: {activite_titre}, type: {activite_type}, indicateur_label: {indicateur_label}, indicateur_reference: {indicateur_reference}")
+
+                                if not all([activite_titre, activite_type, indicateur_label, indicateur_reference]):
+                                    raise ValueError(f"Les champs de l'activité {effet_count}.{produit_count}.{action_count}.{activite_count} doivent être remplis.")
+
+                                # Récupération des cibles, coûts et périodes
+                                activite_couts = []
+                                activite_cibles = []
+                                activite_periodes = []
+                                for i in range(horizon):
+                                    cout = request.POST.get(f'cout_{effet_count}_{produit_count}_{action_count}_{activite_count}_{i}', '0')
+                                    activite_couts.append(float(cout) if cout else 0.0)
+                                    cible = request.POST.get(f'cible_{effet_count}_{produit_count}_{action_count}_{activite_count}_{i}', '')
+                                    activite_cibles.append(cible if cible else None)
+                                    periodes = []
+                                    for t in range(1, 5):
+                                        if request.POST.get(f'periode_{effet_count}_{produit_count}_{action_count}_{activite_count}_{i}_T{t}'):
+                                            periodes.append(f'T{t}')
+                                    activite_periodes.append(periodes)
+
+                                if activite_ref in existing_activites:
+                                    activite = existing_activites[activite_ref]
+                                    activite.titre = activite_titre
+                                    activite.type = activite_type
+                                    activite.indicateur_label = indicateur_label
+                                    activite.indicateur_reference = indicateur_reference
+                                    activite.couts = activite_couts
+                                    activite.cibles = activite_cibles
+                                    activite.periodes_execution = activite_periodes
+                                    activite.save(user=request.user)
+                                    logger.debug(f"Activité {effet_count}.{produit_count}.{action_count}.{activite_count} mis à jour avec ID: {activite.id}, reference: {activite.reference}")
+                                else:
+                                    activite = Activite(
+                                        action=action,
+                                        titre=activite_titre,
+                                        type=activite_type,
+                                        indicateur_label=indicateur_label,
+                                        indicateur_reference=indicateur_reference,
+                                        point_focal=request.user,
+                                        responsable=None,  # À ajuster selon votre logique
+                                        couts=activite_couts,
+                                        cibles=activite_cibles,
+                                        periodes_execution=activite_periodes,
+                                        reference=activite_ref,
+                                    )
+                                    activite.save(user=request.user)
+                                    logger.debug(f"Activité {effet_count}.{produit_count}.{action_count}.{activite_count} créé avec ID: {activite.id}, reference: {activite.reference}")
+
+                messages.success(request, f"Plan d'action '{plan_action.titre}' modifié avec succès (Référence: {plan_action.reference}).")
+                logger.debug("Plan d'action modifié avec succès, redirection vers 'plan_action_list'")
+                return redirect('plan_action_list')
+
+        except ValueError as ve:
+            logger.error(f"Erreur de validation : {str(ve)}")
+            messages.error(request, f"Erreur de validation : {str(ve)}")
+            return render(request, 'planning/edit_plan_action.html', {'plan_action': plan_action})
+        except Exception as e:
+            logger.error(f"Erreur inattendue : {str(e)}", exc_info=True)
+            messages.error(request, f"Erreur lors de la modification du plan d'action : {str(e)}")
+            return render(request, 'planning/edit_plan_action.html', {'plan_action': plan_action})
+
+    logger.debug("Requête GET : Affichage du formulaire pré-rempli")
     context = {
-        'plan': plan,
-        'effets': plan.plan_effet.prefetch_related(
-            'effet_produit__produit_action__action_activite'
-        )
+        'plan_action': plan_action,
+        'effets': Effet.objects.filter(plan=plan_action).order_by('reference'),
+        'produits': Produit.objects.filter(effet__plan=plan_action).order_by('reference'),
+        'actions': Action.objects.filter(produit__effet__plan=plan_action).order_by('reference'),
+        'activites': Activite.objects.filter(action__produit__effet__plan=plan_action).order_by('reference'),
     }
     return render(request, 'planning/edit_plan_action.html', context)
 

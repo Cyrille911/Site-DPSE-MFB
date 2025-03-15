@@ -14,61 +14,65 @@ Liste des Plans d'Actions Stratégiques (PAS)
     <!-- Liste des Plans d'Actions Stratégiques -->
     <div id="plans-actions-list">
         {% for plan in plans %}
-            <div class="card shadow-lg mb-4 border-0 rounded-4 animate-slide-up" style="animation-delay: {{ forloop.counter0|mul:0.1 }}s; background: linear-gradient(135deg, #f8f9fa, #e9ecef); max-width: 800px; margin-left: auto; margin-right: auto;">
+            <div class="card shadow-lg mb-4 border-0 rounded-4 animate-slide-up" style="animation-delay: {{ forloop.counter0|mul:0.1 }}s; background: linear-gradient(135deg, #f8f9fa, #e9ecef); max-width: 900px; margin-left: auto; margin-right: auto;">
                 <div class="card-header bg-success text-white d-flex align-items-center justify-content-between" style="border-radius: 15px 15px 0 0; padding: 12px 20px;">
                     <h4 class="card-title mb-0 fw-bold" style="font-size: 1.4rem;">{{ plan.titre }}</h4>
                     <span class="badge bg-warning text-dark fw-bold" style="font-size: 0.8rem;">{{ plan.reference }}</span>
                 </div>
                 <div class="card-body" style="padding: 20px;">
-                    <!-- Ligne entière pour l'impact -->
-                    <div class="row g-2 align-items-center text-dark mb-4">
-                        <div class="col-12">
+                    <!-- Ligne 1 : Impact -->
+                    <div class="d-flex align-items-center text-dark mb-2 line-container">
+                        <div class="line-item full-width">
                             <i class="bi bi-lightbulb text-dark me-1"></i>
                             <span class="fw-bold">Impact :</span> 
                             <span class="ms-1">{{ plan.impact|truncatewords:20 }}</span>
                         </div>
                     </div>
-                    <!-- Ligne : Effets, Produits, Actions, Coût -->
-                    <div class="row g-2 align-items-center text-dark mb-2">
-                        <div class="col-md-3">
+                    <!-- Ligne 2 : Effets, Produits, Actions, Activités, Coût -->
+                    <div class="d-flex align-items-center text-dark mb-2 line-container" style="flex-wrap: wrap;">
+                        <div class="line-item">
                             <i class="bi bi-bar-chart text-dark me-1"></i>
                             <span class="fw-bold">Effets :</span> 
                             <span class="ms-1">{{ plan.nombre_effets }}</span>
                         </div>
-                        <div class="col-md-3">
+                        <div class="line-item">
                             <i class="bi bi-boxes text-dark me-1"></i>
                             <span class="fw-bold">Produits :</span> 
                             <span class="ms-1">{{ plan.nombre_produits }}</span>
                         </div>
-                        <div class="col-md-3">
+                        <div class="line-item">
                             <i class="bi bi-gear text-dark me-1"></i>
                             <span class="fw-bold">Actions :</span> 
                             <span class="ms-1">{{ plan.nombre_actions }}</span>
                         </div>
-                        <div class="col-md-3">
+                        <div class="line-item">
+                            <i class="bi bi-tools text-dark me-1"></i>
+                            <span class="fw-bold">Activités :</span> 
+                            <span class="ms-1">{{ plan.nombre_activites }}</span>
+                        </div>
+                        <div class="line-item">
                             <i class="bi bi-currency-dollar text-dark me-1"></i>
                             <span class="fw-bold">Coût :</span> 
                             <span class="ms-1">
                                 {% with total_cost=plan.couts|sum_list %}
-                                    {{ total_cost|floatformat:0 }}
+                                    {{ total_cost|floatformat:0 }} M
                                 {% endwith %}
                             </span>
-                            <span class="ms-1"> millions</span> 
                         </div>
                     </div>
-                    <!-- Dernière ligne : Début, Horizon, Statut -->
-                    <div class="row g-2 align-items-center text-dark">
-                        <div class="col-md-4">
+                    <!-- Ligne 3 : Début, Horizon, Statut -->
+                    <div class="d-flex justify-content-between align-items-center text-dark mb-2 line-container">
+                        <div class="line-item">
                             <i class="bi bi-calendar-check text-dark me-1"></i>
                             <span class="fw-bold">Début :</span> 
                             <span class="ms-1">{{ plan.annee_debut }}</span>
                         </div>
-                        <div class="col-md-4">
+                        <div class="line-item">
                             <i class="bi bi-calendar3 text-dark me-1"></i>
                             <span class="fw-bold">Horizon :</span> 
                             <span class="ms-1">{{ plan.horizon }} ans</span>
                         </div>
-                        <div class="col-md-4">
+                        <div class="line-item full-width">
                             <i class="bi bi-link-45deg text-dark me-1"></i>
                             <span class="fw-bold">Statut :</span> 
                             <span class="ms-1">
@@ -81,6 +85,7 @@ Liste des Plans d'Actions Stratégiques (PAS)
                             </span>
                         </div>
                     </div>
+                    <!-- Boutons -->
                     <div class="mt-3 text-center">
                         <a href="{% url 'plan_action_detail' plan.id %}" class="btn btn-primary btn-sm me-1">
                             <i class="bi bi-eye me-1"></i> Voir
@@ -172,20 +177,40 @@ Liste des Plans d'Actions Stratégiques (PAS)
     .fw-bold {
         font-weight: 600;
         color: #2c3e50;
-        font-size: 1.1rem; /* Augmenté de 0.9rem à 1.1rem */
+        font-size: 1rem;
     }
     .text-dark {
         color: #2c3e50;
-        font-size: 1.1rem; /* Augmenté de 0.9rem à 1.1rem */
+        font-size: 1rem;
     }
-    .row.align-items-center {
-        margin-bottom: 0;
+    .line-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        margin-left: 0;
+        margin-right: 0;
     }
-    .col-md-3 {
-        padding: 0 10px;
+    .line-container[style*="flex-wrap: wrap"] {
+        justify-content: flex-start; /* Alignement à gauche avec retour à la ligne */
+        gap: 20px; /* Espacement entre les éléments */
+    }
+    .line-item {
+        flex: 1; /* Espace égal pour chaque élément */
+        min-width: 120px; /* Réduit pour s'adapter à une boîte plus étroite */
+        max-width: 20%; /* Limite pour 5 éléments */
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding: 0 8px; /* Réduit légèrement le padding */
+        text-align: left;
+    }
+    .line-item.full-width {
+        max-width: 100%; /* Pour les lignes avec un seul élément */
+        text-align: left;
     }
     .bi {
-        font-size: 1.2rem; /* Augmenté pour les icônes */
+        font-size: 1.2rem;
         vertical-align: middle;
     }
     .text-purple { color: #6f42c1; }
@@ -193,7 +218,7 @@ Liste des Plans d'Actions Stratégiques (PAS)
     /* Style pour la chaîne de statut */
     .chain-link {
         display: inline-block;
-        font-size: 0.9rem; /* Légèrement augmenté */
+        font-size: 0.9rem;
         color: #6c757d;
         margin: 0 1px;
         transition: color 0.3s ease;
@@ -282,12 +307,20 @@ Liste des Plans d'Actions Stratégiques (PAS)
         to { opacity: 1; transform: translateY(0); }
     }
     @media (max-width: 768px) {
-        .row {
-            flex-direction: column;
+        .line-container {
+            flex-direction: column; /* Passe en colonne sur petits écrans */
             text-align: center;
         }
-        .col-md-3 {
+        .line-container[style*="flex-wrap: wrap"] {
+            gap: 10px; /* Espacement réduit sur mobile */
+        }
+        .line-item {
+            max-width: 100%; /* Pleine largeur sur petits écrans */
             margin-bottom: 10px;
+            text-align: center;
+        }
+        .line-item.full-width {
+            text-align: center;
         }
         .btn {
             display: block;

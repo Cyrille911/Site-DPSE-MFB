@@ -3,8 +3,14 @@ from .models import User
 
 # Formulaire d'inscription pour les membres
 class InscriptionMembreForm(forms.ModelForm):
-    password = forms.CharField(widget=forms.PasswordInput, label="Mot de passe")
-    confirm_password = forms.CharField(widget=forms.PasswordInput, label="Confirmez le mot de passe")
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'input100', 'placeholder': 'Mot de passe'}), 
+        label="Mot de passe"
+    )
+    confirm_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'input100', 'placeholder': 'Confirmez le mot de passe'}), 
+        label="Confirmez le mot de passe"
+    )
     
     # Ajout du champ 'role' avec les choix
     ROLE_CHOICES = (
@@ -13,11 +19,26 @@ class InscriptionMembreForm(forms.ModelForm):
         ('point_focal', 'Point Focal'),
         ('cabinet', 'Cabinet MFB'),
     )
-    role = forms.ChoiceField(choices=ROLE_CHOICES, label="Rôle", initial='membre')
+    role = forms.ChoiceField(
+        choices=ROLE_CHOICES, 
+        label="Rôle", 
+        initial='membre',
+        widget=forms.Select(attrs={'class': 'input100'})
+    )
 
     class Meta:
         model = User
-        fields = ['last_name', 'first_name', 'program', 'entity', 'function', 'email', 'phone_number', 'password', 'confirm_password', 'photo', 'role']
+        fields = ['last_name', 'first_name', 'email', 'phone_number', 'program', 'entity', 'function', 'password', 'confirm_password', 'photo', 'role']
+        widgets = {
+            'last_name': forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Nom'}),
+            'first_name': forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Prénom'}),
+            'email': forms.EmailInput(attrs={'class': 'input100', 'placeholder': 'Email'}),
+            'phone_number': forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Numéro de téléphone'}),
+            'program': forms.Select(attrs={'class': 'input100'}),
+            'entity': forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Entité'}),
+            'function': forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Fonction'}),
+            'photo': forms.FileInput(attrs={'class': 'input100'}),
+        }
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
@@ -34,25 +55,39 @@ class InscriptionMembreForm(forms.ModelForm):
         if password and confirm_password and password != confirm_password:
             raise forms.ValidationError("Les mots de passe ne correspondent pas.")
 
-        # Pas besoin d'attribuer 'role' ici, il vient du formulaire
         return cleaned_data
 
     def save(self, commit=True):
         user = super().save(commit=False)
         user.set_password(self.cleaned_data['password'])  # Hacher le mot de passe
-        user.username = self.cleaned_data['email']  # Par exemple, utiliser l'email comme username
+        user.username = self.cleaned_data['email']  # Utiliser l'email comme username
         if commit:
             user.save()
         return user
 
 # Formulaire d'inscription pour les visiteurs
 class InscriptionVisiteurForm(forms.ModelForm):
-    password = forms.CharField(widget=forms.PasswordInput, label="Mot de passe")
-    confirm_password = forms.CharField(widget=forms.PasswordInput, label="Confirmez le mot de passe")
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'input100', 'placeholder': 'Mot de passe'}), 
+        label="Mot de passe"
+    )
+    confirm_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'input100', 'placeholder': 'Confirmez le mot de passe'}), 
+        label="Confirmez le mot de passe"
+    )
 
     class Meta:
         model = User
-        fields = ['last_name', 'first_name', 'profession', 'interest', 'email', 'phone_number', 'password', 'confirm_password', 'photo']
+        fields = ['last_name', 'first_name', 'email', 'phone_number', 'profession', 'interest', 'password', 'confirm_password', 'photo']
+        widgets = {
+            'last_name': forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Nom'}),
+            'first_name': forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Prénom'}),
+            'email': forms.EmailInput(attrs={'class': 'input100', 'placeholder': 'Email'}),
+            'phone_number': forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Numéro de téléphone'}),
+            'profession': forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Profession'}),
+            'interest': forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Intérêt'}),
+            'photo': forms.FileInput(attrs={'class': 'input100'}),
+        }
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
@@ -73,31 +108,48 @@ class InscriptionVisiteurForm(forms.ModelForm):
         cleaned_data['role'] = 'visiteur'
         return cleaned_data
 
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.set_password(self.cleaned_data['password'])  # Hacher le mot de passe
+        user.username = self.cleaned_data['email']  # Utiliser l'email comme username
+        user.role = 'visiteur'  # Définir explicitement le rôle
+        if commit:
+            user.save()
+        return user
+
 class ConnexionForm(forms.Form):
-    email = forms.EmailField(label="Email")
-    password = forms.CharField(label="Mot de passe", widget=forms.PasswordInput)
+    email = forms.EmailField(
+        label="Email",
+        widget=forms.EmailInput(attrs={'class': 'input100', 'placeholder': 'Votre email'})
+    )
+    password = forms.CharField(
+        label="Mot de passe",
+        widget=forms.PasswordInput(attrs={'class': 'input100', 'placeholder': 'Votre mot de passe'})
+    )
+
+# Remplacer la classe ProfileUpdateForm par celle-ci:
 
 class ProfileUpdateForm(forms.ModelForm):
     # Champs communs à tous les utilisateurs
     first_name = forms.CharField(
         label="Prénom",
         max_length=100,
-        widget=forms.TextInput(attrs={'class': 'input100', 'required': True})
+        widget=forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Prénom', 'required': True})
     )
     last_name = forms.CharField(
         label="Nom",
         max_length=100,
-        widget=forms.TextInput(attrs={'class': 'input100', 'required': True})
+        widget=forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Nom', 'required': True})
     )
     email = forms.EmailField(
         label="Email",
-        widget=forms.EmailInput(attrs={'class': 'input100', 'required': True})
+        widget=forms.EmailInput(attrs={'class': 'input100', 'placeholder': 'Email', 'required': True})
     )
     phone_number = forms.CharField(
         label="Numéro de téléphone",
         max_length=20,
         required=False,
-        widget=forms.TextInput(attrs={'class': 'input100'})
+        widget=forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Numéro de téléphone'})
     )
     photo = forms.ImageField(
         label="Photo de profil",
@@ -106,23 +158,23 @@ class ProfileUpdateForm(forms.ModelForm):
     )
 
     # Champs spécifiques aux membres
-    program = forms.CharField(
+    program = forms.ChoiceField(
         label="Programme",
-        max_length=100,
+        choices=User.PROGRAM_CHOICES,
         required=False,
-        widget=forms.TextInput(attrs={'class': 'input100'})
+        widget=forms.Select(attrs={'class': 'input100'})
     )
     entity = forms.CharField(
         label="Entité",
         max_length=100,
         required=False,
-        widget=forms.TextInput(attrs={'class': 'input100'})
+        widget=forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Entité'})
     )
     function = forms.CharField(
         label="Fonction",
         max_length=100,
         required=False,
-        widget=forms.TextInput(attrs={'class': 'input100'})
+        widget=forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Fonction'})
     )
 
     # Champs spécifiques aux visiteurs
@@ -130,13 +182,13 @@ class ProfileUpdateForm(forms.ModelForm):
         label="Profession",
         max_length=100,
         required=False,
-        widget=forms.TextInput(attrs={'class': 'input100'})
+        widget=forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Profession'})
     )
     interest = forms.CharField(
         label="Intérêt",
         max_length=100,
         required=False,
-        widget=forms.TextInput(attrs={'class': 'input100'})
+        widget=forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Intérêt'})
     )
 
     class Meta:
@@ -145,17 +197,17 @@ class ProfileUpdateForm(forms.ModelForm):
                   'program', 'entity', 'function', 'profession', 'interest']
 
     def __init__(self, *args, **kwargs):
-        # Récupérer l’utilisateur pour conditionner les champs
+        # Récupérer l'utilisateur pour conditionner les champs
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
 
-        # Si l’utilisateur est un membre, masquer les champs visiteurs
-        if user and user.role == 'membre':
+        # Si l'utilisateur est un membre ou un rôle similaire, masquer les champs visiteurs
+        if user and user.role.lower().rstrip('s') in ['membre', 'responsable', 'point_focal', 'cabinet']:
             del self.fields['profession']
             del self.fields['interest']
-        # Si l’utilisateur est un visiteur, masquer les champs membres
-        elif user and user.role == 'visiteur':
+        # Si l'utilisateur est un visiteur, masquer les champs membres
+        elif user and user.role.lower().rstrip('s') == 'visiteur':
             del self.fields['program']
             del self.fields['entity']
             del self.fields['function']
-            
+

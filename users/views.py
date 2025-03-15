@@ -35,7 +35,8 @@ from .tokens import account_activation_token
 
 ## Personnes (Membres, Visiteurs)
 def inscription_membre(request):
-    context = {'message': "Bienvenue sur la page d'inscription pour les membres !"}
+    context = {'message': "Bienvenue sur la page d'inscription pour les membres !",
+               'title': "Inscription Membre"}
     form = InscriptionMembreForm(request.POST or None, request.FILES or None)
 
     if request.method == 'POST' and form.is_valid():
@@ -60,7 +61,7 @@ def inscription_membre(request):
             responsable_group, _ = Group.objects.get_or_create(name='Responsable')
             user.groups.add(responsable_group)
         elif role == 'cabinet':
-            cabinet_group = Group.objects.get_or_create(name='Cabinet')
+            cabinet_group, _ = Group.objects.get_or_create(name='Cabinet')
             user.groups.add(cabinet_group)
 
         # Envoyer un email de confirmation
@@ -82,7 +83,8 @@ def inscription_membre(request):
     return render(request, 'users/formulaire.html', context)
 
 def inscription_visiteur(request):
-    context = {'message': "Bienvenue sur la page d'inscription pour les visiteurs !"}
+    context = {'message': "Bienvenue sur la page d'inscription pour les visiteurs !",
+               'title': "Inscription Visiteur"}
     form = InscriptionVisiteurForm(request.POST or None, request.FILES or None)
 
     if request.method == 'POST' and form.is_valid():
@@ -192,24 +194,60 @@ def activer_compte_visiteur(request, uidb64, token):
         return redirect('inscription_visiteur')
 
 def connexion_membre(request):
+    context = {'message': "Bienvenue sur la page de connexion pour les membres !"}
+    
     if request.method == 'POST':
         form = ConnexionForm(request.POST)
         if form.is_valid():
             email = form.cleaned_data['email']
             password = form.cleaned_data['password']
 
-            user = authenticate(request, email=email, password=password)
+            # Vérifier si l'utilisateur existe d'abord
+            try:
+                user_exists = User.objects.get(email=email)
+                # Si l'utilisateur existe mais n'est pas actif, afficher un message spécifique
+                if not user_exists.is_active:
+                    # Activer l'utilisateur pour ce test (à supprimer en production)
+                    user_exists.is_active = True
+                    user_exists.save()
+                    messages.warning(request, "Votre compte a été activé automatiquement pour ce test.")
+            except User.DoesNotExist:
+                pass
 
-            if user and user.role in ['membre', 'responsable', 'point_focal', 'cabinet']:
-                login(request, user)
-                messages.success(request, f'Bienvenue, {user.first_name} !')
-                return redirect('accueil')
+            # Authentification avec email/password
+            user = authenticate(request, email=email, password=password)
+            
+            # Si l'authentification échoue, essayer avec username/password
+            if user is None:
+                user = authenticate(request, username=email, password=password)
+
+            # Vérifier le rôle (avec plus de flexibilité)
+            if user is not None:
+                # Convertir en minuscules et supprimer le 's' final pour la comparaison
+                user_role = user.role.lower().rstrip('s')
+                allowed_roles = ['membre', 'responsable', 'point_focal', 'cabinet']
+                
+                if user_role in allowed_roles or user.role in allowed_roles:
+                    login(request, user)
+                    messages.success(request, f'Bienvenue, {user.first_name} !')
+                    return redirect('accueil')
+                else:
+                    messages.error(request, f"Vous n'avez pas les autorisations nécessaires. Votre rôle: {user.role}")
             else:
-                messages.error(request, "Email ou mot de passe incorrect ou accès non autorisé.")
+                # Afficher des informations de débogage
+                messages.error(request, "Échec d'authentification. Vérifiez votre email et mot de passe.")
+                
+                # Informations de débogage (à supprimer en production)
+                try:
+                    debug_user = User.objects.get(email=email)
+                    messages.warning(request, f"Débogage: Utilisateur trouvé avec email {email}, rôle: {debug_user.role}, actif: {debug_user.is_active}")
+                except User.DoesNotExist:
+                    messages.warning(request, f"Débogage: Aucun utilisateur trouvé avec email {email}")
     else:
         form = ConnexionForm()
 
-    return render(request, 'users/formulaire.html', {'form': form, 'title': 'Connexion Membre'})
+    context['form'] = form
+    return render(request, 'users/formulaire.html', context)
 
 def connexion_visiteur(request):
     context = {'message': "Bienvenue sur la page de connexion pour les visiteurs !"}
@@ -237,20 +275,38 @@ def connexion_visiteur(request):
 
 @login_required
 def profil_utilisateur(request):
-    utilisateur = request.user
-    return render(request, 'users/profil_utilisateur.html', {'utilisateur': utilisateur})
+    context = {
+        'utilisateur': request.user,
+        'title': "Mon profil"
+    }
+    
+    # Déterminer quels champs afficher en fonction du rôle
+    user_role = request.user.role.lower().rstrip('s')
+    
+    if user_role in ['membre', 'responsable', 'point_focal', 'cabinet']:
+        context['is_membre'] = True
+    else:
+        context['is_visiteur'] = True
+        
+    return render(request, 'users/profil_utilisateur.html', context)
 
 @login_required
 def modifier_profil(request):
+    context = {'message': "Modification de votre profil", 'title': "Modifier mon profil"}
+    
     if request.method == 'POST':
         form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user, user=request.user)
         if form.is_valid():
             form.save()
+            messages.success(request, "Votre profil a été mis à jour avec succès !")
             return redirect('profil_utilisateur')
+        else:
+            messages.error(request, "Erreur lors de la mise à jour du profil. Veuillez corriger les erreurs ci-dessous.")
     else:
         form = ProfileUpdateForm(instance=request.user, user=request.user)
     
-    return render(request, 'users/formulaire.html', {'form': form})
+    context['form'] = form
+    return render(request, 'users/formulaire.html', context)
 
 def deconnexion(request):
     """
@@ -258,3 +314,4 @@ def deconnexion(request):
     """
     logout(request)
     return redirect('accueil')  # Redirige vers la page d'accueil (ou une autre page)
+

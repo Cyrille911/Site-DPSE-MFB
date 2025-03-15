@@ -169,3 +169,19 @@ EMAIL_USE_TLS = True  # Utiliser TLS
 EMAIL_HOST_USER = 'cyrilletaha01@gmail.com'  # adresse e-mail
 EMAIL_HOST_PASSWORD = 'ivhsvvuuelnjvzqx'  # mot de passe
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER  # Email par défaut pour l'envoi
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        '': {
+            'handlers': ['console'],
+            'level': 'DEBUG',  # Affiche DEBUG, INFO, WARNING, ERROR, CRITICAL
+        },
+    },
+}

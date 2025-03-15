@@ -1,57 +1,59 @@
-# planning/templatetags/planning_filters.py
 from django import template
-from django_filters import FilterSet, CharFilter, ChoiceFilter 
+from django_filters import FilterSet, CharFilter, ChoiceFilter
 from ..models import Activite
 
 register = template.Library()
 
+# Filtres pour les templates
 @register.filter
 def times(value):
-    """Retourne une liste d'entiers de 0 à value-1 pour itérer dans un template."""
+    """Retourne une plage de valeurs de 0 à value-1 pour les boucles en template."""
     try:
         return range(int(value))
     except (ValueError, TypeError):
         return []
 
 @register.filter
-def index(value, arg):
-    """Retourne l'élément à l'index spécifié dans une liste ou un objet indexable."""
+def index(sequence, position):
+    """Retourne l'élément à l'index donné dans une liste ou None si hors limite."""
     try:
-        return value[int(arg)]
+        return sequence[int(position)]
     except (IndexError, ValueError, TypeError):
         return None
 
 @register.filter
 def mul(value, arg):
-    """Multiplie deux nombres."""
+    """Multiplie deux nombres et retourne le résultat."""
     try:
         return float(value) * float(arg)
     except (ValueError, TypeError):
-        return 0
-    
+        return value  # Retourne la valeur originale en cas d'erreur
+
 @register.filter
 def sum_list(value):
+    """Retourne la somme des éléments numériques d'une liste."""
     try:
         return sum(float(x) for x in value if x)
     except (TypeError, ValueError):
         return 0.0
 
+# Filtres pour le filtrage de queryset
 @register.filter
-def sum_list(value):
-    try:
-        return sum(float(x) for x in value if x)
-    except (TypeError, ValueError):
-        return 0.0
+def filter_by_effet(queryset, effet):
+    """Filtre un queryset par effet."""
+    return queryset.filter(effet=effet)
 
 @register.filter
-def times(n):
-    return range(n)
+def filter_by_produit(queryset, produit):
+    """Filtre un queryset par produit."""
+    return queryset.filter(produit=produit)
 
 @register.filter
-def index(sequence, position):
-    return sequence[position]
+def filter_by_action(queryset, action):
+    """Filtre un queryset par action."""
+    return queryset.filter(action=action)
 
-# Le filtre qui causait l'erreur
+# Filtre DjangoFilterSet pour le modèle Activite
 class ActiviteFilter(FilterSet):
     status = ChoiceFilter(choices=Activite._meta.get_field('status').choices)
     type = ChoiceFilter(choices=Activite._meta.get_field('type').choices)

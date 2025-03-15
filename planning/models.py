@@ -1,10 +1,10 @@
 from django.db import models
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, PermissionDenied
 from django.conf import settings
 from django.core.mail import send_mail
 from datetime import datetime
 
-# Modèle PlanAction (inchangé)
+# Modèle PlanAction
 class PlanAction(models.Model):
     id = models.AutoField(primary_key=True)
     titre = models.CharField(max_length=255)
@@ -36,6 +36,11 @@ class PlanAction(models.Model):
         self.save()
 
     def save(self, *args, **kwargs):
+        # Initialisation de couts si vide ou incorrect
+        if not self.couts or len(self.couts) != self.horizon:
+            self.couts = [0.0] * self.horizon
+        
+        # Initialisation de statut_pao
         if not isinstance(self.statut_pao, list) or len(self.statut_pao) != self.horizon:
             self.statut_pao = ["Non entamé"] * self.horizon
         current_year = datetime.now().year
@@ -44,13 +49,17 @@ class PlanAction(models.Model):
             self.statut_pao[index_annee_courante] = "En cours"
             for i in range(index_annee_courante):
                 self.statut_pao[i] = "Achevé"
+        
+        # Génération de la référence (ex. PA1)
         if not self.reference:
             if not self.pk:
                 position = PlanAction.objects.count() + 1
             else:
                 position = list(PlanAction.objects.order_by('id')).index(self) + 1
             self.reference = f"PA{position}"
+        
         super().save(*args, **kwargs)
+        # Mise à jour des références des enfants
         for effet in self.plan_effet.all():
             effet.update_reference()
 
@@ -60,7 +69,7 @@ class PlanAction(models.Model):
     def __str__(self):
         return f"Plan d'actions {self.reference} : {self.titre}"
 
-# Modèle Effet (inchangé)
+# Modèle Effet
 class Effet(models.Model):
     id = models.AutoField(primary_key=True)
     plan = models.ForeignKey(PlanAction, related_name="plan_effet", on_delete=models.CASCADE)
@@ -78,6 +87,7 @@ class Effet(models.Model):
                 couts[i] += float(cout)
         self.couts = couts
         self.save()
+        self.plan.calculer_couts()
 
     def calculer_nombres(self):
         effet_produit = self.effet_produit.prefetch_related('produit_action__action_activite')
@@ -88,6 +98,7 @@ class Effet(models.Model):
         self.plan.calculer_nombres()
 
     def update_reference(self):
+        # Génération de la référence (ex. 1 pour PA1)
         if not self.reference or self.pk is None:
             if not self.pk:
                 position = self.plan.plan_effet.count() + 1
@@ -95,13 +106,21 @@ class Effet(models.Model):
                 position = list(self.plan.plan_effet.order_by('id')).index(self) + 1
             self.reference = f"{position}"
             self.save(update_fields=['reference'])
+        # Mise à jour des références des enfants
+        for produit in self.effet_produit.all():
+            produit.update_reference()
 
     def save(self, *args, **kwargs):
+        # Initialisation de couts si vide ou incorrect
+        if not self.couts or len(self.couts) != self.plan.horizon:
+            self.couts = [0.0] * self.plan.horizon
+        
         old_instance = None
         if self.pk:
             old_instance = Effet.objects.get(pk=self.pk)
         self.full_clean()
         super().save(*args, **kwargs)
+        # Mise à jour des références des enfants
         for produit in self.effet_produit.all():
             produit.update_reference()
         if old_instance and old_instance.plan != self.plan:
@@ -118,7 +137,7 @@ class Effet(models.Model):
     def __str__(self):
         return f"Effet {self.reference} : {self.titre}"
 
-# Modèle Produit (inchangé)
+# Modèle Produit
 class Produit(models.Model):
     id = models.AutoField(primary_key=True)
     effet = models.ForeignKey(Effet, related_name="effet_produit", on_delete=models.CASCADE)
@@ -135,6 +154,7 @@ class Produit(models.Model):
                 couts[i] += float(cout)
         self.couts = couts
         self.save()
+        self.effet.calculer_couts()
 
     def calculer_nombres(self):
         produit_action = self.produit_action.prefetch_related('action_activite')
@@ -144,6 +164,7 @@ class Produit(models.Model):
         self.effet.calculer_nombres()
 
     def update_reference(self):
+        # Génération de la référence (ex. 1.1 pour Effet 1 sous PA1)
         if not self.reference or self.pk is None:
             if not self.pk:
                 position = self.effet.effet_produit.count() + 1
@@ -151,13 +172,21 @@ class Produit(models.Model):
                 position = list(self.effet.effet_produit.order_by('id')).index(self) + 1
             self.reference = f"{self.effet.reference}.{position}"
             self.save(update_fields=['reference'])
+        # Mise à jour des références des enfants
+        for action in self.produit_action.all():
+            action.update_reference()
 
     def save(self, *args, **kwargs):
+        # Initialisation de couts si vide ou incorrect
+        if not self.couts or len(self.couts) != self.effet.plan.horizon:
+            self.couts = [0.0] * self.effet.plan.horizon
+        
         old_instance = None
         if self.pk:
             old_instance = Produit.objects.get(pk=self.pk)
         self.full_clean()
         super().save(*args, **kwargs)
+        # Mise à jour des références des enfants
         for action in self.produit_action.all():
             action.update_reference()
         if old_instance and old_instance.effet != self.effet:
@@ -175,7 +204,7 @@ class Produit(models.Model):
     def __str__(self):
         return f"Produit {self.reference} : {self.titre}"
 
-# Modèle Action (inchangé)
+# Modèle Action
 class Action(models.Model):
     id = models.AutoField(primary_key=True)
     produit = models.ForeignKey(Produit, related_name="produit_action", on_delete=models.CASCADE)
@@ -191,6 +220,7 @@ class Action(models.Model):
                 couts[i] += float(cout)
         self.couts = couts
         self.save()
+        self.produit.calculer_couts()
 
     def calculer_nombres(self):
         self.nombre_activites = self.action_activite.count()
@@ -198,6 +228,7 @@ class Action(models.Model):
         self.produit.calculer_nombres()
 
     def update_reference(self):
+        # Génération de la référence (ex. 1.1.1 pour Produit 1.1 sous Effet 1)
         if not self.reference or self.pk is None:
             if not self.pk:
                 position = self.produit.produit_action.count() + 1
@@ -205,13 +236,21 @@ class Action(models.Model):
                 position = list(self.produit.produit_action.order_by('id')).index(self) + 1
             self.reference = f"{self.produit.reference}.{position}"
             self.save(update_fields=['reference'])
+        # Mise à jour des références des enfants
+        for activite in self.action_activite.all():
+            activite.update_reference()
 
     def save(self, *args, **kwargs):
+        # Initialisation de couts si vide ou incorrect
+        if not self.couts or len(self.couts) != self.produit.effet.plan.horizon:
+            self.couts = [0.0] * self.produit.effet.plan.horizon
+        
         old_instance = None
         if self.pk:
             old_instance = Action.objects.get(pk=self.pk)
         self.full_clean()
         super().save(*args, **kwargs)
+        # Mise à jour des références des enfants
         for activite in self.action_activite.all():
             activite.update_reference()
         if old_instance and old_instance.produit != self.produit:
@@ -229,7 +268,7 @@ class Action(models.Model):
     def __str__(self):
         return f"Action {self.reference} : {self.titre}"
 
-# Modèle Activite (mis à jour avec periodes_execution)
+# Modèle Activite
 class Activite(models.Model):
     id = models.AutoField(primary_key=True)
     action = models.ForeignKey(Action, related_name="action_activite", on_delete=models.CASCADE)
@@ -246,19 +285,19 @@ class Activite(models.Model):
     )
     indicateur_label = models.CharField(max_length=255)
     indicateur_reference = models.CharField(max_length=255)
-    cibles = models.JSONField(default=list)  # Liste des cibles par année
-    realisation = models.JSONField(default=list)  # Liste des réalisations par année
-    couts = models.JSONField(default=list)  # Liste des coûts par année
-    periodes_execution = models.JSONField(default=list)  # Liste des trimestres par année (ex. ["T1", "T2"])
+    cibles = models.JSONField(default=list)
+    realisation = models.JSONField(default=list)
+    couts = models.JSONField(default=list)
+    periodes_execution = models.JSONField(default=list)
     point_focal = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=False, blank=False, related_name='point_focal_activites')
     responsable = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True, related_name='responsable_activites')
-    etat_avancement = models.JSONField(default=list)  # Liste des états d'avancement par année
-    commentaire = models.JSONField(default=list)  # Liste des commentaires par année
-    commentaire_se = models.JSONField(default=list)  # Liste des commentaires SE par année
+    etat_avancement = models.JSONField(default=list)
+    commentaire = models.JSONField(default=list)
+    commentaire_se = models.JSONField(default=list)
     reference = models.CharField(max_length=50, blank=True)
-    pending_changes = models.JSONField(default=list)  # Liste des changements en attente par année
-    status = models.JSONField(default=list)  # Liste des statuts par année
-    matrix_status = models.JSONField(default=list)  # Liste des statuts de matrice par année
+    pending_changes = models.JSONField(default=list)
+    status = models.JSONField(default=list)
+    matrix_status = models.JSONField(default=list)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def clean(self):
@@ -306,16 +345,16 @@ class Activite(models.Model):
             if old_instance.indicateur_reference != self.indicateur_reference:
                 self.indicateur_reference = old_instance.indicateur_reference
 
-        # Initialisation des listes
+        # Initialisation des listes basées sur l'horizon
         horizon = self.action.produit.effet.plan.horizon
+        if not self.couts or len(self.couts) != horizon:
+            self.couts = [0.0] * horizon
         if not self.cibles or len(self.cibles) != horizon:
             self.cibles = [None] * horizon
         if not self.realisation or len(self.realisation) != horizon:
             self.realisation = [""] * horizon
-        if not self.couts or len(self.couts) != horizon:
-            self.couts = [0.0] * horizon
         if not self.periodes_execution or len(self.periodes_execution) != horizon:
-            self.periodes_execution = [[] for _ in range(horizon)]  # Liste vide par année
+            self.periodes_execution = [[] for _ in range(horizon)]
         if not self.etat_avancement or len(self.etat_avancement) != horizon:
             self.etat_avancement = [""] * horizon
         if not self.commentaire or len(self.commentaire) != horizon:
@@ -331,7 +370,7 @@ class Activite(models.Model):
 
         self.full_clean()
 
-        # Génération de la référence
+        # Génération de la référence (ex. 1.1.1.1 pour Action 1.1.1)
         if not self.reference or self.pk is None:
             if not self.pk:
                 position = self.action.action_activite.count() + 1
@@ -392,7 +431,7 @@ class Activite(models.Model):
 
     def validate_by_responsable(self, user):
         if user != self.responsable:
-            raise PermissionError("Seul le responsable peut valider.")
+            raise PermissionDenied("Seul le responsable peut valider.")
         horizon = self.action.produit.effet.plan.horizon
         for i in range(horizon):
             if self.pending_changes[i]:
@@ -405,7 +444,7 @@ class Activite(models.Model):
 
     def submit_to_se(self, user):
         if user != self.responsable:
-            raise PermissionError("Seul le responsable peut soumettre au SE.")
+            raise PermissionDenied("Seul le responsable peut soumettre au SE.")
         self.validate_by_responsable(user)
         horizon = self.action.produit.effet.plan.horizon
         for i in range(horizon):
@@ -413,6 +452,7 @@ class Activite(models.Model):
         self.save(user=user)
 
     def update_reference(self):
+        # Génération de la référence (ex. 1.1.1.1 pour Action 1.1.1)
         if not self.reference or self.pk is None:
             if not self.pk:
                 position = self.action.action_activite.count() + 1
@@ -434,7 +474,7 @@ class Activite(models.Model):
     def __str__(self):
         return f"Activité {self.reference} : {self.titre}"
 
-# Modèle ActiviteLog (inchangé)
+# Modèle ActiviteLog
 class ActiviteLog(models.Model):
     activite = models.ForeignKey(Activite, on_delete=models.CASCADE, related_name='logs')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
