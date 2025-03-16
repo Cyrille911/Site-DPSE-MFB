@@ -386,7 +386,8 @@
     justify-content: center;
     text-align: center;
     color: white;
-    transition: background-color 0.3s ease, opacity 0.3s ease; /* Animation fluide */
+    transition: background-color 0.3s ease, opacity 0.3s ease;
+    /* Animation fluide */
   }
 
   .content-carousel {
@@ -569,6 +570,60 @@
   html {
     scroll-behavior: smooth;
   }
+
+
+  /* État initial des éléments (cachés) */
+  .hero .carousel,
+  .hero .container-carousel,
+  .hero .carousel-button,
+  .hero .carousel-indicators,
+  .hero .icon-boxes {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  /* Classe pour déclencher l'animation */
+  .fade-in {
+    animation: fadeInUp 0.6s ease-out forwards;
+  }
+
+  /* Définir différentes délais pour chaque élément */
+  .hero .carousel.fade-in {
+    animation-delay: 0.2s;
+  }
+
+  .hero .container-carousel.fade-in {
+    animation-delay: 0.4s;
+  }
+
+  .hero .carousel-button-prev.fade-in {
+    animation-delay: 0.6s;
+  }
+
+  .hero .carousel-button-next.fade-in {
+    animation-delay: 0.6s;
+  }
+
+  .hero .carousel-indicators.fade-in {
+    animation-delay: 0.8s;
+  }
+
+  .hero .icon-boxes.fade-in {
+    animation-delay: 1s;
+  }
+
+  /* Animation keyframes */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 </style>
 
 {% endblock%}
@@ -577,71 +632,71 @@
 <main class="main">
 
   <!-- Accueil -->
-<!-- Accueil -->
-<section id="hero" class="hero section dark-background">
-  <div class="hero-dark"></div>
+  <!-- Accueil -->
+  <section id="hero" class="hero section dark-background">
+    <div class="hero-dark"></div>
 
-  <!-- Carousel -->
-  <div class="carousel" id="carousel">
-    <!-- Slides will be added by JavaScript -->
-  </div>
-
-  <div class="container-carousel">
-    <div class="content-carousel">
-      <h2 class="title">Direction de la Planification et du Suivi Evaluation</h2>
-      <p class="description">Planifier, suivre, évaluer : agir mieux !</p>
+    <!-- Carousel -->
+    <div class="carousel" id="carousel">
+      <!-- Slides will be added by JavaScript -->
     </div>
-  </div>
 
-  <!-- Navigation buttons -->
-  <button class="carousel-button carousel-button-prev" id="prevButton" aria-label="Previous slide">
-    ❮
-  </button>
-  <button class="carousel-button carousel-button-next" id="nextButton" aria-label="Next slide">
-    ❯
-  </button>
-
-  <!-- Indicators -->
-  <div class="carousel-indicators" id="indicators">
-    <!-- Indicators will be added by JavaScript -->
-  </div>
-
-  <!-- Icon boxes -->
-  <div class="icon-boxes">
-    <div class="icon-boxes-container">
-      <a href="#about" class="icon-box-link">
-        <div class="icon-box">
-          <i class="bi bi-house"></i>
-          <h3 class="icon-title">Le Ministère</h3>
-        </div>
-      </a>
-      <a href="#dpse" class="icon-box-link">
-        <div class="icon-box">
-          <i class="bi bi-bar-chart"></i>
-          <h3 class="icon-title">La DPSE</h3>
-        </div>
-      </a>
-      <a href="#gar" class="icon-box-link">
-        <div class="icon-box">
-          <i class="bi bi-puzzle"></i>
-          <h3 class="icon-title">GAR</h3>
-        </div>
-      </a>
-      <a href="#letmotiv" class="icon-box-link">
-        <div class="icon-box">
-          <i class="bi bi-person-fill"></i>
-          <h3 class="icon-title">Letmotiv</h3>
-        </div>
-      </a>
-      <a href="#contact" class="icon-box-link">
-        <div class="icon-box">
-          <i class="bi bi-person-vcard-fill"></i>
-          <h3 class="icon-title">Contacts</h3>
-        </div>
-      </a>
+    <div class="container-carousel">
+      <div class="content-carousel">
+        <h2 class="title">Direction de la Planification et du Suivi Evaluation</h2>
+        <p class="description">Planifier, suivre, évaluer : agir mieux !</p>
+      </div>
     </div>
-  </div>
-</section><!-- /Accueil -->
+
+    <!-- Navigation buttons -->
+    <button class="carousel-button carousel-button-prev" id="prevButton" aria-label="Previous slide">
+      ❮
+    </button>
+    <button class="carousel-button carousel-button-next" id="nextButton" aria-label="Next slide">
+      ❯
+    </button>
+
+    <!-- Indicators -->
+    <div class="carousel-indicators" id="indicators">
+      <!-- Indicators will be added by JavaScript -->
+    </div>
+
+    <!-- Icon boxes -->
+    <div class="icon-boxes">
+      <div class="icon-boxes-container">
+        <a href="#about" class="icon-box-link">
+          <div class="icon-box">
+            <i class="bi bi-house"></i>
+            <h3 class="icon-title">Le Ministère</h3>
+          </div>
+        </a>
+        <a href="#dpse" class="icon-box-link">
+          <div class="icon-box">
+            <i class="bi bi-bar-chart"></i>
+            <h3 class="icon-title">La DPSE</h3>
+          </div>
+        </a>
+        <a href="#gar" class="icon-box-link">
+          <div class="icon-box">
+            <i class="bi bi-puzzle"></i>
+            <h3 class="icon-title">GAR</h3>
+          </div>
+        </a>
+        <a href="#letmotiv" class="icon-box-link">
+          <div class="icon-box">
+            <i class="bi bi-person-fill"></i>
+            <h3 class="icon-title">Letmotiv</h3>
+          </div>
+        </a>
+        <a href="#contact" class="icon-box-link">
+          <div class="icon-box">
+            <i class="bi bi-person-vcard-fill"></i>
+            <h3 class="icon-title">Contacts</h3>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section><!-- /Accueil -->
 
   <!-- Le Ministère -->
   <section id="about" class="about section">
@@ -1126,7 +1181,7 @@
     </div>
 
   </section>
-  
+
   <!-- Chaine 3PBSE -->
   <section id="stats" class="services section"> <!-- ID conservé -->
 
@@ -1220,12 +1275,12 @@
   <!-- Letmotiv -->
 
 
-<section style="margin-bottom: 0; padding-bottom: 0;">
-  <div id="letmotiv" class="container section-title" data-aos="fade-up">
-    <h2>Letmotiv</h2>
-    <p>Le cœur de notre mission</p>
-  </div><!-- End Section Letmotiv -->
-</section>
+  <section style="margin-bottom: 0; padding-bottom: 0;">
+    <div id="letmotiv" class="container section-title" data-aos="fade-up">
+      <h2>Letmotiv</h2>
+      <p>Le cœur de notre mission</p>
+    </div><!-- End Section Letmotiv -->
+  </section>
 
   <section id="testimonials" class="testimonials section dark-background">
     <img src="{% static 'general/images/testimonials-bg.jpg' %}" class="testimonials-bg" alt="">
@@ -1697,16 +1752,16 @@
 
   // Ajouter un écouteur d'événement à chaque lien
   links.forEach(link => {
-    link.addEventListener('click', function(event) {
+    link.addEventListener('click', function (event) {
       // Empêcher le comportement par défaut du lien
       event.preventDefault();
-      
+
       // Récupérer l'ID de la section cible à partir de l'attribut href
       const targetId = this.getAttribute('href').substring(1); // Supprime le '#'
-      
+
       // Sélectionner la section cible
       const targetSection = document.getElementById(targetId);
-      
+
       // Faire défiler vers la section avec un effet fluide
       if (targetSection) {
         targetSection.scrollIntoView({
@@ -1714,6 +1769,18 @@
           block: 'start'
         });
       }
+    });
+  });
+
+  document.addEventListener('DOMContentLoaded', function () {
+    // Sélectionner tous les éléments à animer
+    const elementsToAnimate = document.querySelectorAll(
+      '.hero .carousel, .hero .container-carousel, .hero .carousel-button, .hero .carousel-indicators, .hero .icon-boxes'
+    );
+
+    // Ajouter la classe fade-in à tous les éléments
+    elementsToAnimate.forEach(element => {
+      element.classList.add('fade-in');
     });
   });
 </script>
