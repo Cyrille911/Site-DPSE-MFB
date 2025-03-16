@@ -109,6 +109,7 @@
                                 <th rowspan="2">Structure Responsable</th>
                                 <th rowspan="2">Programme</th>
                                 <th colspan="{{ annees|length }}">Coûts (en millions)</th>
+                                <th rowspan="2">Coût Total</th>
                             </tr>
                             <tr id="table-header-bottom">
                                 <th>Libellé</th>
@@ -190,10 +191,19 @@
 
             const planImpact = "{{ plan.impact | escapejs }}";
 
+            function calculateTotalCost(couts) {
+                if (!couts || !Array.isArray(couts)) return 'N/A';
+                const total = couts.reduce((sum, cost) => {
+                    const num = parseFloat(cost);
+                    return sum + (isNaN(num) ? 0 : num);
+                }, 0);
+                return total.toFixed(2);
+            }
+
             function updateStats() {
                 const rows = tableBody.getElementsByTagName('tr');
-                const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none' && !row.classList.contains('hierarchy-row'));
-                const totalRows = Array.from(rows).filter(row => !row.classList.contains('hierarchy-row')).length;
+                const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none' && !row.classList.contains('hierarchy-row') && !row.classList.contains('total-row'));
+                const totalRows = Array.from(rows).filter(row => !row.classList.contains('hierarchy-row') && !row.classList.contains('total-row')).length;
                 visibleRowsSpan.textContent = visibleRows.length;
                 totalRowsSpan.textContent = totalRows;
 
@@ -223,8 +233,11 @@
                     const firstCell = row.querySelector('td:first-child');
                     if (!firstCell) return;
 
-                    if (row.classList.contains('impact-row')) {
-                        firstCell.style.top = `${headerHeight}px`; // Impact reste fixe juste sous l'en-tête
+                    if (row.classList.contains('total-row')) {
+                        firstCell.style.top = `${headerHeight}px`; // Coût Total juste sous l'en-tête
+                    } else if (row.classList.contains('impact-row')) {
+                        firstCell.style.top = `${topOffset}px`; // Impact sous Coût Total
+                        topOffset += row.offsetHeight;
                     } else if (row.classList.contains('effet-row')) {
                         firstCell.style.top = `${topOffset}px`;
                         firstCell.style.display = row.offsetTop - scrollTop < topOffset ? 'none' : '';
@@ -258,10 +271,44 @@
                     .then(data => {
                         const annees = data.annees;
                         const anneeDebut = data.annee_debut;
-                        const colspanTotal = 6 + annees.length; // Intitulé, Type, Indicateur (Libellé + Réf + Cibles), Structure, Programme, Coûts
-                        const colspanToProgramme = 4 + annees.length; // Jusqu'à Programme inclus
+                        const colspanTotal = 7 + annees.length; // Intitulé, Type, Indicateur (Libellé + Réf + Cibles), Structure, Programme, Coûts, Coût Total
+                        const colspanToProgramme = 5 + annees.length; // Jusqu'à Programme inclus
 
                         tableBody.innerHTML = '';
+
+                        // Ajouter la ligne "Coût Total"
+                        let totalCouts = Array(annees.length).fill(0);
+                        data.effets.forEach(effet => {
+                            effet.couts.forEach((cout, index) => {
+                                totalCouts[index] += parseFloat(cout) || 0;
+                            });
+                            effet.produits.forEach(produit => {
+                                produit.couts.forEach((cout, index) => {
+                                    totalCouts[index] += parseFloat(cout) || 0;
+                                });
+                                produit.actions.forEach(action => {
+                                    action.couts.forEach((cout, index) => {
+                                        totalCouts[index] += parseFloat(cout) || 0;
+                                    });
+                                    action.activites.forEach(activite => {
+                                        activite.couts.forEach((cout, index) => {
+                                            totalCouts[index] += parseFloat(cout) || 0;
+                                        });
+                                    });
+                                });
+                            });
+                        });
+                        let totalRow = `
+                            <tr class="hierarchy-row total-row">
+                                <td colspan="${colspanToProgramme}">Coût Total</td>
+                        `;
+                        annees.forEach((_, index) => {
+                            totalRow += `<td>${totalCouts[index].toFixed(2)}</td>`;
+                        });
+                        totalRow += `<td>${calculateTotalCost(totalCouts)}</td>`;
+                        tableBody.innerHTML += totalRow;
+
+                        // Ajouter la ligne "Impact"
                         tableBody.innerHTML += `
                             <tr class="hierarchy-row impact-row">
                                 <td colspan="${colspanTotal}">Impact : ${planImpact || 'Impact non défini'}</td>
@@ -278,6 +325,7 @@
                                 const cout = effet.couts && index < effet.couts.length ? effet.couts[index] : 'N/A';
                                 row += `<td>${cout}</td>`;
                             });
+                            row += `<td>${calculateTotalCost(effet.couts)}</td>`;
                             tableBody.innerHTML += row;
 
                             effet.produits.forEach((produit, j) => {
@@ -289,6 +337,7 @@
                                     const cout = produit.couts && index < produit.couts.length ? produit.couts[index] : 'N/A';
                                     produitRow += `<td>${cout}</td>`;
                                 });
+                                produitRow += `<td>${calculateTotalCost(produit.couts)}</td>`;
                                 tableBody.innerHTML += produitRow;
 
                                 produit.actions.forEach((action, k) => {
@@ -300,6 +349,7 @@
                                         const cout = action.couts && index < action.couts.length ? action.couts[index] : 'N/A';
                                         actionRow += `<td>${cout}</td>`;
                                     });
+                                    actionRow += `<td>${calculateTotalCost(action.couts)}</td>`;
                                     tableBody.innerHTML += actionRow;
 
                                     action.activites.forEach((activite, l) => {
@@ -324,6 +374,7 @@
                                             const cout = (activite.couts && index >= 0 && index < activite.couts.length) ? activite.couts[index] : 'N/A';
                                             activiteRow += `<td>${cout}</td>`;
                                         });
+                                        activiteRow += `<td>${calculateTotalCost(activite.couts)}</td>`;
                                         tableBody.innerHTML += activiteRow;
                                     });
                                 });
@@ -357,6 +408,7 @@
                         console.error('Erreur AJAX:', error);
                         let totalColonnes = table.rows[0]?.cells.length || 1;
                         tableBody.innerHTML = `
+                            <tr class="hierarchy-row total-row"><td colspan="${totalColonnes}">Coût Total</td></tr>
                             <tr class="hierarchy-row impact-row"><td colspan="${totalColonnes}">Impact : ${planImpact || 'Impact non défini'}</td></tr>
                             <tr><td colspan="${totalColonnes}" class="text-center">Erreur de chargement des données</td></tr>
                         `;
@@ -378,8 +430,8 @@
                 }
 
                 Array.from(rows).forEach(row => {
-                    if (row.classList.contains('hierarchy-row')) {
-                        row.style.display = ''; // Toujours afficher les lignes hiérarchiques initialement
+                    if (row.classList.contains('hierarchy-row') || row.classList.contains('total-row')) {
+                        row.style.display = ''; // Toujours afficher les lignes hiérarchiques/total initialement
                     } else {
                         const cells = row.getElementsByTagName('td');
                         if (cells.length === 0) return;
@@ -396,14 +448,14 @@
                 const allRows = Array.from(rows);
                 for (let i = allRows.length - 1; i >= 0; i--) {
                     const row = allRows[i];
-                    if (row.classList.contains('hierarchy-row') && !row.classList.contains('impact-row')) {
+                    if (row.classList.contains('hierarchy-row') && !row.classList.contains('impact-row') && !row.classList.contains('total-row')) {
                         const nextRows = allRows.slice(i + 1);
                         const hasVisibleActivity = nextRows.some(nextRow => 
-                            !nextRow.classList.contains('hierarchy-row') && nextRow.style.display !== 'none'
+                            !nextRow.classList.contains('hierarchy-row') && !nextRow.classList.contains('total-row') && nextRow.style.display !== 'none'
                         );
                         if (!hasVisibleActivity) {
                             let j = i;
-                            while (j >= 0 && allRows[j].classList.contains('hierarchy-row') && !allRows[j].classList.contains('impact-row')) {
+                            while (j >= 0 && allRows[j].classList.contains('hierarchy-row') && !allRows[j].classList.contains('impact-row') && !allRows[j].classList.contains('total-row')) {
                                 allRows[j].style.display = 'none';
                                 j--;
                             }
@@ -672,6 +724,10 @@
             text-align: left;
         }
 
+        .hierarchy-row td, .total-row td {
+            border: 1px solid #007A3D; /* Bordures explicites pour les lignes hiérarchiques */
+        }
+
         .table-container {
             margin-top: 40px;
             margin-bottom: 40px;
@@ -730,11 +786,20 @@
             box-shadow: 2px 0 5px rgba(0,0,0,0.1);
         }
 
-        .impact-row td:first-child {
+        .total-row td:first-child {
             position: sticky;
             top: 76px;
             left: 0;
             z-index: 25;
+            background-color: #e0e0e0;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+
+        .impact-row td:first-child {
+            position: sticky;
+            top: 114px; /* Sous Coût Total (76px + hauteur ligne ~38px) */
+            left: 0;
+            z-index: 24;
             background-color: #d1e7dd;
             box-shadow: 2px 0 5px rgba(0,0,0,0.1);
         }
@@ -763,7 +828,7 @@
             box-shadow: 2px 0 5px rgba(0,0,0,0.1);
         }
 
-        .hierarchy-row {
+        .hierarchy-row, .total-row {
             font-weight: bold;
         }
 
