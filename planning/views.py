@@ -30,20 +30,25 @@ def plan_action_list(request):
     }
     return render(request, 'planning/plan_action_list.html', context)
 
+from django.shortcuts import render, get_object_or_404
+from django.http import JsonResponse
+from .models import PlanAction, Effet, Produit, Action, Activite
+
 def plan_action_detail(request, id):
     plan = get_object_or_404(PlanAction, id=id)
 
-    # Données initiales
+    # Données initiales pour le rendu du template
     effets = Effet.objects.filter(plan=plan)
     produits = Produit.objects.filter(effet__plan=plan).select_related('effet')
     actions = Action.objects.filter(produit__effet__plan=plan).select_related('produit__effet')
-    activites = Activite.objects.filter(action__produit__effet__plan=plan).select_related('action__produit__effet')
-    types = list(set(activite.type if activite.type else "N/A" for activite in activites))
+    activites = Activite.objects.filter(action__produit__effet__plan=plan).select_related('action__produit__effet', 'point_focal')
+    types = list(set(activite.type or "N/A" for activite in activites))
     structures = list(set(activite.point_focal.entity if activite.point_focal and hasattr(activite.point_focal, 'entity') else "N/A" for activite in activites))
     annees = [str(plan.annee_debut + i) for i in range(plan.horizon)] if plan.annee_debut and plan.horizon else []
 
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         try:
+            # Récupérer les filtres depuis la requête GET
             effets_selectionnes = request.GET.getlist('effet')
             produits_selectionnes = request.GET.getlist('produit')
             actions_selectionnees = request.GET.getlist('action')
@@ -51,31 +56,35 @@ def plan_action_detail(request, id):
             structures_selectionnees = request.GET.getlist('structure')
             annees_selectionnees = request.GET.getlist('annee')
 
-            # Filtrer les données en cascade
+            # Filtrer les effets
             filtered_effets = effets
             if effets_selectionnes:
-                filtered_effets = effets.filter(titre__in=effets_selectionnes)
+                filtered_effets = filtered_effets.filter(titre__in=effets_selectionnes)
                 produits = produits.filter(effet__titre__in=effets_selectionnes)
                 actions = actions.filter(produit__effet__titre__in=effets_selectionnes)
                 activites = activites.filter(action__produit__effet__titre__in=effets_selectionnes)
 
+            # Filtrer les produits
             if produits_selectionnes:
                 produits = produits.filter(titre__in=produits_selectionnes)
                 actions = actions.filter(produit__titre__in=produits_selectionnes)
                 activites = activites.filter(action__produit__titre__in=produits_selectionnes)
 
+            # Filtrer les actions
             if actions_selectionnees:
                 actions = actions.filter(titre__in=actions_selectionnees)
                 activites = activites.filter(action__titre__in=actions_selectionnees)
 
+            # Filtrer les activités
             if types_selectionnes:
                 activites = activites.filter(type__in=types_selectionnes)
-
             if structures_selectionnees:
                 activites = activites.filter(point_focal__entity__in=structures_selectionnees)
 
+            # Filtrer les années
+            filtered_annees = annees
             if annees_selectionnees:
-                annees = annees_selectionnees
+                filtered_annees = [annee for annee in annees if annee in annees_selectionnees]
 
             # Construire la structure hiérarchique pour la réponse JSON
             effets_data = []
@@ -98,10 +107,10 @@ def plan_action_detail(request, id):
                                     'type': activite.type or 'N/A',
                                     'couts': activite.couts,
                                     'cibles': activite.cibles,
-                                    'realisation': activite.realisation,  # Ajouté
-                                    'etat_avancement': activite.etat_avancement,  # Ajouté
-                                    'commentaire': activite.commentaire,  # Ajouté
-                                    'status': activite.status,  # Ajouté
+                                    'realisation': activite.realisation,
+                                    'etat_avancement': activite.etat_avancement,
+                                    'commentaire': activite.commentaire,
+                                    'status': activite.status,
                                     'indicateur_label': activite.indicateur_label,
                                     'indicateur_reference': activite.indicateur_reference,
                                     'structure': activite.point_focal.entity if activite.point_focal and hasattr(activite.point_focal, 'entity') else 'N/A',
@@ -122,21 +131,39 @@ def plan_action_detail(request, id):
                     'produits': produits_data
                 })
 
+            # Mettre à jour les filtres dépendants
+            types = list(set(activite.type or 'N/A' for activite in activites))
+            structures = list(set(activite.point_focal.entity if activite.point_focal and hasattr(activite.point_focal, 'entity') else 'N/A' for activite in activites))
+
             data = {
                 'effets': effets_data,
-                'produits': list(produits.values('id', 'titre', 'couts')),
-                'actions': list(actions.values('id', 'titre', 'couts')),
-                'activites': list(activites.values('id', 'titre', 'type', 'couts', 'cibles', 'realisation', 'etat_avancement', 'commentaire', 'status', 'indicateur_label', 'indicateur_reference')),
+                'produits': [{'id': p.id, 'titre': p.titre, 'couts': p.couts} for p in produits],
+                'actions': [{'id': a.id, 'titre': a.titre, 'couts': a.couts} for a in actions],
+                'activites': [
+                    {
+                        'id': a.id,
+                        'titre': a.titre,
+                        'type': a.type or 'N/A',
+                        'couts': a.couts,
+                        'cibles': a.cibles,
+                        'realisation': a.realisation,
+                        'etat_avancement': a.etat_avancement,
+                        'commentaire': a.commentaire,
+                        'status': a.status,
+                        'indicateur_label': a.indicateur_label,
+                        'indicateur_reference': a.indicateur_reference
+                    } for a in activites
+                ],
                 'types': types,
                 'structures': structures,
-                'annees': annees,
+                'annees': filtered_annees,
                 'annee_debut': plan.annee_debut
             }
 
             return JsonResponse(data, safe=False)
 
         except Exception as e:
-            print("🚨 Erreur lors du filtrage:", str(e))
+            print(f"🚨 Erreur lors du filtrage: {str(e)}")
             return JsonResponse({"error": "Erreur interne", "details": str(e)}, status=500)
 
     return render(request, 'planning/plan_action_detail.html', {

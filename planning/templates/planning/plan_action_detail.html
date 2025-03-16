@@ -107,8 +107,8 @@
                                 <th rowspan="2">Type</th>
                                 <th colspan="{{ annees|length|add:2 }}">Indicateur</th>
                                 <th rowspan="2">Structure Responsable</th>
-                                <th colspan="{{ annees|length }}">Coûts (en millions)</th>
                                 <th rowspan="2">Programme</th>
+                                <th colspan="{{ annees|length }}">Coûts (en millions)</th>
                             </tr>
                             <tr id="table-header-bottom">
                                 <th>Libellé</th>
@@ -122,6 +122,7 @@
                             </tr>
                         </thead>
                         <tbody id="plan-table-body">
+                            <!-- Le contenu sera chargé dynamiquement via AJAX -->
                         </tbody>
                     </table>
                 </div>
@@ -214,11 +215,8 @@
             function updateHierarchyPositions() {
                 const rows = Array.from(tableBody.getElementsByTagName('tr'));
                 const scrollTop = tableContainer.scrollTop;
-                const headerHeight = 76;
+                const headerHeight = 76; // Hauteur totale des deux lignes d'en-tête
 
-                let currentEffet = null;
-                let currentProduit = null;
-                let currentAction = null;
                 let topOffset = headerHeight;
 
                 rows.forEach(row => {
@@ -226,29 +224,19 @@
                     if (!firstCell) return;
 
                     if (row.classList.contains('impact-row')) {
-                        firstCell.style.top = `${headerHeight}px`;
+                        firstCell.style.top = `${headerHeight}px`; // Impact reste fixe juste sous l'en-tête
                     } else if (row.classList.contains('effet-row')) {
-                        currentEffet = row;
-                        currentProduit = null;
-                        currentAction = null;
                         firstCell.style.top = `${topOffset}px`;
                         firstCell.style.display = row.offsetTop - scrollTop < topOffset ? 'none' : '';
+                        topOffset += row.offsetHeight;
                     } else if (row.classList.contains('produit-row')) {
-                        currentProduit = row;
-                        currentAction = null;
-                        firstCell.style.top = `${topOffset + (currentEffet ? currentEffet.offsetHeight : 0)}px`;
-                        firstCell.style.display = row.offsetTop - scrollTop < topOffset + (currentEffet ? currentEffet.offsetHeight : 0) ? 'none' : '';
+                        firstCell.style.top = `${topOffset}px`;
+                        firstCell.style.display = row.offsetTop - scrollTop < topOffset ? 'none' : '';
+                        topOffset += row.offsetHeight;
                     } else if (row.classList.contains('action-row')) {
-                        currentAction = row;
-                        firstCell.style.top = `${topOffset + (currentEffet ? currentEffet.offsetHeight : 0) + (currentProduit ? currentProduit.offsetHeight : 0)}px`;
-                        firstCell.style.display = row.offsetTop - scrollTop < topOffset + (currentEffet ? currentEffet.offsetHeight : 0) + (currentProduit ? currentProduit.offsetHeight : 0) ? 'none' : '';
-                    }
-
-                    if (currentEffet && currentEffet !== row) {
-                        currentEffet.querySelector('td:first-child').style.display = currentEffet.offsetTop - scrollTop < topOffset ? 'none' : '';
-                    }
-                    if (currentProduit && currentProduit !== row) {
-                        currentProduit.querySelector('td:first-child').style.display = currentProduit.offsetTop - scrollTop < topOffset + (currentEffet ? currentEffet.offsetHeight : 0) ? 'none' : '';
+                        firstCell.style.top = `${topOffset}px`;
+                        firstCell.style.display = row.offsetTop - scrollTop < topOffset ? 'none' : '';
+                        topOffset += row.offsetHeight;
                     }
                 });
             }
@@ -263,12 +251,15 @@
                 });
 
                 fetch(`?${params.toString()}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-                    .then(response => response.json())
+                    .then(response => {
+                        if (!response.ok) throw new Error('Erreur réseau');
+                        return response.json();
+                    })
                     .then(data => {
                         const annees = data.annees;
                         const anneeDebut = data.annee_debut;
-                        const colspanTotal = 5 + annees.length * 2; // Ajusté après suppression des 4 colonnes
-                        const colspanToCibles = 2 + annees.length;
+                        const colspanTotal = 6 + annees.length; // Intitulé, Type, Indicateur (Libellé + Réf + Cibles), Structure, Programme, Coûts
+                        const colspanToProgramme = 4 + annees.length; // Jusqu'à Programme inclus
 
                         tableBody.innerHTML = '';
                         tableBody.innerHTML += `
@@ -281,40 +272,34 @@
                         effets.forEach((effet, i) => {
                             let row = `
                                 <tr class="hierarchy-row effet-row">
-                                    <td colspan="${colspanToCibles}">Effet ${i + 1} : ${effet.titre}</td>
-                                    <td></td>
+                                    <td colspan="${colspanToProgramme}">Effet ${i + 1} : ${effet.titre}</td>
                             `;
                             annees.forEach((annee, index) => {
                                 const cout = effet.couts && index < effet.couts.length ? effet.couts[index] : 'N/A';
                                 row += `<td>${cout}</td>`;
                             });
-                            row += '<td></td>'; // Pour Programme
                             tableBody.innerHTML += row;
 
                             effet.produits.forEach((produit, j) => {
                                 let produitRow = `
                                     <tr class="hierarchy-row produit-row">
-                                        <td colspan="${colspanToCibles}">Produit ${i + 1}.${j + 1} : ${produit.titre}</td>
-                                        <td></td>
+                                        <td colspan="${colspanToProgramme}">Produit ${i + 1}.${j + 1} : ${produit.titre}</td>
                                 `;
                                 annees.forEach((annee, index) => {
                                     const cout = produit.couts && index < produit.couts.length ? produit.couts[index] : 'N/A';
                                     produitRow += `<td>${cout}</td>`;
                                 });
-                                produitRow += '<td></td>'; // Pour Programme
                                 tableBody.innerHTML += produitRow;
 
                                 produit.actions.forEach((action, k) => {
                                     let actionRow = `
                                         <tr class="hierarchy-row action-row">
-                                            <td colspan="${colspanToCibles}">Action ${i + 1}.${j + 1}.${k + 1} : ${action.titre}</td>
-                                            <td></td>
+                                            <td colspan="${colspanToProgramme}">Action ${i + 1}.${j + 1}.${k + 1} : ${action.titre}</td>
                                     `;
                                     annees.forEach((annee, index) => {
                                         const cout = action.couts && index < action.couts.length ? action.couts[index] : 'N/A';
                                         actionRow += `<td>${cout}</td>`;
                                     });
-                                    actionRow += '<td></td>'; // Pour Programme
                                     tableBody.innerHTML += actionRow;
 
                                     action.activites.forEach((activite, l) => {
@@ -330,13 +315,15 @@
                                             const cible = (activite.cibles && index >= 0 && index < activite.cibles.length) ? activite.cibles[index] : 'N/A';
                                             activiteRow += `<td>${cible}</td>`;
                                         });
-                                        activiteRow += `<td>${activite.structure || 'N/A'}</td>`;
+                                        activiteRow += `
+                                            <td>${activite.structure || 'N/A'}</td>
+                                            <td>${activite.programme || 'N/A'}</td>
+                                        `;
                                         annees.forEach(annee => {
                                             const index = parseInt(annee) - anneeDebut;
                                             const cout = (activite.couts && index >= 0 && index < activite.couts.length) ? activite.couts[index] : 'N/A';
                                             activiteRow += `<td>${cout}</td>`;
                                         });
-                                        activiteRow += `<td>${activite.programme || 'N/A'}</td>`;
                                         tableBody.innerHTML += activiteRow;
                                     });
                                 });
@@ -349,7 +336,8 @@
 
                         updateStats();
                         updateHierarchyPositions();
-                        
+
+                        // Mise à jour des filtres dépendants
                         if (filtre === "effet") {
                             updateDependentFilters("produit", data.produits);
                             updateDependentFilters("action", data.actions);
@@ -362,8 +350,6 @@
                             updateDependentFilters("structure", data.structures);
                         } else if (filtre === "action") {
                             updateDependentFilters("type", data.types);
-                            updateDependentFilters("structure", data.structures);
-                        } else if (filtre === "type") {
                             updateDependentFilters("structure", data.structures);
                         }
                     })
@@ -380,7 +366,7 @@
             }
 
             function filterTable() {
-                const searchTerm = searchInput.value.trim();
+                const searchTerm = searchInput.value.trim().toLowerCase();
                 const rows = tableBody.getElementsByTagName('tr');
                 let regex;
 
@@ -393,22 +379,38 @@
 
                 Array.from(rows).forEach(row => {
                     if (row.classList.contains('hierarchy-row')) {
-                        row.style.display = '';
+                        row.style.display = ''; // Toujours afficher les lignes hiérarchiques initialement
                     } else {
                         const cells = row.getElementsByTagName('td');
                         if (cells.length === 0) return;
 
                         const rowText = Array.from(cells)
                             .map(cell => cell.textContent.trim())
-                            .join(' ');
+                            .join(' ').toLowerCase();
 
-                        if (regex.test(rowText)) {
-                            row.style.display = '';
-                        } else {
-                            row.style.display = 'none';
-                        }
+                        row.style.display = regex.test(rowText) ? '' : 'none';
                     }
                 });
+
+                // Masquer les lignes hiérarchiques si aucune activité visible en dessous
+                const allRows = Array.from(rows);
+                for (let i = allRows.length - 1; i >= 0; i--) {
+                    const row = allRows[i];
+                    if (row.classList.contains('hierarchy-row') && !row.classList.contains('impact-row')) {
+                        const nextRows = allRows.slice(i + 1);
+                        const hasVisibleActivity = nextRows.some(nextRow => 
+                            !nextRow.classList.contains('hierarchy-row') && nextRow.style.display !== 'none'
+                        );
+                        if (!hasVisibleActivity) {
+                            let j = i;
+                            while (j >= 0 && allRows[j].classList.contains('hierarchy-row') && !allRows[j].classList.contains('impact-row')) {
+                                allRows[j].style.display = 'none';
+                                j--;
+                            }
+                        }
+                    }
+                }
+
                 updateStats();
                 updateHierarchyPositions();
             }
@@ -507,8 +509,8 @@
                 function updateDropdownButton() {
                     const selectedOptions = Array.from(checkboxes)
                         .filter(checkbox => checkbox.checked && checkbox !== selectAllCheckboxElement)
-                        .map(checkbox => checkbox.parentNode.textContent.trim());
-                    button.textContent = selectedOptions.length > 0 ? selectedOptions.join(', ') : `Sélectionner les ${filtre}`;
+                        .map(checkbox => checkbox.value);
+                    button.textContent = selectedOptions.length > 0 ? selectedOptions.join(', ') : `Sélectionner les ${filtre}s`;
                 }
 
                 function cocherToutesLesCasesAuDemarrage() {
@@ -553,7 +555,7 @@
                 function updateEffetDropdownButton() {
                     const selectedOptions = Array.from(effetCheckboxes)
                         .filter(checkbox => checkbox.checked && checkbox !== effetSelectAllCheckbox)
-                        .map(checkbox => checkbox.parentNode.textContent.trim());
+                        .map(checkbox => checkbox.value);
                     effetButton.textContent = selectedOptions.length > 0 ? selectedOptions.join(', ') : `Sélectionner les effets`;
                 }
 
@@ -592,10 +594,6 @@
                 updateStats();
                 updateHierarchyPositions();
             });
-
-            setInterval(() => {
-                chargeTable("effet");
-            }, 5000);
         });
     </script>
 {% endblock %}
@@ -666,7 +664,7 @@
         }
 
         td, th {
-            border: 1px solid #007A3D;
+            border: 1px solid #007A3D; /* Toutes les bordures visibles */
             padding: 10px;
             min-width: 150px;
             background: white;
@@ -763,16 +761,6 @@
             z-index: 18;
             background-color: #cce5ff;
             box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-        }
-
-        .hierarchy-row .program-cell {
-            background: repeating-linear-gradient(
-                45deg,
-                transparent,
-                transparent 5px,
-                rgba(0, 0, 0, 0.1) 5px,
-                rgba(0, 0, 0, 0.1) 10px
-            );
         }
 
         .hierarchy-row {
