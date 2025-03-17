@@ -46,6 +46,12 @@ def plan_action_detail(request, id):
     structures = list(set(activite.point_focal.entity if activite.point_focal and hasattr(activite.point_focal, 'entity') else "N/A" for activite in activites))
     annees = [str(plan.annee_debut + i) for i in range(plan.horizon)] if plan.annee_debut and plan.horizon else []
 
+    def calculate_total_cost(couts):
+        if not couts or not isinstance(couts, (list, tuple)):
+            return "N/A"
+        total = sum(float(cout) for cout in couts if isinstance(cout, (int, float, str)) and str(cout).replace('.', '', 1).isdigit())
+        return "{:.2f}".format(total)
+
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         try:
             # Récupérer les filtres depuis la requête GET
@@ -100,12 +106,14 @@ def plan_action_detail(request, id):
                             'id': action.id,
                             'titre': action.titre,
                             'couts': action.couts,
+                            'total_cost': calculate_total_cost(action.couts),
                             'activites': [
                                 {
                                     'id': activite.id,
                                     'titre': activite.titre,
                                     'type': activite.type or 'N/A',
                                     'couts': activite.couts,
+                                    'total_cost': calculate_total_cost(activite.couts),
                                     'cibles': activite.cibles,
                                     'realisation': activite.realisation,
                                     'etat_avancement': activite.etat_avancement,
@@ -122,14 +130,31 @@ def plan_action_detail(request, id):
                         'id': produit.id,
                         'titre': produit.titre,
                         'couts': produit.couts,
+                        'total_cost': calculate_total_cost(produit.couts),
                         'actions': actions_data
                     })
                 effets_data.append({
                     'id': effet.id,
                     'titre': effet.titre,
                     'couts': effet.couts,
+                    'total_cost': calculate_total_cost(effet.couts),
                     'produits': produits_data
                 })
+
+            # Calcul du coût total global
+            total_couts = []
+            for effet in filtered_effets:
+                for cout in effet.couts or []:
+                    total_couts.append(cout)
+                for produit in produits.filter(effet=effet):
+                    for cout in produit.couts or []:
+                        total_couts.append(cout)
+                    for action in actions.filter(produit=produit):
+                        for cout in action.couts or []:
+                            total_couts.append(cout)
+                        for activite in activites.filter(action=action):
+                            for cout in activite.couts or []:
+                                total_couts.append(cout)
 
             # Mettre à jour les filtres dépendants
             types = list(set(activite.type or 'N/A' for activite in activites))
@@ -137,14 +162,15 @@ def plan_action_detail(request, id):
 
             data = {
                 'effets': effets_data,
-                'produits': [{'id': p.id, 'titre': p.titre, 'couts': p.couts} for p in produits],
-                'actions': [{'id': a.id, 'titre': a.titre, 'couts': a.couts} for a in actions],
+                'produits': [{'id': p.id, 'titre': p.titre, 'couts': p.couts, 'total_cost': calculate_total_cost(p.couts)} for p in produits],
+                'actions': [{'id': a.id, 'titre': a.titre, 'couts': a.couts, 'total_cost': calculate_total_cost(a.couts)} for a in actions],
                 'activites': [
                     {
                         'id': a.id,
                         'titre': a.titre,
                         'type': a.type or 'N/A',
                         'couts': a.couts,
+                        'total_cost': calculate_total_cost(a.couts),
                         'cibles': a.cibles,
                         'realisation': a.realisation,
                         'etat_avancement': a.etat_avancement,
@@ -157,7 +183,8 @@ def plan_action_detail(request, id):
                 'types': types,
                 'structures': structures,
                 'annees': filtered_annees,
-                'annee_debut': plan.annee_debut
+                'annee_debut': plan.annee_debut,
+                'total_cost_global': calculate_total_cost(total_couts)
             }
 
             return JsonResponse(data, safe=False)
