@@ -46,3 +46,6 @@ def accueil(request):
 ## Glossaire
 def glossaire(request):
     return render(request, 'general/glossaire.html', {})
+
+def ministre(request):
+    return render(request, 'general/ministre.html', {})

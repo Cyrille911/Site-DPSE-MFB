@@ -10,4 +10,5 @@ urlpatterns = [
     path('mfb-structures/', views.mfb_structures, name='mfb_structures'),  # 
     path('discussion/', views.faq, name='faq'),
     path('glossaire/', views.glossaire, name='glossaire'),  # Glossaire
+    path('adama-coulibaly/', views.ministre, name='ministre'),
 ]
