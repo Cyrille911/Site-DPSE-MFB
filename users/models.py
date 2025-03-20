@@ -15,6 +15,7 @@ class User(AbstractUser):
         ('membre', 'Membre'),
         ('point_focal', 'Point Focal'),
         ('responsable', 'Responsable'),
+        ('suiveur_evaluateur', 'Suiveur Evaluateur'),
         ('cabinet', 'Cabinet MFB'),
         ('visiteur', 'Visiteur'),
     )

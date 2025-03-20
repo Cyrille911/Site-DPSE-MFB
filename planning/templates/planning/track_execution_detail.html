@@ -2,12 +2,12 @@
 {% load planning_filters %}
 
 {% block title %}
-Suivi de l'exécution - {{ plan.titre }} - {{ annee }}
+Traitement des Activités - {{ plan.titre }} - {{ annee }}
 {% endblock %}
 
 {% block content %}
 <div class="container mt-5">
-    <h2 class="text-center mb-5 text-orange fw-bold animate-fade-in">Suivi de l'exécution - {{ plan.titre }} - {{ annee }}</h2>
+    <h2 class="text-center mb-5 text-orange fw-bold animate-fade-in">{{ plan.titre }}<br><br>Traitement des Activités - {{ annee }}</h2>
 
     {% if messages %}
         <div class="mt-3 animate-fade-in">
@@ -19,88 +19,119 @@ Suivi de l'exécution - {{ plan.titre }} - {{ annee }}
         </div>
     {% endif %}
 
-    {% if form %}
-        <div class="mb-5 animate-slide-up">
-            <h4 class="text-orange fw-bold mb-3">Statut du PAO {{ annee }}</h4>
-            <form method="post" class="shadow-lg p-4 rounded bg-light">
-                {% csrf_token %}
-                <div class="mb-3">
-                    {{ form.statut.label_tag }}
-                    {{ form.statut }}
+    <div class="mb-5 animate-fade-in">
+        <form method="POST" class="row g-3 justify-content-center align-items-center">
+            {% csrf_token %}
+            <div class="col-12">
+                <label for="id_statut" class="form-label fw-bold text-orange fs-4 text-center d-block">Statut du PAO {{ annee }}</label>
+            </div>
+            <div class="col-12 col-md-8">
+                <select name="statut" id="id_statut" class="form-select form-select-lg shadow-sm" style="border-color: #ff6200;">
+                    {% for value, label in form.statut.field.choices %}
+                        <option value="{{ value }}" {% if value == pao_statut %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-12 col-md-2 d-flex align-items-end">
+                <button type="submit" name="update_pao_status" class="btn btn-primary shadow-sm w-100 d-flex align-items-center justify-content-center">Mettre à jour</button>
+            </div>
+        </form>
+    </div>
+
+    {% if activites_by_entity %}
+        <div id="entity-sections">
+            {% for entity, activites in activites_by_entity.items %}
+                <div class="entity-section" data-entity="{{ entity }}">
+                    <h3 class="mt-5 text-orange fw-bold animate-fade-in">{{ entity }}</h3>
+                    <div class="table-container shadow-lg rounded animate-slide-up" style="animation-delay: 0.2s;">
+                        <div class="scrollable-table">
+                            <table class="table table-bordered table-striped">
+                                <thead class="bg-orange text-white">
+                                    <tr class="header-row-1">
+                                        <th rowspan="2">Référence</th>
+                                        <th rowspan="2">Titre</th>
+                                        <th rowspan="2">Type</th>
+                                        <th colspan="4">Indicateur</th>
+                                        <th colspan="4">Périodes d'exécution</th>
+                                        <th rowspan="2">État d'avancement</th>
+                                        <th rowspan="2">Coût {{ annee }}</th>
+                                        <th rowspan="2">Commentaire</th>
+                                        <th rowspan="2">Commentaire SE</th>
+                                        <th rowspan="2">Statut</th>
+                                        <th rowspan="2">Actions</th>
+                                    </tr>
+                                    <tr class="header-row-2">
+                                        <th>Libellé</th>
+                                        <th>Référence</th>
+                                        <th>Cible {{ annee }}</th>
+                                        <th>Réalisation {{ annee }}</th>
+                                        <th class="trimestre">T1</th>
+                                        <th class="trimestre">T2</th>
+                                        <th class="trimestre">T3</th>
+                                        <th class="trimestre">T4</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for activite in activites %}
+                                        <tr data-id="{{ activite.id }}" class="animate-slide-up" style="animation-delay: {{ forloop.counter0|mul:0.1 }}s;">
+                                            <td>{{ activite.reference }}</td>
+                                            <td>{{ activite.titre }}</td>
+                                            <td>{{ activite.type|default:'N/A' }}</td>
+                                            <td>{{ activite.indicateur_label|default:'N/A' }}</td>
+                                            <td>{{ activite.indicateur_reference|default:'N/A' }}</td>
+                                            <td>{{ activite.cible|default:'N/A' }}</td>
+                                            <td>{{ activite.realisation }}</td>
+                                            <td {% if activite.trimestres_suivi.0 %}class="bg-blue"{% endif %}>T1</td>
+                                            <td {% if activite.trimestres_suivi.1 %}class="bg-blue"{% endif %}>T2</td>
+                                            <td {% if activite.trimestres_suivi.2 %}class="bg-blue"{% endif %}>T3</td>
+                                            <td {% if activite.trimestres_suivi.3 %}class="bg-blue"{% endif %}>T4</td>
+                                            <td>{{ activite.etat_avancement }}</td>
+                                            <td>{{ activite.cout }}</td>
+                                            <td>{{ activite.commentaire }}</td>
+                                            <td>
+                                                <textarea class="form-control" name="commentaire_se" data-pending="{{ activite.pending_commentaire_se }}" data-initial="{{ activite.model_commentaire_se }}">{{ activite.commentaire_se }}</textarea>
+                                            </td>
+                                            <td>
+                                                <select class="form-control" name="status" data-pending="{{ activite.pending_status }}" data-initial="{{ activite.model_status }}">
+                                                    <option value="Non entamée" {% if activite.status == 'Non entamée' %}selected{% endif %}>Non entamée</option>
+                                                    <option value="En cours" {% if activite.status == 'En cours' %}selected{% endif %}>En cours</option>
+                                                    <option value="Réalisée" {% if activite.status == 'Réalisée' %}selected{% endif %}>Réalisée</option>
+                                                    <option value="Non réalisée" {% if activite.status == 'Non réalisée' %}selected{% endif %}>Non réalisée</option>
+                                                    <option value="Supprimée" {% if activite.status == 'Supprimée' %}selected{% endif %}>Supprimée</option>
+                                                    <option value="Reprogrammée" {% if activite.status == 'Reprogrammée' %}selected{% endif %}>Reprogrammée</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-success action-btn" 
+                                                        data-model-status="{{ activite.model_status }}" 
+                                                        data-model-commentaire-se="{{ activite.model_commentaire_se }}"
+                                                        data-last-modified-by="{{ activite.last_modified_by }}">Soumettre</button>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
-                <button type="submit" name="update_pao_status" class="btn btn-orange fw-bold">Mettre à jour le statut</button>
-            </form>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-5 animate-fade-in">
+            <h3 class="text-warning fw-bold">Aucune activité en attente de traitement pour {{ annee }} !</h3>
         </div>
     {% endif %}
 
-    {% for entity, activites in activites_by_entity.items %}
-        <h3 class="text-orange fw-bold mb-3 animate-slide-up">Entité : {{ entity }}</h3>
-        <div class="table-container shadow-lg rounded animate-slide-up" style="animation-delay: 0.2s;">
-            <div class="scrollable-table">
-                <table class="table table-bordered table-striped">
-                    <thead class="bg-orange text-white">
-                        <tr>
-                            <th>Titre</th>
-                            <th>Type</th>
-                            <th>État d'avancement</th>
-                            <th>Réalisation {{ annee }}</th>
-                            <th>Coût {{ annee }}</th>
-                            <th>Cible {{ annee }}</th>
-                            <th>Commentaire</th>
-                            <th>Commentaire SE</th>
-                            <th>Statut</th>
-                            <th>Matrix Status</th>
-                            <th class="text-end">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for activite in activites %}
-                            <tr data-id="{{ activite.id }}" class="animate-slide-up" style="animation-delay: {{ forloop.counter0|mul:0.1 }}s;">
-                                <td>{{ activite.titre }}</td>
-                                <td>{{ activite.type|default:'N/A' }}</td>
-                                <td>{{ activite.etat_avancement|default:'' }}</td>
-                                <td>{{ activite.realisation|default:'' }}</td>
-                                <td>{{ activite.cout|default:'0.0' }}</td>
-                                <td>{{ activite.cible|default:'N/A' }}</td>
-                                <td>{{ activite.commentaire|default:'' }}</td>
-                                <td>
-                                    <textarea class="form-control" name="commentaire_se">{{ activite.commentaire_se|default:'' }}</textarea>
-                                </td>
-                                <td>
-                                    <select class="form-control" name="status">
-                                        {% for choice in status_choices %}
-                                            <option value="{{ choice.0 }}" {% if activite.status == choice.0 %}selected{% endif %}>{{ choice.1 }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </td>
-                                <td>{{ activite.matrix_status }}</td>
-                                <td class="text-end">
-                                    <span class="action-emoji submit-back-btn" title="Soumettre au Responsable">↩️</span>
-                                    {% if activite.can_submit_to_matrix %}
-                                        <span class="action-emoji validate-to-matrix-btn" title="Soumettre à la matrice">✅</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    {% empty %}
-        <div class="text-center py-5 animate-fade-in">
-            <h3 class="text-warning fw-bold">Aucune activité soumise pour {{ annee }} !</h3>
-        </div>
-    {% endfor %}
-
     <div class="text-center mt-4 animate-fade-in">
-        <a href="{% url 'track_execution_list' plan.id %}" class="btn btn-secondary btn-lg px-5 py-2 fw-bold">Retour à la liste</a>
+        <a href="{% url 'pao_list' plan.id %}" class="btn btn-secondary btn-lg px-5 py-2 fw-bold">Retour</a>
     </div>
 </div>
-{% endblock %}
 
-{% block extra_scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    const currentUser = '{{ current_user }}';
+    const isSE = {{ is_se|lower }};
+
     function sendRequest(data, callback) {
         fetch('{% url "track_execution_detail" plan.id %}?annee={{ annee }}', {
             method: 'POST',
@@ -115,35 +146,114 @@ document.addEventListener('DOMContentLoaded', function () {
         .catch(error => console.error('Erreur:', error));
     }
 
-    document.querySelectorAll('.submit-back-btn').forEach(btn => {
-        btn.addEventListener('click', function () {
-            const row = this.closest('tr');
-            const activiteId = row.dataset.id;
-            sendRequest({
-                activite_id: activiteId,
-                submit_back: true
-            }, data => {
-                alert(data.message);
-                if (data.success) row.remove();
+    function checkEntitySections() {
+        document.querySelectorAll('.entity-section').forEach(section => {
+            const rows = section.querySelectorAll('tbody tr');
+            if (rows.length === 0 || Array.from(rows).every(row => row.style.display === 'none')) {
+                section.style.display = 'none';
+            }
+        });
+    }
+
+    document.querySelectorAll('tr[data-id]').forEach(row => {
+        const actionBtn = row.querySelector('.action-btn');
+        const inputs = row.querySelectorAll('select[name="status"], textarea[name="commentaire_se"]');
+        const activiteId = row.dataset.id;
+        let modelStatus = actionBtn.dataset.modelStatus;
+        let modelCommentaireSe = actionBtn.dataset.modelCommentaireSe;
+        let lastModifiedBy = actionBtn.dataset.lastModifiedBy;
+
+        function updateButtonState() {
+            let matchesPending = true;
+            let matchesModel = true;
+
+            inputs.forEach(input => {
+                const pendingValue = input.dataset.pending || '';
+                const initialValue = input.dataset.initial || '';
+                const currentValue = input.value;
+
+                if (pendingValue !== '' && currentValue !== pendingValue) {
+                    matchesPending = false;
+                }
+                if (input.name === 'status' && currentValue !== modelStatus) {
+                    matchesModel = false;
+                }
+                if (input.name === 'commentaire_se' && currentValue !== modelCommentaireSe) {
+                    matchesModel = false;
+                }
             });
+
+            if (isSE && matchesPending && lastModifiedBy && lastModifiedBy !== currentUser) {
+                actionBtn.textContent = 'Soumettre';
+                actionBtn.disabled = false;
+                actionBtn.classList.remove('btn-warning');
+                actionBtn.classList.add('btn-success');
+            } else if (isSE && (!matchesPending || matchesModel)) {
+                actionBtn.textContent = 'Renvoyer';
+                actionBtn.disabled = false;
+                actionBtn.classList.remove('btn-success');
+                actionBtn.classList.add('btn-warning');
+            } else {
+                actionBtn.textContent = '✔';
+                actionBtn.disabled = true;
+                actionBtn.classList.remove('btn-warning');
+                actionBtn.classList.add('btn-success');
+            }
+        }
+
+        inputs.forEach(input => {
+            input.addEventListener('input', updateButtonState);
+            input.addEventListener('change', updateButtonState);
+        });
+
+        updateButtonState();
+
+        actionBtn.addEventListener('click', function () {
+            if (!actionBtn.disabled) {
+                const formData = {
+                    activite_id: activiteId,
+                    status: row.querySelector('[name="status"]').value,
+                    commentaire_se: row.querySelector('[name="commentaire_se"]').value,
+                    submit: true
+                };
+                sendRequest(formData, data => {
+                    if (data.success) {
+                        modelStatus = data.model_status;
+                        modelCommentaireSe = data.model_commentaire_se;
+                        inputs.forEach(input => {
+                            if (input.name === 'status') {
+                                input.dataset.initial = data.model_status;
+                                input.dataset.pending = data.pending_status;
+                            } else if (input.name === 'commentaire_se') {
+                                input.dataset.initial = data.model_commentaire_se;
+                                input.dataset.pending = data.pending_commentaire_se;
+                            }
+                        });
+                        actionBtn.dataset.modelStatus = data.model_status;
+                        actionBtn.dataset.modelCommentaireSe = data.model_commentaire_se;
+                        lastModifiedBy = data.last_modified_by;
+                        actionBtn.dataset.lastModifiedBy = data.last_modified_by;
+
+                        if (data.action === 'model' || data.action === 'pending') {
+                            row.style.backgroundColor = data.action === 'model' ? '#d4edda' : '#fff3cd';
+                            actionBtn.textContent = '✔';
+                            actionBtn.disabled = true;
+                            actionBtn.classList.remove('btn-warning');
+                            actionBtn.classList.add('btn-success');
+                            setTimeout(() => {
+                                row.style.display = 'none';
+                                checkEntitySections();
+                            }, 500); // Disparition après 0.5s
+                        }
+                    } else {
+                        alert(data.message);
+                    }
+                });
+            }
         });
     });
 
-    document.querySelectorAll('.validate-to-matrix-btn').forEach(btn => {
-        btn.addEventListener('click', function () {
-            const row = this.closest('tr');
-            const activiteId = row.dataset.id;
-            sendRequest({
-                activite_id: activiteId,
-                commentaire_se: row.querySelector('[name="commentaire_se"]').value,
-                status: row.querySelector('[name="status"]').value,
-                validate_to_matrix: true
-            }, data => {
-                alert(data.message);
-                if (data.success) row.remove();
-            });
-        });
-    });
+    checkEntitySections();
 });
 </script>
 {% endblock %}
@@ -155,6 +265,7 @@ document.addEventListener('DOMContentLoaded', function () {
     .text-success { color: #28a745 !important; }
     .text-warning { color: #ffc107 !important; }
     .fw-bold { font-weight: bold; }
+    .bg-blue { background-color: #cce5ff !important; }
 
     .table-container { 
         border-radius: 15px; 
@@ -173,53 +284,41 @@ document.addEventListener('DOMContentLoaded', function () {
         width: 100%; 
         border-collapse: collapse; 
     }
-    .table th, .table td { 
-        vertical-align: middle; 
-        border: 1px solid #ff6200; 
-        padding: 10px; 
-        min-width: 120px; 
+    .table td {
+        vertical-align: middle;
+        border: 1px solid #ff6200;
+        padding: 10px;
+        min-width: 120px;
     }
-    .table thead th { 
-        text-align: center; 
-        position: sticky; 
-        top: 0; 
-        z-index: 10; 
-        background: #ff6200; 
-        color: white; 
+    .table thead th {
+        border: 2px solid black !important;
+        text-align: center;
+        background: #ff6200;
+        color: white;
+        position: sticky;
+        z-index: 10;
+    }
+    .header-row-1 th { top: 0; }
+    .header-row-2 th { top: 40px; }
+    .table th.trimestre, .table td:nth-child(8), .table td:nth-child(9), 
+    .table td:nth-child(10), .table td:nth-child(11) { 
+        min-width: 50px;
+        width: 50px;
     }
     .table-striped tbody tr:nth-of-type(odd) { background-color: #fff3e6; }
     .form-control { min-width: 100px; }
     textarea.form-control { min-height: 80px; resize: vertical; }
-    select.form-control { padding: 6px; }
 
-    .btn-orange { background: #ff6200; color: white; border: none; border-radius: 25px; padding: 6px 15px; }
+    .btn-success { background: #28a745; color: white; border: none; border-radius: 25px; padding: 6px 15px; }
+    .btn-warning { background: #ffc107; color: black; border: none; border-radius: 25px; padding: 6px 15px; }
+    .btn-primary { background: #007bff; color: white; border: none; border-radius: 25px; padding: 8px 20px; font-size: 1rem; white-space: nowrap; }
     .btn-secondary { background: #6c757d; border: none; border-radius: 25px; padding: 10px 30px; font-size: 1.25rem; }
-    .btn:hover { opacity: 0.9; transform: scale(1.05); transition: all 0.3s ease; }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn:hover:not(:disabled) { opacity: 0.9; transform: scale(1.05); transition: all 0.3s ease; }
 
-    .action-emoji {
-        font-size: 1.5rem;
-        cursor: pointer;
-        margin-left: 10px;
-        transition: transform 0.3s ease, opacity 0.3s ease;
-    }
-    .action-emoji:hover {
-        transform: scale(1.2);
-        opacity: 0.8;
-    }
-    .action-emoji[title]:hover:after {
-        content: attr(title);
-        position: absolute;
-        background: rgba(0, 0, 0, 0.8);
-        color: white;
-        padding: 5px 10px;
-        border-radius: 5px;
-        font-size: 0.9rem;
-        white-space: nowrap;
-        z-index: 1000;
-        transform: translateY(-100%) translateX(-50%);
-        left: 50%;
-        top: -5px;
-    }
+    .form-select-lg { padding: 12px 20px; font-size: 1.25rem; border-radius: 10px; background-color: #fff; transition: border-color 0.3s ease, box-shadow 0.3s ease; }
+    .form-select-lg:focus { border-color: #ff6200; box-shadow: 0 0 10px rgba(255, 98, 0, 0.5); outline: none; }
+    .shadow-sm { box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); }
 
     .animate-fade-in { animation: fadeIn 1s ease-in-out forwards; }
     .animate-slide-up { animation: slideUp 0.8s ease-in-out forwards; }
@@ -230,7 +329,11 @@ document.addEventListener('DOMContentLoaded', function () {
     @media (max-width: 768px) {
         .scrollable-table { max-height: 300px; }
         .table th, .table td { min-width: 100px; }
-        .action-emoji { font-size: 1.2rem; margin-left: 5px; }
+        .table th.trimestre, .table td:nth-child(8), .table td:nth-child(9), 
+        .table td:nth-child(10), .table td:nth-child(11) { min-width: 40px; width: 40px; }
+        .header-row-2 th { top: 35px; }
+        .form-select-lg { font-size: 1rem; padding: 10px 15px; }
+        .btn-primary { padding: 6px 15px; font-size: 0.9rem; }
     }
 </style>
 {% endblock %}

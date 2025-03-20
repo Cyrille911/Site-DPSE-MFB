@@ -7,15 +7,20 @@ Suivi des Plans d'Actions Opérationnels (PAO) - {{ plan.titre }}
 
 {% block content %}
 <div class="container mt-5">
-    <h1 class="text-center mb-5 text-orange fw-bold animate-fade-in">Suivi des Plans d'Actions Opérationnels (PAO)</br></span><span class="text-success">- {{ plan.titre }} -</span></h1>
+    <h1 class="text-center mb-5 text-orange fw-bold animate-fade-in">
+        Suivi des Plans d'Actions Opérationnels (PAO)<br><span class="text-success">- {{ plan.titre }} -</span>
+    </h1>
 
     <!-- Liste des PAO -->
     <div id="track-execution-list" class="row justify-content-center">
         {% for pao in paos %}
             <div class="col-md-4 col-sm-6 mb-4 animate-slide-up" style="animation-delay: {{ forloop.counter0|mul:0.1 }}s;">
-                <!-- Carte PAO sans h-100 -->
-                <div class="card shadow-lg border-orange rounded-4 pao-card" data-statut="{{ pao.statut }}">
-                    <a href="{% if pao.statut == 'Achevé' %}{% url 'operational_plan_matrix' plan.id pao.annee %}{% else %}{% url 'track_execution_detail' plan.id %}?annee={{ pao.annee }}{% endif %}" class="card-link">
+                <!-- Carte PAO -->
+                <div class="card shadow-lg border-orange rounded-4 pao-card" 
+                     data-statut="{{ pao.statut }}" 
+                     data-has-pending="{{ pao.has_pending|lower }}"
+                     data-last-modified-by-se="{{ pao.last_modified_by_se|lower }}">
+                    <a href="{% url 'track_execution_detail' plan.id %}?annee={{ pao.annee }}" class="card-link">
                         <div class="card-header bg-orange text-white text-center py-3">
                             <h4 class="card-title mb-0">PAO {{ pao.annee }}</h4>
                         </div>
@@ -26,6 +31,14 @@ Suivi des Plans d'Actions Opérationnels (PAO) - {{ plan.titre }}
                                     {{ pao.statut }}
                                 </span>
                             </p>
+                            {% if pao.has_pending %}
+                                <p class="text-muted mb-0 text-center mt-2">
+                                    <span class="fw-bold">En attente :</span>
+                                    <span class="text-warning">
+                                        {% if pao.last_modified_by_se %}Validation par PF/R{% else %}Validation par SE{% endif %}
+                                    </span>
+                                </p>
+                            {% endif %}
                         </div>
                     </a>
                 </div>
@@ -108,7 +121,7 @@ Suivi des Plans d'Actions Opérationnels (PAO) - {{ plan.titre }}
         opacity: 1;
     }
 
-    /* Texte personnalisé selon le statut */
+    /* Texte personnalisé selon le statut et état */
     .pao-card[data-statut="En cours"]::after {
         content: "Suivre / Évaluer";
     }
@@ -117,6 +130,12 @@ Suivi des Plans d'Actions Opérationnels (PAO) - {{ plan.titre }}
     }
     .pao-card[data-statut="Non entamé"]::after {
         content: "En attente de soumission";
+    }
+    .pao-card[data-has-pending="true"][data-last-modified-by-se="true"]::after {
+        content: "En attente de validation PF/R";
+    }
+    .pao-card[data-has-pending="true"][data-last-modified-by-se="false"]::after {
+        content: "Validation SE requise";
     }
 
     /* Boutons */

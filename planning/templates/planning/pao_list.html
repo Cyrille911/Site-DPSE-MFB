@@ -1,8 +1,9 @@
 {% extends 'index.html' %}
+
 {% load planning_filters %}
 
 {% block title %}
-Liste des Plans d'Actions Opérationnels (PAO) - {{ plan.titre }}
+Plans d'Actions Opérationnels (PAO) - {{ plan.titre }}
 {% endblock %}
 
 {% block content %}
@@ -112,7 +113,7 @@ Liste des Plans d'Actions Opérationnels (PAO) - {{ plan.titre }}
         content: "Consulter";
     }
     .pao-card[data-statut="Non entamé"]::after {
-        content: "Non disponible";
+        content: "Non entamé";
     }
 
     /* Bouton de retour */

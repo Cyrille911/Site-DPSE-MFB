@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'planning.apps.PlanningConfig',
     'stats.apps.StatsConfig',
     'quality.apps.QualityConfig',
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -183,5 +184,22 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'DEBUG',  # Affiche DEBUG, INFO, WARNING, ERROR, CRITICAL
         },
+    },
+}
+
+from celery.schedules import crontab  # Ajoute cette ligne pour importer crontab
+# Celery Configuration
+CELERY_BROKER_URL = 'redis://localhost:6379/0'  # Utilise Redis comme broker
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'
+
+# Planification des tâches avec Celery Beat
+CELERY_BEAT_SCHEDULE = {
+    'check-activity-alerts': {
+        'task': 'planning.tasks.check_activity_alerts_task',
+        'schedule': crontab(day_of_week=1, hour=8, minute=0),  # Tous les lundis à 8h00
     },
 }

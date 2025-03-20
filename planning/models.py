@@ -2,9 +2,76 @@ from django.db import models
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.conf import settings
 from django.core.mail import send_mail
-from datetime import datetime
+from django.contrib.auth import get_user_model
+from datetime import datetime, timedelta
+from django.http import HttpRequest
+import logging
+from threading import Timer
+from collections import defaultdict
 
-# Modèle PlanAction
+logger = logging.getLogger(__name__)
+
+User = get_user_model()
+
+# File d'attente temporaire pour regrouper les notifications
+class NotificationQueue:
+    _instance = None
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(NotificationQueue, cls).__new__(cls)
+            cls._instance.pending_notifications = defaultdict(list)  # {destinataires: [activités]}
+            cls._instance.timer = None
+        return cls._instance
+
+    def add_activity(self, activite, user):
+        """Ajoute une activité à la file d'attente pour les destinataires concernés."""
+        recipients = tuple(sorted(self._get_recipients(activite, user)))  # Tuple pour hashabilité
+        self.pending_notifications[recipients].append(activite)
+        if not self.timer or not self.timer.is_alive():
+            self.timer = Timer(60.0, self.send_grouped_notifications)  # 1 minute
+            self.timer.start()
+            logger.debug("Timer démarré pour l'envoi groupé des notifications.")
+
+    def _get_recipients(self, activite, user):
+        """Retourne les destinataires pour une activité."""
+        recipients = set()
+        if activite.point_focal and activite.point_focal.email:
+            recipients.add(activite.point_focal.email)
+        if activite.responsable and activite.responsable.email:
+            recipients.add(activite.responsable.email)
+        if user.email:
+            recipients.add(user.email)
+        return recipients
+
+    def send_grouped_notifications(self):
+        """Envoie les notifications regroupées par destinataires."""
+        for recipients, activites in self.pending_notifications.items():
+            if not recipients:
+                continue
+            subject = f"Création de {len(activites)} activité(s)"
+            message = "Les activités suivantes ont été créées :\n\n"
+            for activite in activites:
+                message += (
+                    f"- Titre : {activite.titre}\n"
+                    f"  Référence : {activite.reference}\n"
+                    f"  Type : {activite.type}\n"
+                    f"  Indicateur : {activite.indicateur_label} (Ref: {activite.indicateur_reference})\n"
+                    f"  Coûts : {activite.couts}\n"
+                    f"  Cibles : {activite.cibles}\n"
+                    f"  Périodes d'exécution : {activite.periodes_execution}\n\n"
+                )
+            logger.debug(f"Envoi de notification groupée - Sujet: {subject}, Destinataires: {list(recipients)}")
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email='cyrilletaha01@gmail.com',
+                recipient_list=list(recipients),
+                fail_silently=True
+            )
+        self.pending_notifications.clear()
+        logger.debug("File d'attente vidée après envoi groupé.")
+
+# Modèle PlanAction (inchangé)
 class PlanAction(models.Model):
     id = models.AutoField(primary_key=True)
     titre = models.CharField(max_length=255)
@@ -36,11 +103,9 @@ class PlanAction(models.Model):
         self.save()
 
     def save(self, *args, **kwargs):
-        # Initialisation de couts si vide ou incorrect
         if not self.couts or len(self.couts) != self.horizon:
             self.couts = [0.0] * self.horizon
         
-        # Initialisation de statut_pao
         if not isinstance(self.statut_pao, list) or len(self.statut_pao) != self.horizon:
             self.statut_pao = ["Non entamé"] * self.horizon
         current_year = datetime.now().year
@@ -50,7 +115,6 @@ class PlanAction(models.Model):
             for i in range(index_annee_courante):
                 self.statut_pao[i] = "Achevé"
         
-        # Génération de la référence (ex. PA1)
         if not self.reference:
             if not self.pk:
                 position = PlanAction.objects.count() + 1
@@ -59,7 +123,6 @@ class PlanAction(models.Model):
             self.reference = f"PA{position}"
         
         super().save(*args, **kwargs)
-        # Mise à jour des références des enfants
         for effet in self.plan_effet.all():
             effet.update_reference()
 
@@ -69,7 +132,7 @@ class PlanAction(models.Model):
     def __str__(self):
         return f"Plan d'actions {self.reference} : {self.titre}"
 
-# Modèle Effet
+# Modèle Effet (inchangé)
 class Effet(models.Model):
     id = models.AutoField(primary_key=True)
     plan = models.ForeignKey(PlanAction, related_name="plan_effet", on_delete=models.CASCADE)
@@ -98,7 +161,6 @@ class Effet(models.Model):
         self.plan.calculer_nombres()
 
     def update_reference(self):
-        # Génération de la référence (ex. 1 pour PA1)
         if not self.reference or self.pk is None:
             if not self.pk:
                 position = self.plan.plan_effet.count() + 1
@@ -106,12 +168,10 @@ class Effet(models.Model):
                 position = list(self.plan.plan_effet.order_by('id')).index(self) + 1
             self.reference = f"{position}"
             self.save(update_fields=['reference'])
-        # Mise à jour des références des enfants
         for produit in self.effet_produit.all():
             produit.update_reference()
 
     def save(self, *args, **kwargs):
-        # Initialisation de couts si vide ou incorrect
         if not self.couts or len(self.couts) != self.plan.horizon:
             self.couts = [0.0] * self.plan.horizon
         
@@ -120,13 +180,13 @@ class Effet(models.Model):
             old_instance = Effet.objects.get(pk=self.pk)
         self.full_clean()
         super().save(*args, **kwargs)
-        # Mise à jour des références des enfants
         for produit in self.effet_produit.all():
             produit.update_reference()
         if old_instance and old_instance.plan != self.plan:
             old_instance.plan.calculer_nombres()
             old_instance.plan.calculer_couts()
-            self.plan.calculer_nombres()
+        self.plan.calculer_nombres()
+        self.plan.calculer_couts()
 
     def delete(self, *args, **kwargs):
         plan = self.plan
@@ -137,7 +197,7 @@ class Effet(models.Model):
     def __str__(self):
         return f"Effet {self.reference} : {self.titre}"
 
-# Modèle Produit
+# Modèle Produit (inchangé)
 class Produit(models.Model):
     id = models.AutoField(primary_key=True)
     effet = models.ForeignKey(Effet, related_name="effet_produit", on_delete=models.CASCADE)
@@ -164,7 +224,6 @@ class Produit(models.Model):
         self.effet.calculer_nombres()
 
     def update_reference(self):
-        # Génération de la référence (ex. 1.1 pour Effet 1 sous PA1)
         if not self.reference or self.pk is None:
             if not self.pk:
                 position = self.effet.effet_produit.count() + 1
@@ -172,12 +231,10 @@ class Produit(models.Model):
                 position = list(self.effet.effet_produit.order_by('id')).index(self) + 1
             self.reference = f"{self.effet.reference}.{position}"
             self.save(update_fields=['reference'])
-        # Mise à jour des références des enfants
         for action in self.produit_action.all():
             action.update_reference()
 
     def save(self, *args, **kwargs):
-        # Initialisation de couts si vide ou incorrect
         if not self.couts or len(self.couts) != self.effet.plan.horizon:
             self.couts = [0.0] * self.effet.plan.horizon
         
@@ -186,14 +243,13 @@ class Produit(models.Model):
             old_instance = Produit.objects.get(pk=self.pk)
         self.full_clean()
         super().save(*args, **kwargs)
-        # Mise à jour des références des enfants
         for action in self.produit_action.all():
             action.update_reference()
         if old_instance and old_instance.effet != self.effet:
             old_instance.effet.calculer_nombres()
             old_instance.effet.calculer_couts()
-            self.effet.calculer_nombres()
-            self.effet.calculer_couts()
+        self.effet.calculer_nombres()
+        self.effet.calculer_couts()
 
     def delete(self, *args, **kwargs):
         effet = self.effet
@@ -204,7 +260,7 @@ class Produit(models.Model):
     def __str__(self):
         return f"Produit {self.reference} : {self.titre}"
 
-# Modèle Action
+# Modèle Action (inchangé)
 class Action(models.Model):
     id = models.AutoField(primary_key=True)
     produit = models.ForeignKey(Produit, related_name="produit_action", on_delete=models.CASCADE)
@@ -228,7 +284,6 @@ class Action(models.Model):
         self.produit.calculer_nombres()
 
     def update_reference(self):
-        # Génération de la référence (ex. 1.1.1 pour Produit 1.1 sous Effet 1)
         if not self.reference or self.pk is None:
             if not self.pk:
                 position = self.produit.produit_action.count() + 1
@@ -236,12 +291,10 @@ class Action(models.Model):
                 position = list(self.produit.produit_action.order_by('id')).index(self) + 1
             self.reference = f"{self.produit.reference}.{position}"
             self.save(update_fields=['reference'])
-        # Mise à jour des références des enfants
         for activite in self.action_activite.all():
             activite.update_reference()
 
     def save(self, *args, **kwargs):
-        # Initialisation de couts si vide ou incorrect
         if not self.couts or len(self.couts) != self.produit.effet.plan.horizon:
             self.couts = [0.0] * self.produit.effet.plan.horizon
         
@@ -250,14 +303,13 @@ class Action(models.Model):
             old_instance = Action.objects.get(pk=self.pk)
         self.full_clean()
         super().save(*args, **kwargs)
-        # Mise à jour des références des enfants
         for activite in self.action_activite.all():
             activite.update_reference()
         if old_instance and old_instance.produit != self.produit:
             old_instance.produit.calculer_nombres()
             old_instance.produit.calculer_couts()
-            self.produit.calculer_nombres()
-            self.produit.calculer_couts()
+        self.produit.calculer_nombres()
+        self.produit.calculer_couts()
 
     def delete(self, *args, **kwargs):
         produit = self.produit
@@ -271,7 +323,7 @@ class Action(models.Model):
 # Modèle Activite
 class Activite(models.Model):
     id = models.AutoField(primary_key=True)
-    action = models.ForeignKey(Action, related_name="action_activite", on_delete=models.CASCADE)
+    reference = models.CharField(max_length=50, blank=True)
     titre = models.CharField(max_length=255)
     type = models.CharField(
         max_length=50,
@@ -283,32 +335,51 @@ class Activite(models.Model):
             ('Activité ordinaire', 'Activité ordinaire')
         ]
     )
+    
+    action = models.ForeignKey('Action', related_name="action_activite", on_delete=models.CASCADE)
+    point_focal = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=False,
+        blank=False,
+        related_name='point_focal_activites'
+    )
+    responsable = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='responsable_activites'
+    )
+    
     indicateur_label = models.CharField(max_length=255)
     indicateur_reference = models.CharField(max_length=255)
+    
     cibles = models.JSONField(default=list)
     realisation = models.JSONField(default=list)
     couts = models.JSONField(default=list)
     periodes_execution = models.JSONField(default=list)
-    point_focal = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=False, blank=False, related_name='point_focal_activites')
-    responsable = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True, related_name='responsable_activites')
     etat_avancement = models.JSONField(default=list)
     commentaire = models.JSONField(default=list)
     commentaire_se = models.JSONField(default=list)
-    reference = models.CharField(max_length=50, blank=True)
     pending_changes = models.JSONField(default=list)
     status = models.JSONField(default=list)
     matrix_status = models.JSONField(default=list)
+    
     created_at = models.DateTimeField(auto_now_add=True)
+    alertes_envoyees = models.JSONField(default=dict, blank=True, null=True)
 
     def clean(self):
         horizon = self.action.produit.effet.plan.horizon
-        fields_to_check = ['cibles', 'realisation', 'couts', 'periodes_execution', 'etat_avancement', 
-                           'commentaire', 'commentaire_se', 'pending_changes', 'status', 'matrix_status']
+        fields_to_check = [
+            'cibles', 'realisation', 'couts', 'periodes_execution', 'etat_avancement',
+            'commentaire', 'commentaire_se', 'pending_changes', 'status', 'matrix_status'
+        ]
         for field in fields_to_check:
             value = getattr(self, field)
             if not isinstance(value, list) or len(value) != horizon:
                 raise ValidationError(f"'{field}' doit être une liste de {horizon} éléments.")
-        
+
         if not all(isinstance(x, (str, type(None))) for x in self.cibles):
             raise ValidationError("'cibles' doit contenir des chaînes ou None.")
         if not all(isinstance(x, str) for x in self.realisation):
@@ -325,17 +396,48 @@ class Activite(models.Model):
             raise ValidationError("'commentaire_se' doit contenir des chaînes.")
         if not all(isinstance(x, (dict, type(None))) for x in self.pending_changes):
             raise ValidationError("'pending_changes' doit contenir des dictionnaires ou None.")
-        if not all(x in ['Non entamée', 'En cours', 'Réalisée', 'Non réalisée', 'Supprimée', 
-                         'Reprogrammée', 'Pending_SE', 'Submitted_SE'] for x in self.status):
+        if not all(x in ['Non entamée', 'En cours', 'Réalisée', 'Non réalisée', 'Supprimée', 'Reprogrammée'] for x in self.status):
             raise ValidationError("'status' doit contenir des valeurs valides.")
-        if not all(x in ['En cours', 'Validé'] for x in self.matrix_status):
-            raise ValidationError("'matrix_status' doit contenir 'En cours' ou 'Validé'.")
+        if not all(x in ['En cours', 'Validée'] for x in self.matrix_status):
+            raise ValidationError("'matrix_status' doit être 'En cours' ou 'Validée'.")
 
-    def get_last_matrix_status_change(self):
-        last_log = self.logs.filter(modifications__has_key='matrix_status').order_by('-timestamp').first()
-        if last_log:
-            return last_log.timestamp
-        return None
+    def _send_change_notification(self, user):
+        """Envoie une notification par email pour informer d'un changement dans l'activité."""
+        subject = f"Modification proposée pour l'activité {self.reference}"
+        if user == self.responsable:
+            recipients = [u.email for u in User.objects.filter(groups__name='SuiveurEvaluateur') if u.email]
+            message = (
+                f"Le responsable {user.email} a proposé des modifications pour l'activité {self.reference}.\n"
+                f"Titre : {self.titre}\n"
+                f"Référence : {self.reference}\n"
+                f"Consultez les détails dans le système."
+            )
+        elif user.groups.filter(name='SuiveurEvaluateur').exists():
+            recipients = []
+            if self.responsable and self.responsable.email:
+                recipients.append(self.responsable.email)
+            if self.point_focal and self.point_focal.email:
+                recipients.append(self.point_focal.email)
+            message = (
+                f"Un suiveur-évaluateur {user.email} a proposé des modifications pour l'activité {self.reference}.\n"
+                f"Titre : {self.titre}\n"
+                f"Référence : {self.reference}\n"
+                f"Consultez les détails dans le système."
+            )
+        else:
+            return
+
+        if recipients:
+            logger.debug(f"Envoi de notification de changement - Sujet: {subject}, Destinataires: {recipients}")
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email='cyrilletaha01@gmail.com',
+                recipient_list=recipients,
+                fail_silently=True
+            )
+        else:
+            logger.debug("Aucun destinataire valide trouvé pour la notification de changement.")
 
     def save(self, *args, **kwargs):
         user = kwargs.pop('user', None)
@@ -345,32 +447,54 @@ class Activite(models.Model):
             if old_instance.indicateur_reference != self.indicateur_reference:
                 self.indicateur_reference = old_instance.indicateur_reference
 
-        # Initialisation des listes basées sur l'horizon
         horizon = self.action.produit.effet.plan.horizon
         if not self.couts or len(self.couts) != horizon:
             self.couts = [0.0] * horizon
         if not self.cibles or len(self.cibles) != horizon:
-            self.cibles = [None] * horizon
+            self.cibles = ["Non définie"] * horizon
         if not self.realisation or len(self.realisation) != horizon:
-            self.realisation = [""] * horizon
+            self.realisation = ["En attente"] * horizon
         if not self.periodes_execution or len(self.periodes_execution) != horizon:
             self.periodes_execution = [[] for _ in range(horizon)]
         if not self.etat_avancement or len(self.etat_avancement) != horizon:
-            self.etat_avancement = [""] * horizon
+            self.etat_avancement = ["En attente"] * horizon
         if not self.commentaire or len(self.commentaire) != horizon:
-            self.commentaire = [""] * horizon
+            self.commentaire = ["En attente"] * horizon
         if not self.commentaire_se or len(self.commentaire_se) != horizon:
-            self.commentaire_se = [""] * horizon
+            self.commentaire_se = ["En attente"] * horizon
         if not self.pending_changes or len(self.pending_changes) != horizon:
             self.pending_changes = [{}] * horizon
         if not self.status or len(self.status) != horizon:
             self.status = ["Non entamée"] * horizon
         if not self.matrix_status or len(self.matrix_status) != horizon:
-            self.matrix_status = ["En cours"] * horizon
+            self.matrix_status = ["Validée"] * horizon
+        if self.alertes_envoyees is None or not isinstance(self.alertes_envoyees, dict):
+            self.alertes_envoyees = {}
+
+        for i in range(horizon):
+            if self.pending_changes[i]:
+                self.matrix_status[i] = 'En cours'
 
         self.full_clean()
+        self.update_reference()
 
-        # Génération de la référence (ex. 1.1.1.1 pour Action 1.1.1)
+        super().save(*args, **kwargs)
+
+        if user:
+            try:
+                if not old_instance:  # Nouvelle activité
+                    NotificationQueue().add_activity(self, user)
+                elif self.pending_changes != old_instance.pending_changes:  # Modification
+                    self._send_change_notification(user)
+            except Exception as e:
+                logger.error(f"Erreur lors de la gestion des notifications : {str(e)}", exc_info=True)
+        if 'apply_changes' in kwargs and user:
+            self._log_changes(user)
+
+        self.action.calculer_nombres()
+        self.action.calculer_couts()
+
+    def update_reference(self):
         if not self.reference or self.pk is None:
             if not self.pk:
                 position = self.action.action_activite.count() + 1
@@ -378,50 +502,82 @@ class Activite(models.Model):
                 position = list(self.action.action_activite.order_by('id')).index(self) + 1
             self.reference = f"{self.action.reference}.{position}"
 
-        super().save(*args, **kwargs)
+    def propose_changes(self, user, index, etat_avancement=None, realisation=None, commentaire=None, commentaire_se=None, status=None):
+        horizon = self.action.produit.effet.plan.horizon
+        if index >= horizon:
+            raise ValueError("Index hors de l'horizon du plan.")
 
-        # Mise à jour des calculs en cascade
+        if not self.pending_changes[index]:
+            self.pending_changes[index] = {
+                'etat_avancement': self.etat_avancement[index],
+                'realisation': self.realisation[index],
+                'commentaire': self.commentaire[index],
+                'commentaire_se': self.commentaire_se[index],
+                'status': self.status[index],
+                'last_modified_by': user.username,
+                'is_processed_by_se': False  # Initialisé à False pour les nouvelles propositions
+            }
+
+        if etat_avancement is not None:
+            self.pending_changes[index]['etat_avancement'] = etat_avancement
+        if realisation is not None:
+            self.pending_changes[index]['realisation'] = realisation
+        if commentaire is not None:
+            self.pending_changes[index]['commentaire'] = commentaire
+        if commentaire_se is not None:
+            self.pending_changes[index]['commentaire_se'] = commentaire_se
+        if status is not None:
+            if status not in ['Non entamée', 'En cours', 'Réalisée', 'Non réalisée', 'Supprimée', 'Reprogrammée']:
+                raise ValueError("Statut invalide.")
+            self.pending_changes[index]['status'] = status
+        
+        self.pending_changes[index]['last_modified_by'] = user.username
+        self.pending_changes[index]['is_processed_by_se'] = user.groups.filter(name='SuiveurEvaluateur').exists()  # Marquer comme traité si SE
+        self.matrix_status[index] = 'En cours'
+        self.save(user=user)
+
+    def apply_pending_changes(self, user, index):
+        if not user.groups.filter(name='SuiveurEvaluateur').exists():
+            raise PermissionDenied("Seul un suiveur-évaluateur peut appliquer les changements définitivement.")
+        
+        horizon = self.action.produit.effet.plan.horizon
+        if index >= horizon or not self.pending_changes[index]:
+            raise ValueError("Aucune modification en attente pour cette année.")
+
+        self.etat_avancement[index] = self.pending_changes[index].get('etat_avancement', self.etat_avancement[index])
+        self.realisation[index] = self.pending_changes[index].get('realisation', self.realisation[index])
+        self.commentaire[index] = self.pending_changes[index].get('commentaire', self.commentaire[index])
+        self.commentaire_se[index] = self.pending_changes[index].get('commentaire_se', self.commentaire_se[index])
+        self.status[index] = self.pending_changes[index].get('status', self.status[index])
+        self.pending_changes[index] = {'is_processed_by_se': True}  # Marquer comme traité
+        self.matrix_status[index] = 'Validée'
+        self.save(user=user, apply_changes=True)
+        
+    def set_status(self, user, index, status):
+        if not user.groups.filter(name='SuiveurEvaluateur').exists():
+            raise PermissionDenied("Seul un suiveur-évaluateur peut modifier le statut directement.")
+        
+        horizon = self.action.produit.effet.plan.horizon
+        if index >= horizon:
+            raise ValueError("Index hors de l'horizon du plan.")
+        
+        if status not in ['Non entamée', 'En cours', 'Réalisée', 'Non réalisée', 'Supprimée', 'Reprogrammée']:
+            raise ValueError("Statut invalide.")
+        
+        self.status[index] = status
+        self.save(user=user)
+
+    def reject_changes(self, user, index):
+        if user != self.responsable and not user.groups.filter(name='SuiveurEvaluateur').exists():
+            raise PermissionDenied("Seul le responsable ou un suiveur-évaluateur peut rejeter des modifications.")
+        
+        horizon = self.action.produit.effet.plan.horizon
+        if index >= horizon:
+            raise ValueError("Index hors de l'horizon du plan.")
+        
+        self.save(user=user)
         self.action.calculer_nombres()
         self.action.calculer_couts()
-
-        # Log des modifications
-        if old_instance and user:
-            fields_to_log = ['etat_avancement', 'realisation', 'commentaire', 'status', 
-                             'commentaire_se', 'matrix_status', 'pending_changes', 'periodes_execution']
-            for year_index in range(horizon):
-                changes = {}
-                for field in fields_to_log:
-                    old_value = getattr(old_instance, field)[year_index]
-                    new_value = getattr(self, field)[year_index]
-                    if old_value != new_value:
-                        changes[field] = {
-                            'old': old_value,
-                            'new': new_value
-                        }
-                if changes:
-                    ActiviteLog.objects.create(
-                        activite=self,
-                        user=user,
-                        modifications={
-                            'year_index': year_index,
-                            'changes': changes
-                        },
-                        statut_apres=self.status[year_index]
-                    )
-                    if 'status' in changes and user != self.point_focal and user != self.responsable:
-                        recipients = [self.point_focal.email] if self.point_focal.email else []
-                        if self.responsable and self.responsable.email:
-                            recipients.append(self.responsable.email)
-                        if recipients:
-                            year = self.action.produit.effet.plan.annee_debut + year_index
-                            send_mail(
-                                f"Changement de statut pour {self.reference} (Année {year})",
-                                f"L'activité {self.reference} - {self.titre} est passée de "
-                                f"'{changes['status']['old']}' à '{changes['status']['new']}' pour l'année {year}.",
-                                settings.DEFAULT_FROM_EMAIL,
-                                recipients,
-                                fail_silently=True,
-                            )
 
     def delete(self, *args, **kwargs):
         action = self.action
@@ -429,67 +585,126 @@ class Activite(models.Model):
         action.calculer_nombres()
         action.calculer_couts()
 
-    def validate_by_responsable(self, user):
-        if user != self.responsable:
-            raise PermissionDenied("Seul le responsable peut valider.")
-        horizon = self.action.produit.effet.plan.horizon
-        for i in range(horizon):
-            if self.pending_changes[i]:
-                self.etat_avancement[i] = self.pending_changes[i].get('etat_avancement', self.etat_avancement[i])
-                self.realisation[i] = self.pending_changes[i].get('realisation', self.realisation[i])
-                self.commentaire[i] = self.pending_changes[i].get('commentaire', self.commentaire[i])
-                self.periodes_execution[i] = self.pending_changes[i].get('periodes_execution', self.periodes_execution[i])
-                self.pending_changes[i] = {}
-        self.save(user=user)
-
-    def submit_to_se(self, user):
-        if user != self.responsable:
-            raise PermissionDenied("Seul le responsable peut soumettre au SE.")
-        self.validate_by_responsable(user)
-        horizon = self.action.produit.effet.plan.horizon
-        for i in range(horizon):
-            self.status[i] = 'Pending_SE'
-        self.save(user=user)
-
-    def update_reference(self):
-        # Génération de la référence (ex. 1.1.1.1 pour Action 1.1.1)
-        if not self.reference or self.pk is None:
-            if not self.pk:
-                position = self.action.action_activite.count() + 1
-            else:
-                position = list(self.action.action_activite.order_by('id')).index(self) + 1
-            self.reference = f"{self.action.reference}.{position}"
-            self.save(update_fields=['reference'])
-
     def update_matrix_status(self, annee_index, matrix_version):
         current_version = {
             'etat_avancement': self.etat_avancement[annee_index],
             'realisation': self.realisation[annee_index],
             'commentaire': self.commentaire[annee_index],
-            'periodes_execution': self.periodes_execution[annee_index],
+            'status': self.status[annee_index],
         }
-        self.matrix_status[annee_index] = 'Validé' if current_version == matrix_version else 'En cours'
+        self.matrix_status[annee_index] = 'Validée' if current_version == matrix_version and not self.pending_changes[annee_index] else 'En cours'
         self.save()
+
+    def get_last_matrix_status_change(self):
+        last_log = self.logs.filter(modifications__has_key='matrix_status').order_by('-timestamp').first()
+        return last_log.timestamp if last_log else None
+
+    def _log_changes(self, user):
+        old_instance = Activite.objects.get(pk=self.pk)
+        horizon = self.action.produit.effet.plan.horizon
+        for i in range(horizon):
+            changes = {}
+            for field in ['etat_avancement', 'realisation', 'commentaire', 'commentaire_se', 'status']:
+                old_value = getattr(old_instance, field)[i]
+                new_value = getattr(self, field)[i]
+                if old_value != new_value:
+                    changes[field] = {'old': old_value, 'new': new_value}
+            if changes:
+                ActiviteLog.objects.create(
+                    activite=self,
+                    user=user,
+                    modifications={'year_index': i, 'changes': changes},
+                    statut_apres=self.status[i]
+                )
+
+    @staticmethod
+    def check_activity_alerts():
+        today = datetime.now().date()
+        current_year = today.year
+        current_month = today.month
+        current_weekday = today.weekday()
+
+        if current_weekday != 0:  # Exécuter uniquement le lundi
+            return
+
+        trimestre_dates = {
+            'T1': (datetime(current_year, 3, 31).date(), 3),
+            'T2': (datetime(current_year, 6, 30).date(), 6),
+            'T3': (datetime(current_year, 9, 30).date(), 9),
+            'T4': (datetime(current_year, 12, 31).date(), 12),
+        }
+        alert_threshold = timedelta(days=15)
+        suiveurs = User.objects.filter(is_active=True, groups__name='SuiveurEvaluateur')
+        suiveurs_emails = [u.email for u in suiveurs if u.email]
+
+        for activite in Activite.objects.select_related('action__produit__effet__plan').all():
+            plan = activite.action.produit.effet.plan
+            horizon = plan.horizon
+            annee_debut = plan.annee_debut
+
+            for year_index in range(horizon):
+                annee = annee_debut + year_index
+                if annee != current_year or plan.statut_pao[year_index] != "En cours":
+                    continue
+
+                periodes = activite.periodes_execution[year_index]
+                if not periodes:
+                    continue
+
+                for periode in periodes:
+                    fin_trimestre, mois_fin = trimestre_dates[periode]
+                    debut_alerte = fin_trimestre - alert_threshold
+
+                    if current_month != mois_fin or not (debut_alerte <= today <= fin_trimestre):
+                        continue
+
+                    cle_alerte = f"{annee}-{periode}-{today.isoformat()}"
+                    if cle_alerte not in activite.alertes_envoyees:
+                        recipients = [activite.point_focal.email] if activite.point_focal.email else []
+                        if activite.responsable and activite.responsable.email:
+                            recipients.append(activite.responsable.email)
+                        if recipients:
+                            send_mail(
+                                f"Rappel : Activité {activite.reference} - {periode} {annee}",
+                                f"L'activité '{activite.titre}' (ref: {activite.reference}) approche sa période d'exécution {periode} pour {annee}. "
+                                f"Date de fin : {fin_trimestre}. Veuillez vérifier son état.",
+                                settings.DEFAULT_FROM_EMAIL,
+                                recipients,
+                                fail_silently=True,
+                            )
+                        if suiveurs_emails:
+                            send_mail(
+                                f"Rappel : Activité {activite.reference} - {periode} {annee}",
+                                f"L'activité '{activite.titre}' (ref: {activite.reference}) approche sa période d'exécution {periode} pour {annee}. "
+                                f"Date de fin : {fin_trimestre}.",
+                                settings.DEFAULT_FROM_EMAIL,
+                                suiveurs_emails,
+                                fail_silently=True,
+                            )
+                        activite.alertes_envoyees[cle_alerte] = today.isoformat()
+                        activite.save()
 
     def __str__(self):
         return f"Activité {self.reference} : {self.titre}"
 
-# Modèle ActiviteLog
 class ActiviteLog(models.Model):
     activite = models.ForeignKey(Activite, on_delete=models.CASCADE, related_name='logs')
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
     modifications = models.JSONField()
     statut_apres = models.CharField(
         max_length=50,
         choices=[
-            ('Draft', 'Brouillon'),
-            ('Submitted_SE', 'Soumise au SE'),
-            ('Pending_SE', 'En attente SE'),
+            ('Non évaluée', 'Non évaluée'),
+            ('En cours', 'En cours'),
             ('Réalisée', 'Réalisée'),
             ('Non réalisée', 'Non réalisée'),
             ('Supprimée', 'Supprimée'),
             ('Reprogrammée', 'Reprogrammée'),
-            ('Rejeté', 'Rejetée'),
         ]
     )
     timestamp = models.DateTimeField(auto_now_add=True)

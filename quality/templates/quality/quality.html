@@ -1,246 +1,326 @@
 {% extends 'index.html' %}
+{% load static %}
 
 {% block title %}Service Qualité et Normalisation{% endblock %}
 
-{% block style %}
-<style>
-    body {
-      font-family: 'Arial', sans-serif;
-      background-color: #f8f9fa;
-      color: #333;
-      margin: 0;
-      padding: 0;
-    }
-
-    /* Animation CSS */
-    .scroll-animation {
-      opacity: 0;
-      transform: translateY(20px);
-      transition: all 0.6s ease-out;
-    }
-
-    .scroll-animation.active {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .section-title {
-      font-size: 2rem;
-      margin-top: 40px;
-      margin-bottom: 20px;
-      text-align: center;
-      font-weight: bold;
-      color: #FF6A13;
-      text-transform: uppercase;
-      opacity: 0;
-      transform: translateY(20px);
-      transition: all 0.6s ease-out;
-    }
-
-    .section-title.active {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .subsection-title {
-      font-size: 1.5rem;
-      margin-top: 30px;
-      margin-bottom: 15px;
-      color: #FF6A13;
-      font-weight: 600;
-    }
-
-    .container {
-      margin-top: 50px;
-      padding: 0 15px;
-    }
-
-    .card {
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      margin-bottom: 30px;
-      transition: transform 0.3s ease-in-out;
-      opacity: 0;
-      transform: translateY(20px);
-      transition: all 0.6s ease-out;
-    }
-
-    .card.active {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .card:hover {
-      transform: translateY(-5px);
-    }
-
-    .card-header {
-      background-color: #FF6A13;
-      color: white;
-      font-weight: bold;
-      padding: 12px 15px;
-      border-top-left-radius: 12px;
-      border-top-right-radius: 12px;
-    }
-
-    .card-body {
-      padding: 20px;
-      background-color: #ffffff;
-      border-bottom-left-radius: 12px;
-      border-bottom-right-radius: 12px;
-    }
-
-    .icon {
-      font-size: 40px;
-      color: #FF6A13;
-      margin-right: 15px;
-    }
-
-    .row {
-      margin-top: 30px;
-    }
-</style>
-{% endblock %}
-
 {% block content %}
-  <div class="container">
-    <div class="section-title">
-      Service Qualité et Normalisation
-    </div>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Service Qualité et Normalisation</title>
 
-    <div class="card scroll-animation">
-      <div class="card-header">
-        Présentation du Service
-      </div>
-      <div class="card-body">
-        <p>Le Service Qualité et Normalisation du Ministère des Finances et du Budget est responsable de l’élaboration et de la mise en œuvre de normes de qualité dans les processus administratifs et financiers...</p>
-      </div>
-    </div>
+    <!-- Google Web Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet"> 
 
-    <!-- Missions -->
-    <div class="subsection-title scroll-animation">
-      Missions du Service
-    </div>
-    <div class="row">
-      <div class="col-md-4">
-        <div class="card scroll-animation">
-          <div class="card-header">
-            Normalisation
-          </div>
-          <div class="card-body">
-            <p>Établir des normes et procédures claires afin d’assurer une gestion financière cohérente...</p>
-          </div>
+    <!-- Icon Font Stylesheet -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Libraries Stylesheet -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link href="{% static 'lib/animate/animate.min.css' %}" rel="stylesheet">
+    <link href="{% static 'lib/owlcarousel/assets/owl.carousel.min.css' %}" rel="stylesheet">
+    <link href="{% static 'lib/lightbox/css/lightbox.min.css' %}" rel="stylesheet">
+
+    <!-- Customized Bootstrap Stylesheet -->
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+
+    <!-- Template Stylesheet -->
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+
+    <!-- Custom Styles -->
+    <style>
+        :root {
+            --bs-primary: #F77F00; /* Orange ivoirien */
+            --bs-dark: #009E60;    /* Vert ivoirien */
+        }
+        .btn-primary { background-color: #F77F00; border-color: #F77F00; }
+        .btn-dark { background-color: #009E60; border-color: #009E60; }
+        .text-primary { color: #F77F00 !important; }
+        .bg-light { background-color: #f8f9fa !important; }
+        /* Uniformisation des images */
+        .carousel-item img, .about-img img, .service-img img, .project-img img {
+            width: 100%;
+            height: 300px; /* Hauteur fixe pour uniformité */
+            object-fit: cover; /* Coupe l'image sans déformation */
+            border-radius: 10px 10px 0 0; /* Coins arrondis en haut */
+        }
+        .header-carousel { height: 400px; overflow: hidden; } /* Hauteur réduite pour le carrousel */
+        .carousel-caption {
+            padding: 15px; /* Padding réduit */
+            top: -28% !important; /* Remonte les éléments à 20% du haut */
+            transform: translateY(0%); /* Ajustement fin */
+            text-align: left; /* Alignement à gauche pour cohérence */
+        }
+        .header-carousel .carousel-caption h1 {
+            white-space: nowrap; /* Force le texte à rester sur une ligne */ 
+            text-transform: none !important;}
+        /* Styles pour les détails */
+        .details-content {
+            display: none; /* Caché par défaut */
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            text-align: left;
+            transition: none !important; /* Désactive les animations conflictuelles */
+        }
+        .details-content.show {
+            display: block; /* Affiché quand activé */
+            color: #000000; /* Noir pour contraster avec un fond blanc */
+            opacity: 1 !important; /* Force la visibilité */
+            visibility: visible !important;
+            height: auto !important; /* Assure que la hauteur s’adapte */
+        }
+        .details-content {
+            position: relative;
+            z-index: 10; /* Assure que les détails sont au-dessus des autres éléments */
+        }
+        .project-item {
+            overflow: visible !important; /* Permet au contenu de déborder */
+        }
+        .project-content {
+            overflow: visible !important;
+            height: auto !important; /* S’assure que le conteneur grandit */
+        }
+
+
+                
+    </style>
+</head>
+<body>
+    <!-- Spinner Start -->
+    <div id="spinner" class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+            <span class="sr-only">Chargement...</span>
         </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card scroll-animation">
-          <div class="card-header">
-            Qualité
-          </div>
-          <div class="card-body">
-            <p>Assurer l'amélioration continue des services et des processus en appliquant des standards de qualité...</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card scroll-animation">
-          <div class="card-header">
-            Conformité
-          </div>
-          <div class="card-body">
-            <p>Garantir le respect des régulations locales et internationales...</p>
-          </div>
-        </div>
-      </div>
     </div>
+    <!-- Spinner End -->
 
-    <!-- Actions -->
-    <div class="section-title scroll-animation">
-      Actions et Réalisations
-    </div>
-    <div class="row">
-      <div class="col-md-6">
-        <div class="card scroll-animation">
-          <div class="card-header">
-            Formation et Sensibilisation
-          </div>
-          <div class="card-body">
-            <p>Le Service organise des sessions de formation pour sensibiliser les agents publics...</p>
-          </div>
+    <!-- Carousel Start -->
+    <div class="header-carousel owl-carousel">
+        <div class="header-carousel-item">
+            <div class="header-carousel-item-img-1">
+                <img src="{% static 'img/quality-hero.jpg' %}" class="img-fluid w-100" alt="Qualité">
+            </div>
+            <div class="carousel-caption">
+                <div class="carousel-caption-inner text-start p-3">
+                    <h1 class="display-1 text-capitalize text-white mb-4 fadeInUp animate__animated" data-animation="fadeInUp" data-delay="0.5s" style="animation-delay: 0.5s;">
+                        Service Qualité et Normalisation
+                    </h1>
+                    <p class="mb-5 fs-5 fadeInUp animate__animated" data-animation="fadeInUp" data-delay="0.5s" style="animation-delay: 0.5s;">
+                        Excellence et conformité au cœur de la gestion financière publique.
+                    </p>
+                </div>
+            </div>
         </div>
-      </div>
-      <div class="col-md-6">
-        <div class="card scroll-animation">
-          <div class="card-header">
-            Audits de Conformité
-          </div>
-          <div class="card-body">
-            <p>Des audits sont réalisés pour vérifier la conformité des processus internes...</p>
-          </div>
+    </div>
+    <!-- Carousel End -->
+
+    <!-- Présentation Start -->
+    <div class="container-fluid about bg-light py-5">
+        <div class="container py-5">
+            <div class="row g-5 align-items-center">
+                <div class="col-lg-6 col-xl-5 wow fadeInLeft" data-wow-delay="1s">
+                    <div class="about-img">
+                        <img src="{% static 'img/quality-about.jpg' %}" class="img-fluid w-100 rounded" alt="Présentation">
+                    </div>
+                </div>
+                <div class="col-lg-6 col-xl-7 wow fadeInRight" data-wow-delay="1s">
+                    <h4 class="text-primary">Présentation</h4>
+                    <h1 class="display-5 mb-4">Service Qualité et Normalisation</h1>
+                    <p class="text ps-4 mb-4">
+                        Le Service Qualité et Normalisation du Ministère des Finances et du Budget est chargé d’élaborer et de mettre en œuvre des normes pour optimiser les processus administratifs et financiers.
+                    </p>
+                    <a class="btn btn-primary rounded-pill py-3 px-5" href="{% url 'quality_detail' %}">Découvrir plus</a>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
+    <!-- Présentation End -->
 
-    <!-- Objectifs Futurs -->
-    <div class="section-title scroll-animation">
-      Objectifs Futurs
+    <!-- Missions Start -->
+    <div class="container-fluid service py-5">
+        <div class="container py-5">
+            <div class="text-center mx-auto pb-5 wow fadeInUp" data-wow-delay="0.1s" style="max-width: 800px;">
+                <h4 class="text-primary">Nos Missions</h4>
+                <h1 class="display-4">Les piliers de notre engagement</h1>
+            </div>
+            <div class="row g-4 justify-content-center text-center">
+                <div class="col-md-6 col-lg-4 col-xl-3 wow fadeInUp" data-wow-delay="0.1s">
+                    <div class="service-item bg-light rounded">
+                        <div class="service-img">
+                            <img src="{% static 'img/normalisation.jpg' %}" class="img-fluid w-100 rounded-top" alt="">
+                        </div>
+                        <div class="service-content text-center p-4">
+                            <div class="service-content-inner">
+                                <a href="#" class="h4 mb-4 d-inline-flex text-start"><i class="fas fa-file-alt fa-2x me-2"></i>Normalisation</a>
+                                <p class="mb-4">Établir des normes claires pour une gestion financière cohérente et transparente.</p>
+                                  <button class="btn btn-light rounded-pill py-2 px-4 toggle-details" data-target="normalisation-details">En savoir plus</button>
+                                  <div id="normalisation-details" class="details-content mt-4">
+                                      <p>
+                                          La mission de normalisation vise à établir des directives uniformes pour tous les départements financiers. Cela inclut la création de manuels de procédures, la simplification des flux de travail et l’alignement sur les meilleures pratiques internationales. Par exemple, nous avons réduit les délais de traitement des dossiers de 30 % grâce à des protocoles standardisés adoptés en 2023.
+                                      </p>
+                                    </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4 col-xl-3 wow fadeInUp" data-wow-delay="0.3s">
+                    <div class="service-item bg-light rounded">
+                        <div class="service-img">
+                            <img src="{% static 'img/qualite.jpg' %}" class="img-fluid w-100 rounded-top" alt="">
+                        </div>
+                        <div class="service-content text-center p-4">
+                            <div class="service-content-inner">
+                                <a href="#" class="h4 mb-4 d-inline-flex text-start"><i class="fas fa-star fa-2x me-2"></i>Qualité</a>
+                                <p class="mb-4">Améliorer continuellement les services avec des standards rigoureux.</p>
+                                <button class="btn btn-light rounded-pill py-2 px-4 toggle-details" data-target="qualite-details">En savoir plus</button>
+                                <div id="qualite-details" class="details-content mt-4">
+                                    <p>
+                                        Notre engagement envers la qualité repose sur des audits réguliers et des formations continues. En 2024, nous avons lancé un programme pilote pour certifier 50 agents aux normes ISO de gestion de la qualité, améliorant ainsi la précision des rapports financiers de 25 %. Ce focus garantit une amélioration constante des services rendus aux citoyens.
+                                    </p>
+                                  </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4 col-xl-3 wow fadeInUp" data-wow-delay="0.5s">
+                    <div class="service-item bg-light rounded">
+                        <div class="service-img">
+                            <img src="{% static 'img/conformite.jpg' %}" class="img-fluid w-100 rounded-top" alt="">
+                        </div>
+                        <div class="service-content text-center p-4">
+                            <div class="service-content-inner">
+                                <a href="#" class="h4 mb-4 d-inline-flex text-start"><i class="fas fa-check-circle fa-2x me-2"></i>Conformité</a>
+                                <p class="mb-4">Garantir le respect des régulations locales et internationales.</p>
+                                <button class="btn btn-light rounded-pill py-2 px-4 toggle-details" data-target="conformite-details">En savoir plus</button>
+                                <div id="conformite-details" class="details-content mt-4">
+                                    <p>
+                                        La conformité est au cœur de nos activités. Nous collaborons avec des organismes comme le FMI et la Banque Mondiale pour respecter les normes internationales, tout en adaptant nos processus aux lois ivoiriennes. En 2022, nous avons réussi à aligner 90 % de nos opérations sur les exigences de transparence budgétaire internationale.
+                                    </p>
+                                  </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="card scroll-animation">
-      <div class="card-header">
-        Développement de Normes Internationales
-      </div>
-      <div class="card-body">
-        <p>Le Service s’efforcera de développer des partenariats avec des institutions internationales...</p>
-      </div>
-    </div>
+    <!-- Missions End -->
 
-    <!-- Contacts -->
-    <div class="section-title scroll-animation">
-      Nous Contacter
+    <!-- Actions Start -->
+    <div class="container-fluid project">
+        <div class="container">
+            <div class="text-center mx-auto pb-5 wow fadeInUp" data-wow-delay="0.1s" style="max-width: 800px;">
+                <h4 class="text-primary">Actions et Réalisations</h4>
+                <h1 class="display-4">Nos initiatives clés</h1>
+            </div>
+            <div class="project-carousel owl-carousel wow fadeInUp" data-wow-delay="0.1s">
+                <div class="project-item h-100">
+                    <div class="project-img">
+                        <img src="{% static 'img/formation.jpg' %}" class="img-fluid w-100 rounded" alt="Formation">
+                    </div>
+                    <div class="project-content bg-light rounded p-4">
+                        <div class="project-content-inner">
+                            <div class="project-icon mb-3"><i class="fas fa-graduation-cap fa-4x text-primary"></i></div>
+                            <p class="text-dark fs-5 mb-3">Formation</p>
+                            <a href="#" class="h4">Sessions de sensibilisation pour les agents publics</a>
+                            <div class="pt-4">
+                              <!-- <button class="btn btn-light rounded-pill py-3 px-5 toggle-details" data-target="formation-details">En savoir plus</button>
+                              <div id="formation-details" class="details-content mt-4">
+                                  <p>
+                                      Nos programmes de formation visent à équiper les agents publics des compétences nécessaires pour appliquer les normes de qualité. En 2023, plus de 200 agents ont suivi des ateliers sur la gestion documentaire et l’éthique financière, réduisant les erreurs administratives de 15 % dans les services participants.
+                                  </p>
+                                </div>-->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="project-item h-100">
+                    <div class="project-img">
+                        <img src="{% static 'img/audit.jpg' %}" class="img-fluid w-100 rounded" alt="Audit">
+                    </div>
+                    <div class="project-content bg-light rounded p-4">
+                        <div class="project-content-inner">
+                            <div class="project-icon mb-3"><i class="fas fa-search fa-4x text-primary"></i></div>
+                            <p class="text-dark fs-5 mb-3">Audits</p>
+                            <a href="#" class="h4">Vérification de la conformité des processus internes</a>
+                            <div class="pt-4">
+                           <!-- <button class="btn btn-light rounded-pill py-3 px-5 toggle-details" data-target="audit-details">En savoir plus</button>
+                              <div id="audit-details" class="details-content mt-4">
+                                  <p>
+                                      Nos audits internes sont menés trimestriellement pour identifier les failles dans les processus financiers. En 2024, un audit a permis de détecter et corriger des écarts dans 10 % des transactions, économisant ainsi 50 millions de FCFA pour le budget public.
+                                  </p>
+                                </div>-->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="card scroll-animation">
-      <div class="card-header">
-        Informations de Contact
-      </div>
-      <div class="card-body">
-        <p><strong>Email :</strong> xxx@finances.gov</p>
-        <p><strong>Téléphone :</strong>+225 27 203 302 538</p>
-        <p><strong>Adresse :</strong> Ministère des Finances et du Budget, Abidjan, Côte d'Ivoire.</p>
-      </div>
-    </div>
-  </div>
-{% endblock %}
+    <!-- Actions End -->
 
-{% block script %}
-<script>
-// Animation au défilement
-document.addEventListener('DOMContentLoaded', function() {
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('active');
-      }
+    <!-- Objectifs Start -->
+    <div class="container-fluid about bg-light py-5">
+        <div class="container py-5">
+            <div class="row g-5 align-items-center">
+                <div class="col-lg-6 col-xl-7 wow fadeInLeft" data-wow-delay="0.1s">
+                    <h4 class="text-primary">Objectifs Futurs</h4>
+                    <h1 class="display-5 mb-4">Normes Internationales</h1>
+                    <p class="text ps-4 mb-4">
+                        Développer des partenariats avec des institutions internationales pour aligner nos normes sur les standards mondiaux.
+                    </p>
+                    <button class="btn btn-primary rounded-pill py-3 px-5 toggle-details" data-target="objectifs-details">En savoir plus</button>
+                    <div id="objectifs-details" class="details-content mt-4">
+                        <p>
+                            Nos objectifs incluent l’adoption de normes internationales comme celles de l’IFAC et de l’ISO pour renforcer la crédibilité de la Côte d'Ivoire sur la scène mondiale. En 2025, nous visons à obtenir une certification ISO 9001 pour l’ensemble des services financiers du ministère, un projet soutenu par des partenariats avec la Banque Africaine de Développement.
+                        </p>
+                      </div>
+                </div>
+                <div class="col-lg-6 col-xl-5 wow fadeInRight" data-wow-delay="0.3s">
+                    <div class="about-img">
+                        <img src="{% static 'img/objectifs.jpg' %}" class="img-fluid w-100 rounded" alt="Objectifs">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Objectifs End -->
+
+
+    <!-- JavaScript Libraries -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'lib/wow/wow.min.js' %}"></script>
+    <script src="{% static 'lib/easing/easing.min.js' %}"></script>
+    <script src="{% static 'lib/waypoints/waypoints.min.js' %}"></script>
+    <script src="{% static 'lib/counterup/counterup.min.js' %}"></script>
+    <script src="{% static 'lib/owlcarousel/owl.carousel.min.js' %}"></script>
+    <script src="{% static 'lib/lightbox/js/lightbox.min.js' %}"></script>
+    <script src="{% static 'js/main.js' %}"></script>
+
+    <!-- Initialize WOW.js -->
+    <script>
+      new WOW().init();
+
+      // Toggle des détails au clic sur "En savoir plus"
+      $(document).ready(function() {
+    $('.toggle-details').click(function(e) {
+        e.preventDefault();
+        var target = $(this).data('target');
+        var $details = $('#' + target);
+        $details.toggleClass('show');
+        $(this).text($details.hasClass('show') ? 'Masquer' : 'En savoir plus');
+        $details.css('display', $details.hasClass('show') ? 'block' : 'none');
     });
-  }, {
-    threshold: 0.5 // Déclenche l'animation quand 50% de l'élément est visible
-  });
-
-  document.querySelectorAll('.scroll-animation').forEach((element) => {
-    observer.observe(element);
-  });
-
-  // Animation pour les titres de section
-  const sectionObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('active');
-      }
-    });
-  });
-
-  document.querySelectorAll('.section-title').forEach((element) => {
-    sectionObserver.observe(element);
-  });
 });
-</script>
+  </script>
+</body>
+</html>
 {% endblock %}

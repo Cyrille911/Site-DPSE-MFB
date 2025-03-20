@@ -99,7 +99,7 @@
 
         <div class="table-container mx-0 animate-section" style="animation-delay: 0.4s;">
             <div class="table-wrapper">
-                <div class="table-horizontal-container">
+                <div class="table-scroll-container">
                     <table class="unfixed-table" id="plan-table">
                         <thead class="thead-dark">
                             <tr id="table-header-top">
@@ -109,6 +109,7 @@
                                 <th rowspan="2">Structure Responsable</th>
                                 <th rowspan="2">Programme</th>
                                 <th colspan="{{ annees|length }}">Coûts (en millions)</th>
+                                <th rowspan="2">Coût Total</th>
                             </tr>
                             <tr id="table-header-bottom">
                                 <th>Libellé</th>
@@ -129,24 +130,14 @@
             </div>
         </div>
 
-        <!-- Statistiques et bouton download -->
-        <div class="stats-and-download-container mx-0 animate-section" style="animation-delay: 0.6s;">
-            <div class="stats-container">
-                <h3>Statistiques</h3>
-                <p>Lignes : <span id="visible-rows">0</span> visibles sur <span id="total-rows">0</span> totales</p>
-                <table id="type-stats-table" class="stats-table">
-                    <thead>
-                        <tr>
-                            <th>Type</th>
-                            <th>Nombre</th>
-                            <th>Proportion (%)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="type-stats-body"></tbody>
+        <!-- Tableau croisé : Nombre d'activités par effet et par type -->
+        <div class="crosstab-container mx-0 animate-section" style="animation-delay: 0.6s;">
+            <h3>Nombre d'activités par effet et par type</h3>
+            <div class="crosstab-wrapper">
+                <table id="crosstab-table" class="crosstab-table">
+                    <thead id="crosstab-header"></thead>
+                    <tbody id="crosstab-body"></tbody>
                 </table>
-            </div>
-            <div class="download-container">
-                <button id="download-excel-btn" class="btn btn-primary">Télécharger Excel</button>
             </div>
         </div>
 
@@ -158,7 +149,7 @@
         </div>
 
         <!-- Barre-loupe flottante fixe -->
-        <div id="floating-search" class="floating-search-container animate-section" style="animation-delay: 1s;">
+        <div id="floating-search" class="floating-search-container animate-section" style="animation-delay: 1.0s;">
             <button id="toggle-search-btn" class="search-icon">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M15.5 14H14.71L14.43 13.73C15.41 12.59 16 11.11 16 9.5C16 5.91 13.09 3 9.5 3C5.91 3 3 5.91 3 9.5C3 13.09 5.91 16 9.5 16C11.11 16 12.59 15.41 13.73 14.43L14 14.71V15.5L19 20.49L20.49 19L15.5 14ZM9.5 14C7.01 14 5 11.99 5 9.5C5 7.01 7.01 5 9.5 5C11.99 5 14 7.01 14 9.5C14 11.99 11.99 14 9.5 14Z" fill="orange"/>
@@ -167,6 +158,15 @@
             <div id="search-container" class="search-container">
                 <input type="text" id="search-input" class="form-control" placeholder="Rechercher..." aria-label="Rechercher">
             </div>
+        </div>
+
+        <!-- Icône flottante de téléchargement -->
+        <div id="floating-download" class="floating-download-container animate-section" style="animation-delay: 1.2s;">
+            <button id="download-excel-btn" class="download-icon" title="Télécharger Excel">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" fill="#007A3D"/>
+                </svg>
+            </button>
         </div>
     </div>
 
@@ -182,63 +182,92 @@
             const toggleSearchBtn = document.getElementById('toggle-search-btn');
             const searchContainer = document.getElementById('search-container');
             const floatingSearch = document.getElementById('floating-search');
-            const visibleRowsSpan = document.getElementById('visible-rows');
-            const totalRowsSpan = document.getElementById('total-rows');
-            const typeStatsBody = document.getElementById('type-stats-body');
             const downloadBtn = document.getElementById('download-excel-btn');
-            const tableContainer = document.querySelector('.table-horizontal-container');
+            const tableContainer = document.querySelector('.table-scroll-container');
+            const crosstabHeader = document.getElementById('crosstab-header');
+            const crosstabBody = document.getElementById('crosstab-body');
 
             const planImpact = "{{ plan.impact | escapejs }}";
-
-            function updateStats() {
-                const rows = tableBody.getElementsByTagName('tr');
-                const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none' && !row.classList.contains('hierarchy-row'));
-                const totalRows = Array.from(rows).filter(row => !row.classList.contains('hierarchy-row')).length;
-                visibleRowsSpan.textContent = visibleRows.length;
-                totalRowsSpan.textContent = totalRows;
-
-                const typeStats = {};
-                visibleRows.forEach(row => {
-                    const type = row.cells[1].textContent.trim() || 'N/A';
-                    typeStats[type] = (typeStats[type] || 0) + 1;
-                });
-
-                typeStatsBody.innerHTML = '';
-                Object.entries(typeStats).forEach(([type, count]) => {
-                    const percentage = totalRows > 0 ? ((count / totalRows) * 100).toFixed(1) : 0;
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `<td>${type}</td><td>${count}</td><td>${percentage}%</td>`;
-                    typeStatsBody.appendChild(tr);
-                });
-            }
 
             function updateHierarchyPositions() {
                 const rows = Array.from(tableBody.getElementsByTagName('tr'));
                 const scrollTop = tableContainer.scrollTop;
                 const headerHeight = 76; // Hauteur totale des deux lignes d'en-tête
 
-                let topOffset = headerHeight;
+                let topOffset = headerHeight; // Décalage initial après l'en-tête
 
-                rows.forEach(row => {
+                rows.forEach((row, index) => {
                     const firstCell = row.querySelector('td:first-child');
                     if (!firstCell) return;
 
-                    if (row.classList.contains('impact-row')) {
-                        firstCell.style.top = `${headerHeight}px`; // Impact reste fixe juste sous l'en-tête
-                    } else if (row.classList.contains('effet-row')) {
-                        firstCell.style.top = `${topOffset}px`;
-                        firstCell.style.display = row.offsetTop - scrollTop < topOffset ? 'none' : '';
-                        topOffset += row.offsetHeight;
-                    } else if (row.classList.contains('produit-row')) {
-                        firstCell.style.top = `${topOffset}px`;
-                        firstCell.style.display = row.offsetTop - scrollTop < topOffset ? 'none' : '';
-                        topOffset += row.offsetHeight;
-                    } else if (row.classList.contains('action-row')) {
-                        firstCell.style.top = `${topOffset}px`;
-                        firstCell.style.display = row.offsetTop - scrollTop < topOffset ? 'none' : '';
+                    if (row.classList.contains('hierarchy-row')) {
+                        row.style.position = 'sticky';
+                        row.style.top = `${topOffset}px`;
+                        row.style.zIndex = 20 - index; // Décrémenter z-index pour ordre correct
                         topOffset += row.offsetHeight;
                     }
                 });
+            }
+
+            function updateCrosstab(data) {
+                const effets = data.effets || [];
+                const types = [...new Set(effets.flatMap(effet => 
+                    effet.produits.flatMap(produit => 
+                        produit.actions.flatMap(action => 
+                            action.activites.map(activite => activite.type || 'N/A')
+                        )
+                    )
+                ))].sort();
+
+                crosstabHeader.innerHTML = `
+                    <tr>
+                        <th>Effet</th>
+                        ${types.map(type => `<th>${type}</th>`).join('')}
+                        <th>Total</th>
+                    </tr>
+                `;
+
+                crosstabBody.innerHTML = '';
+                const crosstabData = {};
+                let grandTotal = 0;
+
+                effets.forEach((effet, i) => {
+                    crosstabData[effet.titre] = {};
+                    types.forEach(type => crosstabData[effet.titre][type] = 0);
+
+                    effet.produits.forEach(produit => {
+                        produit.actions.forEach(action => {
+                            action.activites.forEach(activite => {
+                                const type = activite.type || 'N/A';
+                                crosstabData[effet.titre][type]++;
+                                grandTotal++;
+                            });
+                        });
+                    });
+                });
+
+                effets.forEach((effet, i) => {
+                    const rowTotal = types.reduce((sum, type) => sum + crosstabData[effet.titre][type], 0);
+                    const row = `
+                        <tr>
+                            <td>Effet ${i + 1} : ${effet.titre}</td>
+                            ${types.map(type => `<td>${crosstabData[effet.titre][type]}</td>`).join('')}
+                            <td>${rowTotal}</td>
+                        </tr>
+                    `;
+                    crosstabBody.innerHTML += row;
+                });
+
+                const columnTotals = types.map(type => 
+                    effets.reduce((sum, effet) => sum + crosstabData[effet.titre][type], 0)
+                );
+                crosstabBody.innerHTML += `
+                    <tr class="total-row">
+                        <td>Total</td>
+                        ${columnTotals.map(total => `<td>${total}</td>`).join('')}
+                        <td>${grandTotal}</td>
+                    </tr>
+                `;
             }
 
             function chargeTable(filtre) {
@@ -256,50 +285,95 @@
                         return response.json();
                     })
                     .then(data => {
-                        const annees = data.annees;
+                        const annees = data.annees || [];
                         const anneeDebut = data.annee_debut;
-                        const colspanTotal = 6 + annees.length; // Intitulé, Type, Indicateur (Libellé + Réf + Cibles), Structure, Programme, Coûts
-                        const colspanToProgramme = 4 + annees.length; // Jusqu'à Programme inclus
+                        const colspanBeforeCosts = 5 + annees.length; // Intitulé, Type, Indicateur (Libellé + Réf + Cibles), Structure, Programme
 
                         tableBody.innerHTML = '';
+
+                        // Calcul des coûts totaux par année pour chaque niveau
+                        const effets = data.effets || [];
+                        effets.forEach(effet => {
+                            effet.coutsParAnnee = Array(annees.length).fill(0);
+                            effet.totalCost = 0;
+                            effet.produits.forEach(produit => {
+                                produit.coutsParAnnee = Array(annees.length).fill(0);
+                                produit.totalCost = 0;
+                                produit.actions.forEach(action => {
+                                    action.coutsParAnnee = Array(annees.length).fill(0);
+                                    action.totalCost = 0;
+                                    action.activites.forEach(activite => {
+                                        activite.couts = activite.couts || Array(annees.length).fill(0);
+                                        activite.totalCost = 0;
+                                        activite.couts.forEach((cout, index) => {
+                                            const coutNum = parseFloat(cout) || 0;
+                                            activite.totalCost += coutNum;
+                                            action.coutsParAnnee[index] += coutNum;
+                                            produit.coutsParAnnee[index] += coutNum;
+                                            effet.coutsParAnnee[index] += coutNum;
+                                        });
+                                        action.totalCost += activite.totalCost;
+                                    });
+                                    produit.totalCost += action.totalCost;
+                                });
+                                effet.totalCost += produit.totalCost;
+                            });
+                        });
+
+                        // Calcul du coût total global
+                        let totalCoutsParAnnee = Array(annees.length).fill(0);
+                        let totalCostGlobal = 0;
+                        effets.forEach(effet => {
+                            effet.coutsParAnnee.forEach((cout, index) => {
+                                totalCoutsParAnnee[index] += cout;
+                            });
+                            totalCostGlobal += effet.totalCost;
+                        });
+
+                        // Ajouter la ligne "Impact"
                         tableBody.innerHTML += `
-                            <tr class="hierarchy-row impact-row">
-                                <td colspan="${colspanTotal}">Impact : ${planImpact || 'Impact non défini'}</td>
+                            <tr class="hierarchy-row impact-row impact-bg">
+                                <td colspan="${colspanBeforeCosts + annees.length + 1}">Impact : ${planImpact || 'Impact non défini'}</td>
                             </tr>
                         `;
 
-                        const effets = data.effets || [];
+                        // Ajouter la ligne "Coût Total"
+                        tableBody.innerHTML += `
+                            <tr class="hierarchy-row total-row total-bg">
+                                <td colspan="${colspanBeforeCosts}">Coût Total</td>
+                                ${annees.map((annee, index) => `<td>${totalCoutsParAnnee[index].toFixed(2)}</td>`).join('')}
+                                <td>${totalCostGlobal.toFixed(2)}</td>
+                            </tr>
+                        `;
+
                         effets.forEach((effet, i) => {
                             let row = `
-                                <tr class="hierarchy-row effet-row">
-                                    <td colspan="${colspanToProgramme}">Effet ${i + 1} : ${effet.titre}</td>
+                                <tr class="hierarchy-row effet-row effet-bg">
+                                    <td colspan="${colspanBeforeCosts}">Effet ${i + 1} : ${effet.titre}</td>
+                                    ${annees.map((annee, index) => `<td>${effet.coutsParAnnee[index].toFixed(2)}</td>`).join('')}
+                                    <td>${effet.totalCost.toFixed(2)}</td>
+                                </tr>
                             `;
-                            annees.forEach((annee, index) => {
-                                const cout = effet.couts && index < effet.couts.length ? effet.couts[index] : 'N/A';
-                                row += `<td>${cout}</td>`;
-                            });
                             tableBody.innerHTML += row;
 
                             effet.produits.forEach((produit, j) => {
                                 let produitRow = `
-                                    <tr class="hierarchy-row produit-row">
-                                        <td colspan="${colspanToProgramme}">Produit ${i + 1}.${j + 1} : ${produit.titre}</td>
+                                    <tr class="hierarchy-row produit-row produit-bg">
+                                        <td colspan="${colspanBeforeCosts}">Produit ${i + 1}.${j + 1} : ${produit.titre}</td>
+                                        ${annees.map((annee, index) => `<td>${produit.coutsParAnnee[index].toFixed(2)}</td>`).join('')}
+                                        <td>${produit.totalCost.toFixed(2)}</td>
+                                    </tr>
                                 `;
-                                annees.forEach((annee, index) => {
-                                    const cout = produit.couts && index < produit.couts.length ? produit.couts[index] : 'N/A';
-                                    produitRow += `<td>${cout}</td>`;
-                                });
                                 tableBody.innerHTML += produitRow;
 
                                 produit.actions.forEach((action, k) => {
                                     let actionRow = `
-                                        <tr class="hierarchy-row action-row">
-                                            <td colspan="${colspanToProgramme}">Action ${i + 1}.${j + 1}.${k + 1} : ${action.titre}</td>
+                                        <tr class="hierarchy-row action-row action-bg">
+                                            <td colspan="${colspanBeforeCosts}">Action ${i + 1}.${j + 1}.${k + 1} : ${action.titre}</td>
+                                            ${annees.map((annee, index) => `<td>${action.coutsParAnnee[index].toFixed(2)}</td>`).join('')}
+                                            <td>${action.totalCost.toFixed(2)}</td>
+                                        </tr>
                                     `;
-                                    annees.forEach((annee, index) => {
-                                        const cout = action.couts && index < action.couts.length ? action.couts[index] : 'N/A';
-                                        actionRow += `<td>${cout}</td>`;
-                                    });
                                     tableBody.innerHTML += actionRow;
 
                                     action.activites.forEach((activite, l) => {
@@ -318,12 +392,9 @@
                                         activiteRow += `
                                             <td>${activite.structure || 'N/A'}</td>
                                             <td>${activite.programme || 'N/A'}</td>
+                                            ${annees.map((annee, index) => `<td>${(activite.couts[index] || 0).toFixed(2)}</td>`).join('')}
+                                            <td>${activite.totalCost.toFixed(2)}</td>
                                         `;
-                                        annees.forEach(annee => {
-                                            const index = parseInt(annee) - anneeDebut;
-                                            const cout = (activite.couts && index >= 0 && index < activite.couts.length) ? activite.couts[index] : 'N/A';
-                                            activiteRow += `<td>${cout}</td>`;
-                                        });
                                         tableBody.innerHTML += activiteRow;
                                     });
                                 });
@@ -331,37 +402,22 @@
                         });
 
                         if (effets.length === 0) {
-                            tableBody.innerHTML += `<tr><td colspan="${colspanTotal}" class="text-center">Aucune donnée trouvée</td></tr>`;
+                            tableBody.innerHTML += `<tr><td colspan="${colspanBeforeCosts + annees.length + 1}" class="text-center">Aucune donnée trouvée</td></tr>`;
                         }
 
-                        updateStats();
                         updateHierarchyPositions();
-
-                        // Mise à jour des filtres dépendants
-                        if (filtre === "effet") {
-                            updateDependentFilters("produit", data.produits);
-                            updateDependentFilters("action", data.actions);
-                            updateDependentFilters("type", data.types);
-                            updateDependentFilters("structure", data.structures);
-                            updateDependentFilters("annee", data.annees);
-                        } else if (filtre === "produit") {
-                            updateDependentFilters("action", data.actions);
-                            updateDependentFilters("type", data.types);
-                            updateDependentFilters("structure", data.structures);
-                        } else if (filtre === "action") {
-                            updateDependentFilters("type", data.types);
-                            updateDependentFilters("structure", data.structures);
-                        }
+                        updateCrosstab(data);
                     })
                     .catch(error => {
                         console.error('Erreur AJAX:', error);
                         let totalColonnes = table.rows[0]?.cells.length || 1;
                         tableBody.innerHTML = `
-                            <tr class="hierarchy-row impact-row"><td colspan="${totalColonnes}">Impact : ${planImpact || 'Impact non défini'}</td></tr>
+                            <tr class="hierarchy-row impact-row impact-bg"><td colspan="${totalColonnes}">Impact : ${planImpact || 'Impact non défini'}</td></tr>
+                            <tr class="hierarchy-row total-row total-bg"><td colspan="${totalColonnes}">Coût Total : N/A</td></tr>
                             <tr><td colspan="${totalColonnes}" class="text-center">Erreur de chargement des données</td></tr>
                         `;
-                        updateStats();
                         updateHierarchyPositions();
+                        crosstabBody.innerHTML = `<tr><td colspan="${totalColonnes}" class="text-center">Erreur de chargement des données</td></tr>`;
                     });
             }
 
@@ -379,7 +435,7 @@
 
                 Array.from(rows).forEach(row => {
                     if (row.classList.contains('hierarchy-row')) {
-                        row.style.display = ''; // Toujours afficher les lignes hiérarchiques initialement
+                        row.style.display = ''; // Toujours afficher les lignes hiérarchiques
                     } else {
                         const cells = row.getElementsByTagName('td');
                         if (cells.length === 0) return;
@@ -392,26 +448,6 @@
                     }
                 });
 
-                // Masquer les lignes hiérarchiques si aucune activité visible en dessous
-                const allRows = Array.from(rows);
-                for (let i = allRows.length - 1; i >= 0; i--) {
-                    const row = allRows[i];
-                    if (row.classList.contains('hierarchy-row') && !row.classList.contains('impact-row')) {
-                        const nextRows = allRows.slice(i + 1);
-                        const hasVisibleActivity = nextRows.some(nextRow => 
-                            !nextRow.classList.contains('hierarchy-row') && nextRow.style.display !== 'none'
-                        );
-                        if (!hasVisibleActivity) {
-                            let j = i;
-                            while (j >= 0 && allRows[j].classList.contains('hierarchy-row') && !allRows[j].classList.contains('impact-row')) {
-                                allRows[j].style.display = 'none';
-                                j--;
-                            }
-                        }
-                    }
-                }
-
-                updateStats();
                 updateHierarchyPositions();
             }
 
@@ -442,23 +478,48 @@
 
             downloadBtn.addEventListener('click', function () {
                 const wb = XLSX.utils.book_new();
-                const ws_data = [];
 
-                const headersTop = Array.from(tableHeaderTop.cells).map(cell => cell.textContent);
-                ws_data.push(headersTop);
-                const headersBottom = Array.from(tableHeaderBottom.cells).map(cell => cell.textContent);
-                ws_data.push(['', '', ...headersBottom]);
+                // Première feuille : Grand tableau (Plan)
+                const planData = [];
+                
+                // Ajouter les en-têtes du grand tableau
+                const headersTop = Array.from(tableHeaderTop.cells).map(cell => cell.textContent.trim());
+                planData.push(headersTop);
+                const headersBottom = Array.from(tableHeaderBottom.cells).map(cell => cell.textContent.trim());
+                planData.push(['', '', ...headersBottom.slice(2)]); // Ajuster pour aligner avec les colonnes
 
+                // Ajouter les lignes du corps du grand tableau
                 Array.from(tableBody.getElementsByTagName('tr'))
-                    .filter(row => row.style.display !== 'none')
+                    .filter(row => row.style.display !== 'none') // Respecter le filtre de recherche
                     .forEach(row => {
-                        const cells = Array.from(row.cells).map(cell => cell.textContent);
-                        ws_data.push(cells);
+                        const cells = Array.from(row.cells).map(cell => cell.textContent.trim());
+                        planData.push(cells);
                     });
 
-                const ws = XLSX.utils.aoa_to_sheet(ws_data);
-                XLSX.utils.book_append_sheet(wb, ws, "Plan");
-                XLSX.writeFile(wb, 'tableau_stats.xlsx');
+                const planSheet = XLSX.utils.aoa_to_sheet(planData);
+                XLSX.utils.book_append_sheet(wb, planSheet, "Plan");
+
+                // Deuxième feuille : Tableau des stats (Stats)
+                const statsData = [];
+
+                // Ajouter le titre du tableau croisé
+                statsData.push(["Nombre d'activités par effet et par type"]);
+
+                // Ajouter les en-têtes du tableau croisé
+                const crosstabHeaderRow = Array.from(crosstabHeader.getElementsByTagName('tr')[0].cells).map(cell => cell.textContent.trim());
+                statsData.push(crosstabHeaderRow);
+
+                // Ajouter les lignes du corps du tableau croisé
+                Array.from(crosstabBody.getElementsByTagName('tr')).forEach(row => {
+                    const cells = Array.from(row.cells).map(cell => cell.textContent.trim());
+                    statsData.push(cells);
+                });
+
+                const statsSheet = XLSX.utils.aoa_to_sheet(statsData);
+                XLSX.utils.book_append_sheet(wb, statsSheet, "Stats");
+
+                // Générer et télécharger le fichier Excel
+                XLSX.writeFile(wb, 'plan_action.xlsx');
             });
 
             function updateDependentFilters(filtre, nouvellesValeurs) {
@@ -589,11 +650,7 @@
                 cocherToutesLesCasesEffet();
             }
 
-            updateStats();
-            tableContainer.addEventListener('scroll', () => {
-                updateStats();
-                updateHierarchyPositions();
-            });
+            tableContainer.addEventListener('scroll', updateHierarchyPositions);
         });
     </script>
 {% endblock %}
@@ -664,12 +721,31 @@
         }
 
         td, th {
-            border: 1px solid #007A3D; /* Toutes les bordures visibles */
+            border: 1px solid #007A3D;
             padding: 10px;
             min-width: 150px;
-            background: white;
             box-sizing: border-box;
             text-align: left;
+        }
+
+        .impact-bg {
+            background-color: #d1e7dd; /* Vert clair pour Impact */
+        }
+
+        .total-bg {
+            background-color: #b8d8c9; /* Vert légèrement plus foncé pour Coût Total */
+        }
+
+        .effet-bg {
+            background-color: #f8d7da;
+        }
+
+        .produit-bg {
+            background-color: #fff3cd;
+        }
+
+        .action-bg {
+            background-color: #cce5ff;
         }
 
         .table-container {
@@ -677,7 +753,6 @@
             margin-bottom: 40px;
             padding: 20px;
             position: relative;
-            max-height: 800px;
             border: 5px solid #007A3D;
             border-radius: 20px;
             background-color: #fff;
@@ -687,17 +762,22 @@
 
         .table-wrapper {
             position: relative;
-            height: 100%;
             width: 100%;
             overflow: hidden;
         }
 
-        .table-horizontal-container {
-            max-height: 760px;
-            overflow: auto;
+        .table-scroll-container {
+            max-height: 500px; /* Hauteur maximale avant défilement vertical */
+            max-width: 1200px; /* Largeur maximale avant défilement horizontal */
+            overflow: auto; /* Défilement horizontal et vertical */
             position: relative;
             border: 1px solid #007A3D;
             border-radius: 5px;
+        }
+
+        table {
+            width: 100%; /* Le tableau s'adapte à la largeur disponible */
+            max-width: none; /* Pas de limite stricte, sauf par le conteneur */
         }
 
         thead {
@@ -711,6 +791,7 @@
             background: orange !important;
             color: white !important;
             text-align: center;
+            opacity: 1 !important; /* Assure que l'en-tête est opaque */
         }
 
         #table-header-bottom th {
@@ -720,99 +801,97 @@
             background: orange !important;
             color: white !important;
             text-align: center;
+            opacity: 1 !important;
         }
 
         tr > td:first-child {
             position: sticky;
             left: 0;
-            z-index: 10;
-            background: white;
+            z-index: 15; /* Augmenté pour rester au-dessus des autres cellules */
             box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            background-color: inherit; /* Hérite de la couleur de la ligne */
+            opacity: 1 !important; /* Force l'opacité complète */
         }
 
         .impact-row td:first-child {
+            background-color: #d1e7dd; /* Fond opaque spécifique pour Impact */
             position: sticky;
-            top: 76px;
             left: 0;
-            z-index: 25;
-            background-color: #d1e7dd;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            z-index: 16; /* Légèrement supérieur pour rester visible */
+            opacity: 1 !important;
+        }
+
+        .total-row td:first-child {
+            background-color: #b8d8c9; /* Fond opaque spécifique pour Coût Total */
+            position: sticky;
+            left: 0;
+            z-index: 16; /* Même niveau que Impact */
+            opacity: 1 !important;
         }
 
         .effet-row td:first-child {
-            position: sticky;
-            left: 0;
-            z-index: 20;
-            background-color: #f8d7da;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            background-color: #f8d7da; /* Fond opaque pour les lignes Effet */
+            opacity: 1 !important;
         }
 
         .produit-row td:first-child {
-            position: sticky;
-            left: 0;
-            z-index: 19;
-            background-color: #fff3cd;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            background-color: #fff3cd; /* Fond opaque pour les lignes Produit */
+            opacity: 1 !important;
         }
 
         .action-row td:first-child {
-            position: sticky;
-            left: 0;
-            z-index: 18;
-            background-color: #cce5ff;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            background-color: #cce5ff; /* Fond opaque pour les lignes Action */
+            opacity: 1 !important;
         }
 
         .hierarchy-row {
             font-weight: bold;
+            background-color: inherit; /* Assure que la ligne entière hérite de la couleur */
         }
 
-        .stats-and-download-container {
+        .hierarchy-row td {
+            opacity: 1 !important; /* Assure que toutes les cellules des lignes hiérarchiques sont opaques */
+        }
+
+        .crosstab-container {
             padding: 20px;
             background: #f9f9f9;
             border-radius: 10px;
             box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 40px;
         }
 
-        .stats-container {
-            margin-bottom: 20px;
-        }
-
-        .stats-container h3 {
+        .crosstab-container h3 {
             font-size: 18px;
             margin-bottom: 10px;
             text-align: center;
         }
 
-        .stats-table {
+        .crosstab-wrapper {
+            overflow-x: auto;
+        }
+
+        .crosstab-table {
             width: 100%;
-            max-width: 400px;
-            margin: 0 auto;
             border-collapse: collapse;
+            font-family: helvetica;
         }
 
-        .stats-table th, .stats-table td {
-            border: 1px solid #ccc;
-            padding: 5px;
+        .crosstab-table th, .crosstab-table td {
+            border: 1px solid #007A3D;
+            padding: 10px;
             text-align: center;
-            background: white;
+            min-width: 100px;
         }
 
-        .stats-table th {
+        .crosstab-table th {
             background: #e0e0e0;
+            font-weight: bold;
         }
 
-        .download-container {
-            text-align: center;
-        }
-
-        #download-excel-btn {
-            background-color: #007A3D;
-            border: none;
-        }
-
-        #download-excel-btn:hover {
-            background-color: #005f2e;
+        .crosstab-table .total-row {
+            background: #e0e0e0;
+            font-weight: bold;
         }
 
         .floating-search-container {
@@ -824,7 +903,7 @@
             border-radius: 25px;
             padding: 5px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            top: 85px;
+            top: 100px; /* Descendu légèrement de 85px à 100px */
             left: 85px;
         }
 
@@ -864,6 +943,27 @@
             outline: none;
             border-color: orange;
             box-shadow: 0 0 5px rgba(255, 165, 0, 0.5);
+        }
+
+        .floating-download-container {
+            position: fixed;
+            z-index: 1000;
+            top: 85px;
+            right: 35px; /* Décalé légèrement de 85px à 70px vers la droite */
+        }
+
+        .download-icon {
+            background: none;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            opacity: 0.5;
+            transition: opacity 0.3s ease, transform 0.2s ease;
+        }
+
+        .download-icon:hover {
+            opacity: 1;
+            transform: scale(1.1);
         }
     </style>
 {% endblock %}
