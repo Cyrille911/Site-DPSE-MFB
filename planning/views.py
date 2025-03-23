@@ -12,6 +12,7 @@ from .forms import PaoStatusForm  # Import du formulaire
 from django.core.exceptions import ValidationError
 from django.db import transaction
 import logging
+from django.core.exceptions import PermissionDenied
 from django import forms
 
 from users.models import User  # Import corrigé
@@ -399,6 +400,10 @@ def plan_action_list(request):
     }
     return render(request, 'planning/plan_action_list.html', context)
 
+from django.shortcuts import render, get_object_or_404
+from django.http import JsonResponse
+from .models import PlanAction, Effet, Produit, Action, Activite
+
 def plan_action_detail(request, id):
     plan = get_object_or_404(PlanAction, id=id)
 
@@ -571,7 +576,6 @@ def plan_action_detail(request, id):
         'horizon': plan.horizon
     })
 
-
 def pao_list(request, plan_id):
     plan = get_object_or_404(PlanAction, id=plan_id)
     
@@ -601,12 +605,21 @@ def manage_activities(request, plan_id, entity):
     index = annee - plan.annee_debut
     if index < 0 or index >= plan.horizon:
         messages.error(request, "Année invalide.")
-        return render(request, 'planning/error.html', {'message': "Année invalide."})
+        return render(request, 'planning/access_denied.html', {'message': "Année invalide."})
 
     filters = Q(action__produit__effet__plan=plan)
     filters &= Q(point_focal__entity=request.user.entity)
     
     activites = Activite.objects.filter(filters).distinct()
+
+    is_responsable = any(a.responsable == request.user for a in activites)
+    is_point_focal = any(a.point_focal == request.user for a in activites)
+
+    if not (is_responsable or is_point_focal):
+        messages.error(request, "Vous n'avez pas les permissions nécessaires pour gérer ces activités.")
+        return render(request, 'planning/access_denied.html', {'message': "Accès non autorisé."})
+
+    has_no_responsable = is_point_focal and any(a.responsable is None for a in activites)
 
     if request.method == 'POST':
         data = request.POST
@@ -617,59 +630,97 @@ def manage_activities(request, plan_id, entity):
             return JsonResponse({'success': False, 'message': "Activité hors de votre structure."})
 
         horizon = plan.horizon
-        for attr in ['realisation', 'etat_avancement', 'commentaire', 'commentaire_se', 'status', 'matrix_status', 'pending_changes']:
+        for attr in ['realisation', 'etat_avancement', 'commentaire', 'commentaire_se', 'status', 'matrix_status', 'pending_changes', 'proposed_changes']:
             if not getattr(activite, attr) or len(getattr(activite, attr)) < horizon:
-                setattr(activite, attr, [''] * horizon if attr in ['realisation', 'etat_avancement', 'commentaire', 'commentaire_se'] else ['Non évaluée'] * horizon if attr == 'status' else [[]] * horizon if attr == 'matrix_status' else [{}] * horizon)
+                setattr(activite, attr, [''] * horizon if attr in ['realisation', 'etat_avancement', 'commentaire', 'commentaire_se'] else ['Non évaluée'] * horizon if attr == 'status' else ['En cours'] * horizon if attr == 'matrix_status' else [{}] * horizon)
 
-        old_data = {
+        model_values = {
             'etat_avancement': activite.etat_avancement[index],
             'realisation': activite.realisation[index],
             'commentaire': activite.commentaire[index],
         }
+        proposed = activite.proposed_changes[index] if activite.proposed_changes and len(activite.proposed_changes) > index else {}
+        pf_values = {
+            'etat_avancement': proposed.get('etat_avancement', model_values['etat_avancement']),
+            'realisation': proposed.get('realisation', model_values['realisation']),
+            'commentaire': proposed.get('commentaire', model_values['commentaire']),
+        }
+        pending = activite.pending_changes[index] if activite.pending_changes and len(activite.pending_changes) > index else {}
+        resp_values = {
+            'etat_avancement': pending.get('etat_avancement', pf_values['etat_avancement']),
+            'realisation': pending.get('realisation', pf_values['realisation']),
+            'commentaire': pending.get('commentaire', pf_values['commentaire']),
+        }
         new_data = {
-            'etat_avancement': data.get('etat_avancement', old_data['etat_avancement']),
-            'realisation': data.get('realisation', old_data['realisation']),
-            'commentaire': data.get('commentaire', old_data['commentaire']),
+            'etat_avancement': data.get('etat_avancement', resp_values['etat_avancement']),
+            'realisation': data.get('realisation', resp_values['realisation']),
+            'commentaire': data.get('commentaire', resp_values['commentaire']),
         }
 
-        changes = {k: {'avant': old_data[k], 'apres': new_data[k]} for k in old_data if old_data[k] != new_data[k]}
+        changes = {k: {'avant': resp_values[k], 'apres': new_data[k]} for k in resp_values if resp_values[k] != new_data[k]}
 
-        if 'submit' in data:
-            activite.propose_changes(
-                user=request.user,
-                index=index,
-                etat_avancement=new_data['etat_avancement'],
-                realisation=new_data['realisation'],
-                commentaire=new_data['commentaire']
-            )
-            if changes:
-                ActiviteLog.objects.create(
-                    activite=activite,
+        if 'submit' in data and is_responsable:
+            try:
+                activite.propose_changes(
                     user=request.user,
-                    modifications=changes,
-                    statut_apres=activite.status[index]
+                    index=index,
+                    etat_avancement=new_data['etat_avancement'],
+                    realisation=new_data['realisation'],
+                    commentaire=new_data['commentaire']
                 )
-            return JsonResponse({'success': True, 'message': 'Modifications soumises à l’évaluation'})
+                if changes:
+                    ActiviteLog.objects.create(
+                        activite=activite,
+                        user=request.user,
+                        modifications={'year_index': index, 'changes': changes},
+                        statut_apres=activite.status[index]
+                    )
+                return JsonResponse({'success': True, 'message': 'Modifications soumises à l’évaluation'})
+            except PermissionDenied as e:
+                return JsonResponse({'success': False, 'message': str(e)})
+        
+        elif 'propose' in data and is_point_focal:
+            try:
+                activite.propose_changes(
+                    user=request.user,
+                    index=index,
+                    etat_avancement=new_data['etat_avancement'],
+                    realisation=new_data['realisation'],
+                    commentaire=new_data['commentaire']
+                )
+                return JsonResponse({'success': True, 'message': 'Proposition enregistrée pour validation par le responsable'})
+            except PermissionDenied as e:
+                return JsonResponse({'success': False, 'message': str(e)})
 
     activites_list = []
     for a in activites:
         horizon = plan.horizon
-        for attr in ['realisation', 'etat_avancement', 'commentaire', 'commentaire_se', 'status', 'matrix_status', 'couts', 'cibles', 'pending_changes', 'periodes_execution']:
+        for attr in ['realisation', 'etat_avancement', 'commentaire', 'commentaire_se', 'status', 'matrix_status', 'couts', 'cibles', 'pending_changes', 'proposed_changes', 'periodes_execution']:
             if not getattr(a, attr) or len(getattr(a, attr)) != horizon:
-                setattr(a, attr, [''] * horizon if attr in ['realisation', 'etat_avancement', 'commentaire', 'commentaire_se'] else ['Non évaluée'] * horizon if attr == 'status' else [[]] * horizon if attr == 'matrix_status' else [0.0] * horizon if attr == 'couts' else [None] * horizon if attr == 'cibles' else [{}] * horizon if attr == 'pending_changes' else [''] * horizon)
+                setattr(a, attr, [''] * horizon if attr in ['realisation', 'etat_avancement', 'commentaire', 'commentaire_se'] else ['Non évaluée'] * horizon if attr == 'status' else ['En cours'] * horizon if attr == 'matrix_status' else [0.0] * horizon if attr == 'couts' else [None] * horizon if attr == 'cibles' else [{}] * horizon if attr in ['pending_changes', 'proposed_changes'] else [''] * horizon)
                 a.save()
 
+        model_values = {
+            'realisation': a.realisation[index],
+            'etat_avancement': a.etat_avancement[index],
+            'commentaire': a.commentaire[index],
+            'commentaire_se': a.commentaire_se[index],
+            'status': a.status[index],
+            'matrix_status': a.matrix_status[index],
+        }
+        proposed = a.proposed_changes[index] if a.proposed_changes and len(a.proposed_changes) > index else {}
+        pf_values = {
+            'realisation': proposed.get('realisation', model_values['realisation']),
+            'etat_avancement': proposed.get('etat_avancement', model_values['etat_avancement']),
+            'commentaire': proposed.get('commentaire', model_values['commentaire']),
+        }
         pending = a.pending_changes[index] if a.pending_changes and len(a.pending_changes) > index else {}
-        display_values = {
-            'realisation': pending.get('realisation', a.realisation[index]) if pending else a.realisation[index],
-            'etat_avancement': pending.get('etat_avancement', a.etat_avancement[index]) if pending else a.etat_avancement[index],
-            'commentaire': pending.get('commentaire', a.commentaire[index]) if pending else a.commentaire[index],
-            'commentaire_se': pending.get('commentaire_se', a.commentaire_se[index]) if pending else a.commentaire_se[index],
-            'status': pending.get('status', a.status[index]) if pending else a.status[index],
-            'matrix_status': pending.get('matrix_status', a.matrix_status[index]) if pending else a.matrix_status[index],
+        resp_values = {
+            'realisation': pending.get('realisation', pf_values['realisation']),
+            'etat_avancement': pending.get('etat_avancement', pf_values['etat_avancement']),
+            'commentaire': pending.get('commentaire', pf_values['commentaire']),
         }
 
-        # Utilisation de periodes_execution au lieu de reference
         try:
             periodes = a.periodes_execution[index] if a.periodes_execution and len(a.periodes_execution) > index else ''
             trimestres_suivi = [
@@ -681,6 +732,15 @@ def manage_activities(request, plan_id, entity):
         except (TypeError, IndexError):
             trimestres_suivi = [False, False, False, False]
 
+        last_modified_by_pending = pending.get('last_modified_by', '')
+        last_modified_by_proposed = proposed.get('last_modified_by', '')
+        last_modified_by = last_modified_by_pending or last_modified_by_proposed
+        last_is_responsable = False
+        if last_modified_by:
+            last_user = User.objects.filter(username=last_modified_by).first()  # Utilise le modèle personnalisé
+            if last_user:
+                last_is_responsable = (last_user == a.responsable)
+
         activites_list.append({
             'id': a.id,
             'reference': a.reference or '',
@@ -688,23 +748,27 @@ def manage_activities(request, plan_id, entity):
             'type': a.type,
             'indicateur_label': a.indicateur_label,
             'indicateur_reference': a.indicateur_reference,
-            'etat_avancement': display_values['etat_avancement'],
-            'realisation': display_values['realisation'],
+            'model_etat_avancement': model_values['etat_avancement'],
+            'model_realisation': model_values['realisation'],
+            'model_commentaire': model_values['commentaire'],
+            'model_commentaire_se': model_values['commentaire_se'],
+            'model_status': model_values['status'],
+            'model_matrix_status': model_values['matrix_status'],
+            'pf_etat_avancement': pf_values['etat_avancement'],
+            'pf_realisation': pf_values['realisation'],
+            'pf_commentaire': pf_values['commentaire'],
+            'resp_etat_avancement': resp_values['etat_avancement'],
+            'resp_realisation': resp_values['realisation'],
+            'resp_commentaire': resp_values['commentaire'],
             'cout': a.couts[index],
             'cible': a.cibles[index],
-            'commentaire': display_values['commentaire'],
-            'commentaire_se': display_values['commentaire_se'],
-            'status': display_values['status'],
-            'matrix_status': display_values['matrix_status'],
             'pending_changes': a.pending_changes[index],
+            'proposed_changes': a.proposed_changes[index],
             'is_submitted': bool(a.pending_changes[index]),
             'trimestres_suivi': trimestres_suivi,
-            'pending_realisation': pending.get('realisation', '') if pending else '',
-            'pending_etat_avancement': pending.get('etat_avancement', '') if pending else '',
-            'pending_commentaire': pending.get('commentaire', '') if pending else '',
-            'pending_commentaire_se': pending.get('commentaire_se', '') if pending else '',
-            'pending_status': pending.get('status', '') if pending else '',
-            'pending_matrix_status': pending.get('matrix_status', []) if pending else [],
+            'last_modified_by': last_modified_by,
+            'last_is_responsable': last_is_responsable,
+            'has_responsable': a.responsable is not None,
         })
 
     context = {
@@ -712,6 +776,9 @@ def manage_activities(request, plan_id, entity):
         'annee': annee,
         'entity': entity,
         'activites': activites_list,
+        'is_responsable': is_responsable,
+        'is_point_focal': is_point_focal,
+        'has_no_responsable': has_no_responsable,
     }
     return render(request, 'planning/manage_activities.html', context)
 
@@ -720,9 +787,9 @@ def track_execution_list(request, plan_id):
     is_se = request.user.groups.filter(name='SuiveurEvaluateur').exists()
 
     # Vérification des permissions
-    #if not is_se:
-        #messages.error(request, "Seul un Suiveur Évaluateur peut accéder à cette page.")
-        #return render(request, 'planning/access_denied.html', {'plan': plan})
+    if not is_se:
+        messages.error(request, "Seul un Suiveur-Évaluateur peut accéder à cette page.")
+        return render(request, 'planning/access_denied.html', {'plan': plan})
 
     # Générer la liste des PAO par année avec leur statut
     paos = [
@@ -740,14 +807,21 @@ def track_execution_detail(request, plan_id):
     plan = get_object_or_404(PlanAction, id=plan_id)
     is_se = request.user.groups.filter(name='SuiveurEvaluateur').exists()
 
+    # Vérification des permissions au début
+    if not is_se:
+        messages.error(request, "Seul un Suiveur-Évaluateur peut accéder à cette page.")
+        return render(request, 'planning/access_denied.html', {'plan': plan})
+
     annee = request.GET.get('annee')
     if not annee or not annee.isdigit() or int(annee) < plan.annee_debut or int(annee) >= plan.annee_debut + plan.horizon:
         messages.error(request, "Année invalide pour ce plan.")
-        return render(request, 'planning/error.html', {'message': "Année invalide pour ce plan.", 'plan': plan})
+        return render(request, 'planning/access_denied.html', {
+            'message': "Année invalide pour ce plan.",
+            'plan': plan
+        })
 
     annee = int(annee)
     index = annee - plan.annee_debut
-
 
     pao_statut = plan.statut_pao[index]
     activites = Activite.objects.filter(
@@ -775,7 +849,7 @@ def track_execution_detail(request, plan_id):
         if not last_modified_by:
             continue
 
-        # Vérifier si le dernier modificateur est un SE
+        # Vérifier le groupe du dernier modificateur
         try:
             last_user = User.objects.get(username=last_modified_by)
             if last_user.groups.filter(name='SuiveurEvaluateur').exists():
@@ -783,7 +857,7 @@ def track_execution_detail(request, plan_id):
         except User.DoesNotExist:
             continue
 
-        # Si on arrive ici, c'est un PF qui a modifié en dernier
+        # Si on arrive ici, c'est un PF ou Responsable qui a modifié en dernier
         modified_activite_ids.append(activite.id)
 
     has_submitted_activities = bool(modified_activite_ids)
@@ -836,22 +910,39 @@ def track_execution_detail(request, plan_id):
                 'pending_status': pending.get('status', ''),
                 'pending_commentaire_se': pending.get('commentaire_se', ''),
                 'last_modified_by': last_modified_by,
+                'last_modified_group': 'SuiveurEvaluateur' if request.user.groups.filter(name='SuiveurEvaluateur').exists() else 'PointFocal' if last_modified_by else ''
             }
 
-            if is_se and matches_pending and last_modified_by and last_modified_by != request.user.username:
-                # "Soumettre" : Appliquer au modèle si SE valide les changements du PF
-                activite.apply_pending_changes(request.user, index)
-                response_data.update({
-                    'message': 'Modifications appliquées au modèle réel',
-                    'action': 'model',
-                    'model_status': activite.status[index],
-                    'model_commentaire_se': activite.commentaire_se[index],
-                    'pending_status': '',
-                    'pending_commentaire_se': '',
-                    'last_modified_by': '',
-                })
-            elif is_se:
-                # "Renvoyer" : Mettre à jour pending_changes et faire disparaître
+            if matches_pending and last_modified_by:
+                try:
+                    last_user = User.objects.get(username=last_modified_by)
+                    last_is_se = last_user.groups.filter(name='SuiveurEvaluateur').exists()
+                    if not last_is_se:
+                        # "Soumettre" : Appliquer au modèle si SE valide les changements d'un PF/Responsable
+                        activite.apply_pending_changes(request.user, index)
+                        response_data.update({
+                            'message': 'Modifications appliquées au modèle réel',
+                            'action': 'model',
+                            'model_status': activite.status[index],
+                            'model_commentaire_se': activite.commentaire_se[index],
+                            'pending_status': '',
+                            'pending_commentaire_se': '',
+                            'last_modified_by': '',
+                            'last_modified_group': ''
+                        })
+                    else:
+                        # Pas d'action si le dernier modificateur est SE
+                        return JsonResponse({
+                            'success': False,
+                            'message': "Aucune action nécessaire : déjà modifié par un SE."
+                        })
+                except User.DoesNotExist:
+                    return JsonResponse({
+                        'success': False,
+                        'message': "Utilisateur inconnu."
+                    })
+            else:
+                # "Renvoyer" : Mettre à jour pending_changes
                 activite.propose_changes(
                     user=request.user,
                     index=index,
@@ -859,16 +950,12 @@ def track_execution_detail(request, plan_id):
                     commentaire_se=current_commentaire_se
                 )
                 response_data.update({
-                    'message': 'Propositions renvoyées au point focal',
+                    'message': 'Propositions renvoyées au point focal ou responsable',
                     'action': 'pending',
                     'pending_status': current_status,
                     'pending_commentaire_se': current_commentaire_se,
                     'last_modified_by': request.user.username,
-                })
-            else:
-                return JsonResponse({
-                    'success': False,
-                    'message': "Action non autorisée."
+                    'last_modified_group': 'SuiveurEvaluateur'
                 })
 
             return JsonResponse(response_data)
@@ -905,6 +992,16 @@ def track_execution_detail(request, plan_id):
                   a.responsable.entity if a.responsable and hasattr(a.responsable, 'entity') else 'Sans entité')
         if entity not in activites_by_entity:
             activites_by_entity[entity] = []
+        
+        last_modified_by = pending.get('last_modified_by', '') if pending else ''
+        last_modified_group = ''
+        if last_modified_by:
+            try:
+                last_user = User.objects.get(username=last_modified_by)
+                last_modified_group = 'SuiveurEvaluateur' if last_user.groups.filter(name='SuiveurEvaluateur').exists() else 'PointFocal'
+            except User.DoesNotExist:
+                last_modified_group = ''
+
         activites_by_entity[entity].append({
             'id': a.id,
             'reference': a.reference or '',
@@ -925,7 +1022,8 @@ def track_execution_detail(request, plan_id):
             'pending_status': pending.get('status', '') if pending else '',
             'model_status': a.status[index],
             'model_commentaire_se': a.commentaire_se[index],
-            'last_modified_by': pending.get('last_modified_by', '') if pending else '',
+            'last_modified_by': last_modified_by,
+            'last_modified_group': last_modified_group
         })
 
     context = {
@@ -969,19 +1067,13 @@ def operational_plan_matrix(request, plan_id, annee):
                         ('cibles', None),
                         ('etat_avancement', ''),
                         ('commentaire_se', ''),
-                        ('status', 'Draft'),
+                        ('status', 'Non entamée'),  # Changement de 'Draft' à 'Non entamée' pour cohérence
                         ('matrix_status', 'en cours')
                     ]:
                         current = getattr(activite, field)
                         if not current or len(current) != horizon:
                             setattr(activite, field, [default] * horizon)
                             activite.save()
-
-                    # Récupérer la dernière modification de matrix_status via ActiviteLog
-                    last_log = activite.activitelog_set.filter(
-                        modifications__has_key='matrix_status'
-                    ).order_by('-timestamp').first()
-                    last_matrix_change = last_log.timestamp if last_log else None
 
                     activites_data.append({
                         'id': activite.id,
@@ -1001,7 +1093,6 @@ def operational_plan_matrix(request, plan_id, annee):
                         'commentaire_se': activite.commentaire_se[annee_index],
                         'status': activite.status[annee_index],
                         'matrix_status': activite.matrix_status[annee_index],
-                        'last_modified_matrix_status': last_matrix_change.strftime('%Y-%m-%d %H:%M:%S') if last_matrix_change else 'Non défini',
                     })
                 if activites_data:
                     actions_data.append({
@@ -1054,12 +1145,12 @@ def operational_plan_matrix(request, plan_id, annee):
         'annee': annee,
     }
     filter_groups = [
-    {'group': 'effet', 'label': 'Filtrer par effet', 'items': context['effet_list'], 'col_width': 4},
-    {'group': 'produit', 'label': 'Filtrer par produit', 'items': context['produit_list'], 'col_width': 4},
-    {'group': 'action', 'label': 'Filtrer par action', 'items': context['action_list'], 'col_width': 4},
-    {'group': 'type', 'label': 'Filtrer par type', 'items': [{'id': t, 'titre': t} for t in context['types']], 'col_width': 3},
-    {'group': 'structure', 'label': 'Filtrer par structure', 'items': [{'id': s, 'titre': s} for s in context['structures']], 'col_width': 3},
-]
+        {'group': 'effet', 'label': 'Filtrer par effet', 'items': context['effet_list'], 'col_width': 4},
+        {'group': 'produit', 'label': 'Filtrer par produit', 'items': context['produit_list'], 'col_width': 4},
+        {'group': 'action', 'label': 'Filtrer par action', 'items': context['action_list'], 'col_width': 4},
+        {'group': 'type', 'label': 'Filtrer par type', 'items': [{'id': t, 'titre': t} for t in context['types']], 'col_width': 3},
+        {'group': 'structure', 'label': 'Filtrer par structure', 'items': [{'id': s, 'titre': s} for s in context['structures']], 'col_width': 3},
+    ]
     context['filter_groups'] = filter_groups
     
     return render(request, 'planning/operational_plan_matrix.html', context)
@@ -1070,8 +1161,8 @@ def hierarchy_review(request, plan_id):
     
     # Vérifier si l'utilisateur a le rôle hiérarchique
     is_hierarchy = request.user.groups.filter(name='Hierarchy').exists()
-    #if not is_hierarchy:
-        #return render(request, 'planning/access_denied.html', {'plan': plan})
+    if not is_hierarchy:
+        return render(request, 'planning/access_denied.html', {'plan': plan})
 
     # Générer la liste des PAO par année
     paos = []

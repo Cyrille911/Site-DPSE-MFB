@@ -1,0 +1,438 @@
+{% load static %}
+{% load table_tags %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Métadonnées -->
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="title" content="AdminLTE v4 | Dashboard" />
+    <meta name="author" content="ColorlibHQ" />
+    <meta name="description" content="AdminLTE is a Free Bootstrap 5 Admin Dashboard, 30 example pages using Vanilla JS." />
+    <meta name="keywords" content="bootstrap 5, bootstrap, bootstrap 5 admin dashboard, bootstrap 5 dashboard, bootstrap 5 charts, bootstrap 5 calendar, bootstrap 5 datepicker, bootstrap 5 tables, bootstrap 5 datatable, vanilla js datatable, colorlibhq, colorlibhq dashboard, colorlibhq admin dashboard" />
+    <title>Statistiques</title>
+
+    <!-- Styles externes -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/source-sans-3@5.0.12/index.css" integrity="sha256-tXJfXfp6Ewt1ilPzLDtQnJV4hclT9XuaZUKyUvmyr+Q=" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.10.1/styles/overlayscrollbars.min.css" integrity="sha256-tZHrRjVqNSRyWg2wbppGnT833E/Ys0DHWGwT04GiqQg=" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" integrity="sha256-9kPW/n5nn53j4WMRYAxe9c1rCY96Oogo/MKSVdKzPmI=" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/apexcharts@3.37.1/dist/apexcharts.css" integrity="sha256-4MX+61mt9NVvvuPjUWdUdyfZfxSB1/Rf9WtqRHgG5S0=" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsvectormap@1.5.3/dist/css/jsvectormap.min.css" integrity="sha256-+uGLJmmTKOqBr+2E6KDYs/NRsHxSkONXFHUL0fy2O/4=" crossorigin="anonymous" />
+
+    <!-- Styles locaux -->
+    <link rel="stylesheet" href="{% static 'adminlte/plugins/fontawesome-free/css/all.min.css' %}" />
+    <link rel="stylesheet" href="{% static 'adminlte/dist/css/adminlte.css' %}" />
+    <link rel="stylesheet" href="{% static 'adminlte/custom.css' %}" />
+
+    <!-- Styles personnalisés -->
+    <style>
+        .app-header {
+            background-color: #FF6200;
+            color: #FFFFFF;
+            border-bottom: 2px solid #FFFFFF;
+        }
+        .app-header .nav-link {
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+        }
+        .app-header .nav-link:hover {
+            background-color: #FF8C00;
+        }
+        .app-header .navbar-badge {
+            background-color: #FFFFFF;
+            color: #FF6200;
+        }
+        .app-header .dropdown-menu {
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        .app-header .dropdown-item:hover {
+            background-color: #FFF5E6;
+        }
+        /* Styles pour la barre de recherche */
+        .search-container {
+            position: relative;
+            width: 40px;
+            transition: width 0.3s ease-in-out;
+        }
+        .search-container.active {
+            width: 300px;
+        }
+        #navbar-search {
+            width: 0;
+            opacity: 0;
+            padding: 0;
+            border: none;
+            transition: width 0.3s ease-in-out, opacity 0.2s ease-in-out, padding 0.3s ease-in-out;
+            position: absolute;
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+        }
+        .search-container.active #navbar-search {
+            width: 100%;
+            opacity: 1;
+            padding: 6px 12px;
+            border: 1px solid #FFFFFF;
+            border-radius: 4px;
+        }
+        #search-toggle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            transition: opacity 0.2s ease-in-out;
+        }
+        .search-container.active #search-toggle {
+            opacity: 0;
+            pointer-events: none;
+        }
+        #search-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            z-index: 1000;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 0;
+            margin: 0;
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+        #search-suggestions li {
+            list-style: none;
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+        #search-suggestions li:hover {
+            background-color: #f8f9fa;
+        }
+        /* Style de la sidebar */
+        .app-sidebar {
+      background: #ee7225db;
+      color: #FFFFFF !important;
+      transition: all 0.3s ease;
+  }
+  .app-sidebar .sidebar-brand .brand-link {
+      color: #FFFFFF !important;
+  }
+  .app-sidebar .sidebar-brand .brand-link span.brand-text {
+      color: #FFFFFF !important;
+  }
+  .app-sidebar .nav-link {
+      color: #FFFFFF !important;
+  }
+  .app-sidebar .nav-link p {
+      color: #FFFFFF !important;
+      overflow: visible !important;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      max-width: 180px;
+      position: relative;
+      padding-right: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+  }
+    </style>
+</head>
+
+<body class="layout-fixed sidebar-expand-lg bg-body-tertiary">
+    <div class="app-wrapper">
+        <!-- Navbar -->
+        <nav class="app-header navbar navbar-expand" style="background-color: #FF6200; color: #FFFFFF;">
+            <div class="container-fluid">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" data-lte-toggle="sidebar" href="#" role="button" id="sidebar-toggle">
+                            <i class="bi bi-list"></i>
+                        </a>
+                    </li>
+                    <li class="nav-item d-none d-md-block">
+                        <a href="{% url 'accueil' %}" class="nav-link">Page d'accueil</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <!-- Barre de recherche avec loupe -->
+                    <li class="nav-item search-container">
+                        <form id="navbar-search-form">
+                            <i class="bi bi-search" id="search-toggle"></i>
+                            <input class="form-control" type="search" id="navbar-search" placeholder="Rechercher un tableau..." aria-label="Search">
+                            <ul id="search-suggestions" class="dropdown-menu"></ul>
+                        </form>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-lte-toggle="fullscreen">
+                            <i data-lte-icon="maximize" class="bi bi-arrows-fullscreen"></i>
+                            <i data-lte-icon="minimize" class="bi bi-fullscreen-exit" style="display: none;"></i>
+                        </a>
+                    </li>
+                    {% if request.user.is_authenticated %}
+                        <li class="nav-item">
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#profileModal" class="nav-link">
+                                {% if request.user.photo %}
+                                    <img src="{{ request.user.photo.url }}" class="rounded-circle" width="30" height="30" alt="Photo" style="margin-right: 10px;">
+                                {% else %}
+                                    <div class="rounded-circle bg-success text-white d-flex justify-content-center align-items-center" style="width: 30px; height: 30px; font-size: 14px; font-weight: bold; margin-right: 10px;">
+                                        {{ request.user.first_name|default:''|slice:":1" }}{{ request.user.last_name|default:''|slice:":1" }}
+                                    </div>
+                                {% endif %}
+                                <span>{{ request.user.first_name }} {{ request.user.last_name }}</span>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#loginModal" class="nav-link">Se connecter</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Sidebar -->
+        <aside class="app-sidebar shadow" id="sidebar">
+            <div class="sidebar-brand" style="background-color: #FF6200;">
+                <a href="{% url 'accueil' %}" class="brand-link">
+                    <span class="brand-text fw-light">Dashboard</span>
+                </a>
+            </div>
+            <div class="sidebar-wrapper">
+                <nav class="mt-2">
+                    <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="menu" data-accordion="false">
+                        <li class="nav-item">
+                            <a href="{% url 'dashboard_TOFE' %}" class="nav-link">
+                                <i class="nav-icon bi bi-speedometer"></i>
+                                <p>TOFE</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'douanes_dashboard' %}" class="nav-link">
+                                <i class="nav-icon bi bi-circle"></i>
+                                <p>Douanes</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'financements_dashboard' %}" class="nav-link">
+                                <i class="nav-icon bi bi-circle"></i>
+                                <p>Financements</p>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Modale Profil -->
+        <div class="modal fade" id="profileModal" tabindex="-1" aria-labelledby="profileModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="profileModalLabel">Que souhaitez-vous faire ?</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Voulez-vous voir votre profil ou vous déconnecter ?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <a href="{% url 'profil_utilisateur' %}" class="btn btn-primary">Voir mon profil</a>
+                        <a href="{% url 'deconnexion' %}" class="btn btn-danger">Déconnexion</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modale Connexion/Inscription -->
+        <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="loginModalLabel">Se connecter ou s'inscrire</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="choiceStep">
+                            <h6>Que souhaitez-vous faire ?</h6>
+                            <button class="btn btn-primary mb-2" id="newAccountBtn">Nouvelle inscription</button>
+                            <button class="btn btn-secondary mb-2" id="existingAccountBtn">Connexion à un compte existant</button>
+                        </div>
+                        <div id="userTypeStep1" style="display: none;">
+                            <h6>Choisissez votre type d'utilisateur :</h6>
+                            <button type="button" class="btn btn-primary" id="membreBtn1">Membre</button>
+                            <button type="button" class="btn btn-primary" id="visiteurBtn1">Visiteur</button>
+                            <button class="btn btn-link" id="backToChoiceStep1">Retour</button>
+                        </div>
+                        <div id="userTypeStep2" style="display: none;">
+                            <h6>Choisissez votre type d'utilisateur :</h6>
+                            <button type="button" class="btn btn-primary" id="membreBtn2">Membre</button>
+                            <button type="button" class="btn btn-primary" id="visiteurBtn2">Visiteur</button>
+                            <button class="btn btn-link" id="backToChoiceStep2">Retour</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contenu principal -->
+        {% block content %}{% endblock %}
+
+        <!-- Scripts -->
+        <script src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.10.1/browser/overlayscrollbars.browser.es6.min.js" integrity="sha256-dghWARbRe2eLlIJ56wNB+b760ywulqK3DzZYEpsg2fQ=" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
+        <script src="{% static 'adminlte/dist/js/adminlte.js' %}"></script>
+        <script>
+            // Vérification du chargement d'AdminLTE
+            document.addEventListener('DOMContentLoaded', function() {
+                if (typeof AdminLTE === 'undefined') {
+                    console.error('AdminLTE n\'est pas chargé. Vérifiez le chemin de adminlte.js.');
+                } else {
+                    console.log('AdminLTE est chargé correctement.');
+                }
+            });
+
+            // Gestion manuelle du toggle sidebar (solution de secours)
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            const sidebar = document.getElementById('sidebar');
+            const body = document.body;
+
+            sidebarToggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                // Si AdminLTE ne gère pas le toggle, on le fait manuellement
+                if (body.classList.contains('sidebar-open')) {
+                    body.classList.remove('sidebar-open');
+                    body.classList.add('sidebar-collapse');
+                } else {
+                    body.classList.remove('sidebar-collapse');
+                    body.classList.add('sidebar-open');
+                }
+            });
+
+            // Gestion de la barre de recherche
+            const searchToggle = document.getElementById('search-toggle');
+            const searchContainer = document.querySelector('.search-container');
+            const searchInput = document.getElementById('navbar-search');
+            const searchForm = document.getElementById('navbar-search-form');
+            const suggestionsList = document.getElementById('search-suggestions');
+
+            searchToggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                searchContainer.classList.toggle('active');
+                if (searchContainer.classList.contains('active')) {
+                    searchInput.focus();
+                }
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!searchForm.contains(e.target)) {
+                    searchContainer.classList.remove('active');
+                    suggestionsList.style.display = 'none';
+                }
+            });
+
+            // Autocomplétion
+            const sidebarLinks = [
+                { label: 'TOFE', url: '{% url "dashboard_TOFE" %}', parentDashboard: 'tofe' },
+                { label: 'Douanes', url: '{% url "douanes_dashboard" %}', parentDashboard: 'douanes' },
+                { label: 'Financements', url: '{% url "financements_dashboard" %}', parentDashboard: 'financements' },
+                {% for tableau in tableaux %}
+                    { label: '{{ tableau.name|split:": "|slice:"1:"|join:"" }}', tableauId: '{{ tableau.id }}', parentDashboard: 'financements' },
+                {% endfor %}
+            ];
+
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.trim().toLowerCase();
+                suggestionsList.innerHTML = '';
+
+                if (searchTerm.length < 1) {
+                    suggestionsList.style.display = 'none';
+                    return;
+                }
+
+                const matches = sidebarLinks.filter(item => item.label.toLowerCase().includes(searchTerm));
+                if (matches.length > 0) {
+                    matches.forEach(match => {
+                        const li = document.createElement('li');
+                        li.textContent = match.label;
+                        li.dataset.tableauId = match.tableauId || '';
+                        li.dataset.url = match.url || '';
+                        li.dataset.parentDashboard = match.parentDashboard || '';
+                        li.addEventListener('click', function() {
+                            const tableauId = this.dataset.tableauId;
+                            const url = this.dataset.url;
+                            const parentDashboard = this.dataset.parentDashboard;
+
+                            if (url && !tableauId) {
+                                window.location.href = url;
+                            } else if (tableauId && parentDashboard === 'financements') {
+                                const targetUrl = '{% url "financements_dashboard" %}';
+                                window.location.href = `${targetUrl}?tableau_id=${tableauId}`;
+                            }
+                            suggestionsList.style.display = 'none';
+                            searchInput.value = match.label;
+                        });
+                        suggestionsList.appendChild(li);
+                    });
+                    suggestionsList.style.display = 'block';
+                } else {
+                    suggestionsList.style.display = 'none';
+                }
+            });
+
+            // Gestion des modales (inchangée)
+            function resetModal() {
+                document.getElementById('choiceStep').style.display = 'block';
+                document.getElementById('userTypeStep1').style.display = 'none';
+                document.getElementById('userTypeStep2').style.display = 'none';
+            }
+
+            document.getElementById('newAccountBtn').onclick = function() {
+                document.getElementById('choiceStep').style.display = 'none';
+                document.getElementById('userTypeStep1').style.display = 'block';
+            };
+
+            document.getElementById('existingAccountBtn').onclick = function() {
+                document.getElementById('choiceStep').style.display = 'none';
+                document.getElementById('userTypeStep2').style.display = 'block';
+            };
+
+            document.getElementById('backToChoiceStep1').onclick = function() {
+                document.getElementById('userTypeStep1').style.display = 'none';
+                document.getElementById('choiceStep').style.display = 'block';
+            };
+
+            document.getElementById('backToChoiceStep2').onclick = function() {
+                document.getElementById('userTypeStep2').style.display = 'none';
+                document.getElementById('choiceStep').style.display = 'block';
+            };
+
+            document.getElementById('membreBtn1').onclick = function() {
+                window.location.href = "{% url 'inscription_membre' %}";
+            };
+
+            document.getElementById('visiteurBtn1').onclick = function() {
+                window.location.href = "{% url 'inscription_visiteur' %}";
+            };
+
+            document.getElementById('membreBtn2').onclick = function() {
+                window.location.href = "{% url 'connexion_membre' %}";
+            };
+
+            document.getElementById('visiteurBtn2').onclick = function() {
+                window.location.href = "{% url 'connexion_visiteur' %}";
+            };
+
+            var loginModal = document.getElementById('loginModal');
+            loginModal.addEventListener('shown.bs.modal', function() {
+                resetModal();
+            });
+        </script>
+    </div>
+</body>
+</html>

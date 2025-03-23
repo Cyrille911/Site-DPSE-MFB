@@ -81,10 +81,10 @@ Traitement des Activités - {{ plan.titre }} - {{ annee }}
                                             <td>{{ activite.indicateur_reference|default:'N/A' }}</td>
                                             <td>{{ activite.cible|default:'N/A' }}</td>
                                             <td>{{ activite.realisation }}</td>
-                                            <td {% if activite.trimestres_suivi.0 %}class="bg-blue"{% endif %}>T1</td>
-                                            <td {% if activite.trimestres_suivi.1 %}class="bg-blue"{% endif %}>T2</td>
-                                            <td {% if activite.trimestres_suivi.2 %}class="bg-blue"{% endif %}>T3</td>
-                                            <td {% if activite.trimestres_suivi.3 %}class="bg-blue"{% endif %}>T4</td>
+                                            <td {% if activite.trimestres_suivi.0 %}class="bg-blue"{% endif %}></td>
+                                            <td {% if activite.trimestres_suivi.1 %}class="bg-blue"{% endif %}></td>
+                                            <td {% if activite.trimestres_suivi.2 %}class="bg-blue"{% endif %}></td>
+                                            <td {% if activite.trimestres_suivi.3 %}class="bg-blue"{% endif %}></td>
                                             <td>{{ activite.etat_avancement }}</td>
                                             <td>{{ activite.cout }}</td>
                                             <td>{{ activite.commentaire }}</td>
@@ -105,7 +105,8 @@ Traitement des Activités - {{ plan.titre }} - {{ annee }}
                                                 <button class="btn btn-success action-btn" 
                                                         data-model-status="{{ activite.model_status }}" 
                                                         data-model-commentaire-se="{{ activite.model_commentaire_se }}"
-                                                        data-last-modified-by="{{ activite.last_modified_by }}">Soumettre</button>
+                                                        data-last-modified-by="{{ activite.last_modified_by }}"
+                                                        data-last-modified-group="{{ activite.last_modified_group }}">Soumettre</button>
                                             </td>
                                         </tr>
                                     {% endfor %}
@@ -123,7 +124,7 @@ Traitement des Activités - {{ plan.titre }} - {{ annee }}
     {% endif %}
 
     <div class="text-center mt-4 animate-fade-in">
-        <a href="{% url 'pao_list' plan.id %}" class="btn btn-secondary btn-lg px-5 py-2 fw-bold">Retour</a>
+        <a href="{% url 'track_execution_list' plan.id %}" class="btn btn-secondary btn-lg px-5 py-2 fw-bold">Retour</a>
     </div>
 </div>
 
@@ -162,38 +163,45 @@ document.addEventListener('DOMContentLoaded', function () {
         let modelStatus = actionBtn.dataset.modelStatus;
         let modelCommentaireSe = actionBtn.dataset.modelCommentaireSe;
         let lastModifiedBy = actionBtn.dataset.lastModifiedBy;
+        let lastModifiedGroup = actionBtn.dataset.lastModifiedGroup;
 
         function updateButtonState() {
-            let matchesPending = true;
-            let matchesModel = true;
+            let matchesPending = true;  // Current === Pending
+            let matchesInitial = true;  // Current === Initial
 
             inputs.forEach(input => {
                 const pendingValue = input.dataset.pending || '';
                 const initialValue = input.dataset.initial || '';
                 const currentValue = input.value;
 
-                if (pendingValue !== '' && currentValue !== pendingValue) {
+                if (currentValue !== pendingValue) {
                     matchesPending = false;
                 }
-                if (input.name === 'status' && currentValue !== modelStatus) {
-                    matchesModel = false;
-                }
-                if (input.name === 'commentaire_se' && currentValue !== modelCommentaireSe) {
-                    matchesModel = false;
+                if (currentValue !== initialValue) {
+                    matchesInitial = false;
                 }
             });
 
-            if (isSE && matchesPending && lastModifiedBy && lastModifiedBy !== currentUser) {
+            if (isSE && matchesPending && !matchesInitial && lastModifiedGroup === 'PointFocal') {
+                // Current === Pending, Initial !== Current, dernier modificateur est PF
                 actionBtn.textContent = 'Soumettre';
                 actionBtn.disabled = false;
                 actionBtn.classList.remove('btn-warning');
                 actionBtn.classList.add('btn-success');
-            } else if (isSE && (!matchesPending || matchesModel)) {
+            } else if (isSE && matchesPending && !matchesInitial && lastModifiedGroup === 'SuiveurEvaluateur') {
+                // Current === Pending, Initial !== Current, dernier modificateur est SE
+                actionBtn.textContent = '✔';
+                actionBtn.disabled = true;
+                actionBtn.classList.remove('btn-warning');
+                actionBtn.classList.add('btn-success');
+            } else if (isSE && !matchesPending) {
+                // Current !== Pending
                 actionBtn.textContent = 'Renvoyer';
                 actionBtn.disabled = false;
                 actionBtn.classList.remove('btn-success');
                 actionBtn.classList.add('btn-warning');
             } else {
+                // Cas par défaut : rien à faire
                 actionBtn.textContent = '✔';
                 actionBtn.disabled = true;
                 actionBtn.classList.remove('btn-warning');
@@ -233,6 +241,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         actionBtn.dataset.modelCommentaireSe = data.model_commentaire_se;
                         lastModifiedBy = data.last_modified_by;
                         actionBtn.dataset.lastModifiedBy = data.last_modified_by;
+                        lastModifiedGroup = data.last_modified_group;
+                        actionBtn.dataset.lastModifiedGroup = lastModifiedGroup;
 
                         if (data.action === 'model' || data.action === 'pending') {
                             row.style.backgroundColor = data.action === 'model' ? '#d4edda' : '#fff3cd';
@@ -243,7 +253,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             setTimeout(() => {
                                 row.style.display = 'none';
                                 checkEntitySections();
-                            }, 500); // Disparition après 0.5s
+                            }, 500);
                         }
                     } else {
                         alert(data.message);
@@ -256,6 +266,7 @@ document.addEventListener('DOMContentLoaded', function () {
     checkEntitySections();
 });
 </script>
+
 {% endblock %}
 
 {% block style %}
@@ -291,7 +302,7 @@ document.addEventListener('DOMContentLoaded', function () {
         min-width: 120px;
     }
     .table thead th {
-        border: 2px solid black !important;
+        border: 1px solid black !important;
         text-align: center;
         background: #ff6200;
         color: white;

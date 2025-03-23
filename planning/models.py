@@ -13,63 +13,6 @@ logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
-# File d'attente temporaire pour regrouper les notifications
-class NotificationQueue:
-    _instance = None
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(NotificationQueue, cls).__new__(cls)
-            cls._instance.pending_notifications = defaultdict(list)  # {destinataires: [activités]}
-            cls._instance.timer = None
-        return cls._instance
-
-    def add_activity(self, activite, user):
-        """Ajoute une activité à la file d'attente pour les destinataires concernés."""
-        recipients = tuple(sorted(self._get_recipients(activite, user)))  # Tuple pour hashabilité
-        self.pending_notifications[recipients].append(activite)
-        if not self.timer or not self.timer.is_alive():
-            self.timer = Timer(60.0, self.send_grouped_notifications)  # 1 minute
-            self.timer.start()
-            logger.debug("Timer démarré pour l'envoi groupé des notifications.")
-
-    def _get_recipients(self, activite, user):
-        """Retourne les destinataires pour une activité."""
-        recipients = set()
-        if activite.point_focal and activite.point_focal.email:
-            recipients.add(activite.point_focal.email)
-        if activite.responsable and activite.responsable.email:
-            recipients.add(activite.responsable.email)
-        if user.email:
-            recipients.add(user.email)
-        return recipients
-
-    def send_grouped_notifications(self):
-        """Envoie les notifications regroupées par destinataires."""
-        for recipients, activites in self.pending_notifications.items():
-            if not recipients:
-                continue
-            subject = f"Création de {len(activites)} activité(s)"
-            message = "Les activités suivantes ont été créées :\n\n"
-            for activite in activites:
-                message += (
-                    f"- Titre : {activite.titre}\n"
-                    f"  Référence : {activite.reference}\n"
-                    f"  Type : {activite.type}\n"
-                    f"  Indicateur : {activite.indicateur_label} (Ref: {activite.indicateur_reference})\n"
-                    f"  Coûts : {activite.couts}\n"
-                    f"  Cibles : {activite.cibles}\n"
-                    f"  Périodes d'exécution : {activite.periodes_execution}\n\n"
-                )
-            logger.debug(f"Envoi de notification groupée - Sujet: {subject}, Destinataires: {list(recipients)}")
-            send_mail(
-                subject=subject,
-                message=message,
-                from_email='cyrilletaha01@gmail.com',
-                recipient_list=list(recipients),
-                fail_silently=True
-            )
-        self.pending_notifications.clear()
-        logger.debug("File d'attente vidée après envoi groupé.")
 
 # Modèle PlanAction (inchangé)
 class PlanAction(models.Model):
@@ -321,6 +264,114 @@ class Action(models.Model):
         return f"Action {self.reference} : {self.titre}"
 
 # Modèle Activite
+# File d'attente temporaire pour regrouper les notifications
+class NotificationQueue:
+    _instance = None
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(NotificationQueue, cls).__new__(cls)
+            cls._instance.pending_notifications = defaultdict(list)
+            cls._instance.timer = None
+        return cls._instance
+
+    def add_activity(self, activite, user):
+        recipients = tuple(sorted(self._get_recipients(activite, user)))
+        self.pending_notifications[recipients].append(activite)
+        if not self.timer or not self.timer.is_alive():
+            self.timer = Timer(60.0, self.send_grouped_notifications)
+            self.timer.start()
+            logger.debug("Timer démarré pour l'envoi groupé des notifications.")
+
+    def _get_recipients(self, activite, user):
+        recipients = set()
+        if activite.point_focal and activite.point_focal.email:
+            recipients.add(activite.point_focal.email)
+        if activite.responsable and activite.responsable.email:
+            recipients.add(activite.responsable.email)
+        if user.email:
+            recipients.add(user.email)
+        return recipients
+
+    def send_grouped_notifications(self):
+        for recipients, activites in self.pending_notifications.items():
+            if not recipients:
+                continue
+
+            # Construire une liste de destinataires mise à jour avec suiveurs et évaluateurs
+            all_recipients = set(recipients)  # Convertir en set pour éviter les doublons
+            for activite in activites:
+                plan = activite.action.produit.effet.plan  # Accès au PlanAction
+
+                # Ajouter les suiveurs (supposons qu'ils sont dans une relation ManyToMany ou ForeignKey)
+                if hasattr(plan, 'suiveurs') and plan.suiveurs.exists():
+                    suiveurs_emails = [suiveur.email for suiveur in plan.suiveurs.all() if suiveur.email]
+                    all_recipients.update(suiveurs_emails)
+
+                # Ajouter les évaluateurs (supposons qu'ils sont dans une relation ManyToMany ou ForeignKey)
+                if hasattr(plan, 'evaluateurs') and plan.evaluateurs.exists():
+                    evaluateurs_emails = [evaluateur.email for evaluateur in plan.evaluateurs.all() if evaluateur.email]
+                    all_recipients.update(evaluateurs_emails)
+
+            if not all_recipients:
+                logger.debug("Aucun destinataire valide trouvé pour les notifications.")
+                continue
+
+            subject = f"Notification : Création de {len(activites)} nouvelle(s) activité(s)"
+            message = (
+                "Bonjour,\n\n"
+                "Nous avons le plaisir de vous informer que les activités suivantes ont été récemment créées dans le cadre du plan d’action. Voici les détails :\n\n"
+            )
+
+            for activite in activites:
+                plan = activite.action.produit.effet.plan
+                annee_debut = plan.annee_debut
+                horizon = plan.horizon
+                annees = [annee_debut + i for i in range(horizon)]
+
+                message += f"**Activité : {activite.titre}**\n"
+                message += f"- Référence : {activite.reference or 'Non spécifiée'}\n"
+                message += f"- Type : {activite.type or 'Non défini'}\n"
+                message += f"- Indicateur : {activite.indicateur_label} (Réf. : {activite.indicateur_reference or 'N/A'})\n"
+
+                # Afficher les coûts par année
+                message += "- Coûts prévus :\n"
+                for i, cout in enumerate(activite.couts[:horizon]):
+                    message += f"  * {annees[i]} : {cout if cout is not None else 'Non défini'} \n"
+
+                # Afficher les cibles par année
+                message += "- Cibles :\n"
+                for i, cible in enumerate(activite.cibles[:horizon]):
+                    message += f"  * {annees[i]} : {cible if cible is not None else 'Non définie'} \n"
+
+                # Gérer les périodes d'exécution
+                periodes = activite.periodes_execution
+                if periodes and isinstance(periodes, list) and periodes[0]:
+                    if isinstance(periodes[0], list):  # Liste imbriquée
+                        periodes_flat = periodes[0]
+                    else:
+                        periodes_flat = periodes
+                    message += f"- Périodes d'exécution : {', '.join(periodes_flat)}\n\n"
+                else:
+                    message += "- Périodes d'exécution : Non spécifiées\n\n"
+
+            message += (
+                "N’hésitez pas à nous contacter si vous avez des questions ou besoin de précisions.\n\n"
+                "Cordialement,\n"
+                "L’équipe de gestion du plan d’action"
+            )
+
+            logger.debug(f"Envoi de notification groupée - Sujet: {subject}, Destinataires: {list(all_recipients)}")
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email='cyrilletaha01@gmail.com',
+                recipient_list=list(all_recipients),  # Utiliser la liste mise à jour
+                fail_silently=True
+            )
+
+        self.pending_notifications.clear()
+        logger.debug("File d'attente vidée après envoi groupé.")
+
 class Activite(models.Model):
     id = models.AutoField(primary_key=True)
     reference = models.CharField(max_length=50, blank=True)
@@ -346,8 +397,8 @@ class Activite(models.Model):
     )
     responsable = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        null=True,
+        on_delete=models.SET_NULL,  # Suppression du responsable met le champ à NULL
+        null=True,  # Doit être nullable pour SET_NULL
         blank=True,
         related_name='responsable_activites'
     )
@@ -363,17 +414,25 @@ class Activite(models.Model):
     commentaire = models.JSONField(default=list)
     commentaire_se = models.JSONField(default=list)
     pending_changes = models.JSONField(default=list)
+    proposed_changes = models.JSONField(default=list)
     status = models.JSONField(default=list)
     matrix_status = models.JSONField(default=list)
     
     created_at = models.DateTimeField(auto_now_add=True)
     alertes_envoyees = models.JSONField(default=dict, blank=True, null=True)
 
+    class Meta:
+        verbose_name = "Activité"
+        verbose_name_plural = "Activités"
+
+    def __str__(self):
+        return f"Activité {self.reference} : {self.titre}"
+
     def clean(self):
         horizon = self.action.produit.effet.plan.horizon
         fields_to_check = [
             'cibles', 'realisation', 'couts', 'periodes_execution', 'etat_avancement',
-            'commentaire', 'commentaire_se', 'pending_changes', 'status', 'matrix_status'
+            'commentaire', 'commentaire_se', 'pending_changes', 'proposed_changes', 'status', 'matrix_status'
         ]
         for field in fields_to_check:
             value = getattr(self, field)
@@ -394,15 +453,16 @@ class Activite(models.Model):
             raise ValidationError("'commentaire' doit contenir des chaînes.")
         if not all(isinstance(x, str) for x in self.commentaire_se):
             raise ValidationError("'commentaire_se' doit contenir des chaînes.")
-        if not all(isinstance(x, (dict, type(None))) for x in self.pending_changes):
-            raise ValidationError("'pending_changes' doit contenir des dictionnaires ou None.")
+        if not all(isinstance(x, dict) for x in self.pending_changes):
+            raise ValidationError("'pending_changes' doit contenir des dictionnaires.")
+        if not all(isinstance(x, dict) for x in self.proposed_changes):
+            raise ValidationError("'proposed_changes' doit contenir des dictionnaires.")
         if not all(x in ['Non entamée', 'En cours', 'Réalisée', 'Non réalisée', 'Supprimée', 'Reprogrammée'] for x in self.status):
             raise ValidationError("'status' doit contenir des valeurs valides.")
         if not all(x in ['En cours', 'Validée'] for x in self.matrix_status):
             raise ValidationError("'matrix_status' doit être 'En cours' ou 'Validée'.")
 
     def _send_change_notification(self, user):
-        """Envoie une notification par email pour informer d'un changement dans l'activité."""
         subject = f"Modification proposée pour l'activité {self.reference}"
         if user == self.responsable:
             recipients = [u.email for u in User.objects.filter(groups__name='SuiveurEvaluateur') if u.email]
@@ -412,12 +472,22 @@ class Activite(models.Model):
                 f"Référence : {self.reference}\n"
                 f"Consultez les détails dans le système."
             )
+        elif user == self.point_focal:
+            recipients = []
+            if self.responsable and self.responsable.email:
+                recipients.append(self.responsable.email)
+            message = (
+                f"Le point focal {user.email} a proposé des modifications pour l'activité {self.reference}.\n"
+                f"Titre : {self.titre}\n"
+                f"Référence : {self.reference}\n"
+                f"Consultez les détails dans le système."
+            )
         elif user.groups.filter(name='SuiveurEvaluateur').exists():
             recipients = []
             if self.responsable and self.responsable.email:
                 recipients.append(self.responsable.email)
             if self.point_focal and self.point_focal.email:
-                recipients.append(self.point_focal.email)
+                recipients.add(self.point_focal.email)
             message = (
                 f"Un suiveur-évaluateur {user.email} a proposé des modifications pour l'activité {self.reference}.\n"
                 f"Titre : {self.titre}\n"
@@ -439,13 +509,32 @@ class Activite(models.Model):
         else:
             logger.debug("Aucun destinataire valide trouvé pour la notification de changement.")
 
+    def update_responsable(self):
+        """Met à jour dynamiquement le responsable en fonction de l'entité du point focal."""
+        if self.point_focal and hasattr(self.point_focal, 'entity') and self.point_focal.entity:
+            # Recherche d'un responsable avec la même entité
+            responsable = User.objects.filter(
+                entity=self.point_focal.entity,
+                groups__name='Responsable'  # Suppose un groupe "Responsable", ajuste si nécessaire
+            ).exclude(id=self.point_focal.id).first()  # Exclut le point focal lui-même
+
+            if responsable:
+                self.responsable = responsable
+            else:
+                self.responsable = None  # Aucun responsable trouvé pour cette entité
+
     def save(self, *args, **kwargs):
         user = kwargs.pop('user', None)
+        apply_changes = kwargs.pop('apply_changes', False)
+        
         old_instance = None
         if self.pk:
             old_instance = Activite.objects.get(pk=self.pk)
             if old_instance.indicateur_reference != self.indicateur_reference:
                 self.indicateur_reference = old_instance.indicateur_reference
+
+        # Mise à jour dynamique du responsable
+        self.update_responsable()
 
         horizon = self.action.produit.effet.plan.horizon
         if not self.couts or len(self.couts) != horizon:
@@ -464,6 +553,8 @@ class Activite(models.Model):
             self.commentaire_se = ["En attente"] * horizon
         if not self.pending_changes or len(self.pending_changes) != horizon:
             self.pending_changes = [{}] * horizon
+        if not self.proposed_changes or len(self.proposed_changes) != horizon:
+            self.proposed_changes = [{}] * horizon
         if not self.status or len(self.status) != horizon:
             self.status = ["Non entamée"] * horizon
         if not self.matrix_status or len(self.matrix_status) != horizon:
@@ -472,8 +563,14 @@ class Activite(models.Model):
             self.alertes_envoyees = {}
 
         for i in range(horizon):
-            if self.pending_changes[i]:
+            if self.pending_changes[i] or self.proposed_changes[i]:
                 self.matrix_status[i] = 'En cours'
+
+        # Synchro PF avec Responsable après soumission
+        if user == self.responsable and self.pending_changes != old_instance.pending_changes if old_instance else False:
+            for i in range(horizon):
+                if self.pending_changes[i]:
+                    self.proposed_changes[i] = self.pending_changes[i].copy()  # PF suit Responsable
 
         self.full_clean()
         self.update_reference()
@@ -482,13 +579,14 @@ class Activite(models.Model):
 
         if user:
             try:
-                if not old_instance:  # Nouvelle activité
+                if not old_instance:
                     NotificationQueue().add_activity(self, user)
-                elif self.pending_changes != old_instance.pending_changes:  # Modification
+                elif (self.pending_changes != old_instance.pending_changes or 
+                      self.proposed_changes != old_instance.proposed_changes):
                     self._send_change_notification(user)
             except Exception as e:
                 logger.error(f"Erreur lors de la gestion des notifications : {str(e)}", exc_info=True)
-        if 'apply_changes' in kwargs and user:
+        if apply_changes and user:
             self._log_changes(user)
 
         self.action.calculer_nombres()
@@ -507,33 +605,83 @@ class Activite(models.Model):
         if index >= horizon:
             raise ValueError("Index hors de l'horizon du plan.")
 
-        if not self.pending_changes[index]:
-            self.pending_changes[index] = {
-                'etat_avancement': self.etat_avancement[index],
-                'realisation': self.realisation[index],
-                'commentaire': self.commentaire[index],
-                'commentaire_se': self.commentaire_se[index],
-                'status': self.status[index],
-                'last_modified_by': user.username,
-                'is_processed_by_se': False  # Initialisé à False pour les nouvelles propositions
-            }
+        # Restriction : Le point focal ne peut pas modifier si aucun responsable n'est assigné
+        if user == self.point_focal and not self.responsable:
+            raise PermissionDenied("Vous ne pouvez pas proposer de modifications tant qu'un responsable n'est pas assigné à cette activité.")
 
-        if etat_avancement is not None:
-            self.pending_changes[index]['etat_avancement'] = etat_avancement
-        if realisation is not None:
-            self.pending_changes[index]['realisation'] = realisation
-        if commentaire is not None:
-            self.pending_changes[index]['commentaire'] = commentaire
-        if commentaire_se is not None:
-            self.pending_changes[index]['commentaire_se'] = commentaire_se
-        if status is not None:
-            if status not in ['Non entamée', 'En cours', 'Réalisée', 'Non réalisée', 'Supprimée', 'Reprogrammée']:
-                raise ValueError("Statut invalide.")
-            self.pending_changes[index]['status'] = status
-        
-        self.pending_changes[index]['last_modified_by'] = user.username
-        self.pending_changes[index]['is_processed_by_se'] = user.groups.filter(name='SuiveurEvaluateur').exists()  # Marquer comme traité si SE
-        self.matrix_status[index] = 'En cours'
+        if user == self.responsable:
+            if not self.pending_changes[index]:
+                self.pending_changes[index] = {
+                    'etat_avancement': self.etat_avancement[index],
+                    'realisation': self.realisation[index],
+                    'commentaire': self.commentaire[index],
+                    'commentaire_se': self.commentaire_se[index],
+                    'status': self.status[index],
+                    'last_modified_by': user.username,
+                    'is_processed_by_se': False
+                }
+            if etat_avancement is not None:
+                self.pending_changes[index]['etat_avancement'] = etat_avancement
+            if realisation is not None:
+                self.pending_changes[index]['realisation'] = realisation
+            if commentaire is not None:
+                self.pending_changes[index]['commentaire'] = commentaire
+            if commentaire_se is not None:
+                self.pending_changes[index]['commentaire_se'] = commentaire_se
+            if status is not None:
+                if status not in ['Non entamée', 'En cours', 'Réalisée', 'Non réalisée', 'Supprimée', 'Reprogrammée']:
+                    raise ValueError("Statut invalide.")
+                self.pending_changes[index]['status'] = status
+            self.pending_changes[index]['last_modified_by'] = user.username
+            self.pending_changes[index]['is_processed_by_se'] = user.groups.filter(name='SuiveurEvaluateur').exists()
+            self.matrix_status[index] = 'En cours'
+        elif user == self.point_focal:
+            if self.pending_changes[index] and self.pending_changes[index].get('last_modified_by') == self.responsable.username:
+                raise PermissionDenied("Le responsable a déjà soumis des modifications. Vous ne pouvez plus proposer de changements.")
+            if not self.proposed_changes[index]:
+                self.proposed_changes[index] = {
+                    'etat_avancement': self.etat_avancement[index],
+                    'realisation': self.realisation[index],
+                    'commentaire': self.commentaire[index],
+                    'last_modified_by': user.username,
+                }
+            if etat_avancement is not None:
+                self.proposed_changes[index]['etat_avancement'] = etat_avancement
+            if realisation is not None:
+                self.proposed_changes[index]['realisation'] = realisation
+            if commentaire is not None:
+                self.proposed_changes[index]['commentaire'] = commentaire
+            self.proposed_changes[index]['last_modified_by'] = user.username
+            self.matrix_status[index] = 'En cours'
+        elif user.groups.filter(name='SuiveurEvaluateur').exists():
+            if not self.pending_changes[index]:
+                self.pending_changes[index] = {
+                    'etat_avancement': self.etat_avancement[index],
+                    'realisation': self.realisation[index],
+                    'commentaire': self.commentaire[index],
+                    'commentaire_se': self.commentaire_se[index],
+                    'status': self.status[index],
+                    'last_modified_by': user.username,
+                    'is_processed_by_se': True
+                }
+            if etat_avancement is not None:
+                self.pending_changes[index]['etat_avancement'] = etat_avancement
+            if realisation is not None:
+                self.pending_changes[index]['realisation'] = realisation
+            if commentaire is not None:
+                self.pending_changes[index]['commentaire'] = commentaire
+            if commentaire_se is not None:
+                self.pending_changes[index]['commentaire_se'] = commentaire_se
+            if status is not None:
+                if status not in ['Non entamée', 'En cours', 'Réalisée', 'Non réalisée', 'Supprimée', 'Reprogrammée']:
+                    raise ValueError("Statut invalide.")
+                self.pending_changes[index]['status'] = status
+            self.pending_changes[index]['last_modified_by'] = user.username
+            self.pending_changes[index]['is_processed_by_se'] = True
+            self.matrix_status[index] = 'En cours'
+        else:
+            raise PermissionDenied("Vous n'avez pas les permissions nécessaires pour proposer des changements.")
+
         self.save(user=user)
 
     def apply_pending_changes(self, user, index):
@@ -549,10 +697,11 @@ class Activite(models.Model):
         self.commentaire[index] = self.pending_changes[index].get('commentaire', self.commentaire[index])
         self.commentaire_se[index] = self.pending_changes[index].get('commentaire_se', self.commentaire_se[index])
         self.status[index] = self.pending_changes[index].get('status', self.status[index])
-        self.pending_changes[index] = {'is_processed_by_se': True}  # Marquer comme traité
+        self.pending_changes[index] = {}
+        self.proposed_changes[index] = {}
         self.matrix_status[index] = 'Validée'
         self.save(user=user, apply_changes=True)
-        
+
     def set_status(self, user, index, status):
         if not user.groups.filter(name='SuiveurEvaluateur').exists():
             raise PermissionDenied("Seul un suiveur-évaluateur peut modifier le statut directement.")
@@ -575,6 +724,9 @@ class Activite(models.Model):
         if index >= horizon:
             raise ValueError("Index hors de l'horizon du plan.")
         
+        self.pending_changes[index] = {}
+        self.proposed_changes[index] = {}
+        self.matrix_status[index] = 'Validée'
         self.save(user=user)
         self.action.calculer_nombres()
         self.action.calculer_couts()
@@ -592,7 +744,7 @@ class Activite(models.Model):
             'commentaire': self.commentaire[annee_index],
             'status': self.status[annee_index],
         }
-        self.matrix_status[annee_index] = 'Validée' if current_version == matrix_version and not self.pending_changes[annee_index] else 'En cours'
+        self.matrix_status[annee_index] = 'Validée' if current_version == matrix_version and not self.pending_changes[annee_index] and not self.proposed_changes[annee_index] else 'En cours'
         self.save()
 
     def get_last_matrix_status_change(self):
@@ -624,7 +776,7 @@ class Activite(models.Model):
         current_month = today.month
         current_weekday = today.weekday()
 
-        if current_weekday != 0:  # Exécuter uniquement le lundi
+        if current_weekday != 0:
             return
 
         trimestre_dates = {
@@ -683,9 +835,6 @@ class Activite(models.Model):
                             )
                         activite.alertes_envoyees[cle_alerte] = today.isoformat()
                         activite.save()
-
-    def __str__(self):
-        return f"Activité {self.reference} : {self.titre}"
 
 class ActiviteLog(models.Model):
     activite = models.ForeignKey(Activite, on_delete=models.CASCADE, related_name='logs')

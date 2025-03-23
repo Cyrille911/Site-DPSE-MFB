@@ -1,5 +1,3 @@
-# views.py
-
 from django.shortcuts import render
 
 # Vue pour la page d'accueil

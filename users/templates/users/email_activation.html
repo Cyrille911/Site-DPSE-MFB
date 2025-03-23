@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmation de votre inscription</title>
+</head>
+<body>
+    <h1>Bienvenue, {{ user.first_name }} !</h1>
+    <p>Bonjour {{ user.first_name }},</p>
+    {% if user.role == 'visiteur' %}
+        <p>Nous sommes ravis de vous accueillir parmi nos collaborateurs externes. Pour activer votre accès à la plateforme et participer à nos activités, veuillez cliquer sur le lien suivant :</p>
+        <p><a href="{{ activation_link }}">Activer mon accès</a></p>
+        <p>Ce lien reste valide pendant 24 heures. En cas d’expiration, une nouvelle inscription sera requise.</p>
+        <p>Nous vous remercions pour votre engagement et votre contribution à nos travaux.</p>
+        <p>Salutations distinguées,<br>L’équipe de la DPSE</p>
+    {% else %}
+        <p>Nous sommes heureux de vous compter parmi nos collaborateurs. Pour finaliser votre inscription à la plateforme, merci de confirmer votre compte via le lien ci-dessous :</p>
+        <p><a href="{{ activation_link }}">Confirmer l'inscription</a></p>
+        <p>Ce lien reste valide pendant 24 heures. En cas d’expiration, une nouvelle inscription sera requise.</p>
+        <p>Nous vous remercions pour votre engagement et votre contribution à nos travaux.</p>
+        <p>Salutations distinguées,<br>L’équipe de la DPSE</p>
+    {% endif %}
+</body>
+</html>

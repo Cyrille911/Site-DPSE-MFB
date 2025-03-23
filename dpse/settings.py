@@ -43,12 +43,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'users.apps.UserConfig',
+    'users.apps.UserConfig',  # Doit être présent
     'general.apps.GeneralConfig',
     'blog.apps.BlogConfig',
     'documents.apps.DocumentsConfig',
     'news.apps.NewsConfig',
-    'planning.apps.PlanningConfig',
+    'planning.apps.PlanningConfig',  # Doit être présent
     'stats.apps.StatsConfig',
     'quality.apps.QualityConfig',
     'django_celery_beat',

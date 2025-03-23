@@ -3,23 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Demande d'activation de compte</title>
+    <title>Demande d’activation de compte</title>
 </head>
 <body>
-    <h1>Demande d'activation de compte</h1>
-    <p>Un nouveau membre a demandé l'activation de son compte.</p>
+    <h1>Demande d’activation de compte</h1>
+    <p>Monsieur/Madame,</p>
+    <p>Un nouveau collaborateur a soumis une demande d’activation de compte sur la plateforme. Voici les informations le concernant :</p>
     <ul>
-        <li><strong>Nom :</strong> {{ user.username }}</li>
+        <li><strong>Nom d’utilisateur :</strong> {{ user.username }}</li>
         <li><strong>Nom :</strong> {{ user.last_name }}</li>
         <li><strong>Prénoms :</strong> {{ user.first_name }}</li>
-        <li><strong>Programme :</strong> {{ user.program }}</li>
-        <li><strong>Entité :</strong> {{ user.entity }}</li>
-        <li><strong>Fonction :</strong> {{ user.function }}</li>
+        <li><strong>Programme :</strong> {{ user.program|default:"Non spécifié" }}</li>
+        <li><strong>Entité :</strong> {{ user.entity|default:"Non spécifié" }}</li>
+        <li><strong>Fonction :</strong> {{ user.function|default:"Non spécifié" }}</li>
         <li><strong>Email :</strong> {{ user.email }}</li>
-        <li><strong>Téléphone :</strong> {{ user.phone_number }}</li>
+        <li><strong>Téléphone :</strong> {{ user.phone_number|default:"Non spécifié" }}</li>
+        <li><strong>Rôle :</strong> {{ user.role }}</li>
     </ul>
-    <p>
-        <a href="http://{{ domain }}/nouveau/membre/{{ uid }}/{{ token }}">Cliquer ici pour l'activer</a>
-    </p>
+    <p>Pour valider cette demande et activer le compte, merci de cliquer sur le lien suivant :</p>
+    <p><a href="http://{{ domain }}/User/nouveau/membre/{{ uid }}/{{ token }}">Valider l’activation</a></p>
+    <p>Nous vous remercions par avance pour votre diligence dans le traitement de cette requête.</p>
+    <p>Salutations distinguées !</p>
 </body>
 </html>

@@ -3,34 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Confirmez votre inscription</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-        }
-        h2 {
-            color: #4CAF50; /* Exemple d'utilisation des couleurs */
-        }
-        p {
-            font-size: 16px;
-        }
-        a {
-            color: #3498db;
-            text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-    </style>
+    <title>Votre compte est activé</title>
 </head>
 <body>
-    <p>Bonjour {{ user.last_name }} {{ user.first_name }},</p>
-    <p>Votre compte a été activé avec succès. Vous pouvez maintenant vous connecter.</p>
-    <p>Veuillez utiliser le lien suivant pour vous connecter :</p>
-        <a href="http://{{ domain }}/connexion/membre/">Me connecter</a>
-    </p>
-    <p>Cordialement,<br>L'équipe du site</p>
+    <h1>Votre compte est activé !</h1>
+    <p>Bonjour {{ user.first_name }},</p>
+    <p>Nous avons le plaisir de vous informer que votre compte sur la plateforme a été activé avec succès.</p>
+    <p>Vous pouvez désormais vous connecter pour collaborer avec nous et accéder aux ressources disponibles. Nous vous remercions pour votre engagement.</p>
+    <p>Pour vous connecter, veuillez utiliser le lien suivant :</p>
+    <p><a href="http://{{ domain }}/User/connexion/membre/">Me connecter</a></p>
+    <p>Salutations distinguées,<br>L’équipe de la DPSE</p>
 </body>
 </html>

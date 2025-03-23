@@ -69,28 +69,28 @@ Matrice Opérationnelle - {{ plan.titre }} - {{ annee }}
                     </thead>
                     <tbody id="matrix-table-body">
                         <tr class="hierarchy-row impact-row">
-                            <td colspan="12">Impact : {{ impact }}</td>
+                            <td colspan="13">Impact : {{ impact }}</td>
                         </tr>
                         {% for effet in effets %}
                             <tr class="hierarchy-row effet-row">
                                 <td colspan="6">Effet : {{ effet.titre }}</td>
                                 <td>{{ effet.cout }}</td>
-                                <td colspan="5"></td>
+                                <td colspan="6"></td>
                             </tr>
                             {% for produit in effet.produits %}
                                 <tr class="hierarchy-row produit-row">
                                     <td colspan="6">Produit : {{ produit.titre }}</td>
                                     <td>{{ produit.cout }}</td>
-                                    <td colspan="5"></td>
+                                    <td colspan="6"></td>
                                 </tr>
                                 {% for action in produit.actions %}
                                     <tr class="hierarchy-row action-row">
                                         <td colspan="6">Action : {{ action.titre }}</td>
                                         <td>{{ action.cout }}</td>
-                                        <td colspan="5"></td>
+                                        <td colspan="6"></td>
                                     </tr>
                                     {% for activite in action.activites %}
-                                        <tr class="activity-row" data-last-modified="{{ activite.last_modified_matrix_status }}">
+                                        <tr class="activity-row">
                                             <td>{{ activite.titre }}</td>
                                             <td>{{ activite.type }}</td>
                                             <td>{{ activite.indicateur_label }}</td>
@@ -142,10 +142,15 @@ Matrice Opérationnelle - {{ plan.titre }} - {{ annee }}
 
     <!-- Boutons -->
     <div class="text-center mt-4 mb-4 animate-fade-in">
-        <button id="download-excel-btn" class="btn btn-orange btn-lg px-5 py-2 fw-bold">Télécharger Excel</button>
-        <a href="{% url 'hierarchy_review' plan.id %}" class="btn btn-orange btn-lg px-5 py-2 fw-bold me-3">Liste des PAO (H)</a>
-        <a href="{% url 'pao_list' plan.id %}" class="btn btn-orange btn-lg px-5 py-2 fw-bold me-3">Liste des PAO (PF)</a>
-        <a href="{% url 'track_execution_list' plan.id %}" class="btn btn-orange btn-lg px-5 py-2 fw-bold me-3">Liste des PAO (SE)</a>
+        {% if user.role == 'point_focal' or user.role == 'responsable' %}
+            <a href="{% url 'pao_list' plan.id %}" class="btn btn-orange btn-lg px-5 py-2 fw-bold me-3">Liste des PAO</a>
+        {% endif %}
+        {% if user.role == 'cabinet' %}
+            <a href="{% url 'hierarchy_review' plan.id %}" class="btn btn-orange btn-lg px-5 py-2 fw-bold me-3">Liste des PAO</a>
+        {% endif %}
+        {% if user.role == 'suiveur_evaluateur' %}
+            <a href="{% url 'track_execution_list' plan.id %}" class="btn btn-orange btn-lg px-5 py-2 fw-bold me-3">Liste des PAO</a>
+        {% endif %}
     </div>
 
     <!-- Barre-loupe flottante -->
@@ -372,7 +377,7 @@ document.addEventListener('DOMContentLoaded', function () {
         .then(data => {
             tableBody.innerHTML = `
                 <tr class="hierarchy-row impact-row">
-                    <td colspan="12">Impact : ${data.impact}</td>
+                    <td colspan="13">Impact : ${data.impact}</td>
                 </tr>
             `;
 
@@ -381,7 +386,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <tr class="hierarchy-row effet-row">
                         <td colspan="6">Effet : ${effet.titre}</td>
                         <td>${effet.cout}</td>
-                        <td colspan="5"></td>
+                        <td colspan="6"></td>
                     </tr>
                 `;
                 effet.produits.forEach(produit => {
@@ -389,7 +394,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <tr class="hierarchy-row produit-row">
                             <td colspan="6">Produit : ${produit.titre}</td>
                             <td>${produit.cout}</td>
-                            <td colspan="5"></td>
+                            <td colspan="6"></td>
                         </tr>
                     `;
                     produit.actions.forEach(action => {
@@ -397,12 +402,12 @@ document.addEventListener('DOMContentLoaded', function () {
                             <tr class="hierarchy-row action-row">
                                 <td colspan="6">Action : ${action.titre}</td>
                                 <td>${action.cout}</td>
-                                <td colspan="5"></td>
+                                <td colspan="6"></td>
                             </tr>
                         `;
                         action.activites.forEach(activite => {
                             tableBody.innerHTML += `
-                                <tr class="activity-row" data-last-modified="${activite.last_modified_matrix_status}">
+                                <tr class="activity-row">
                                     <td>${activite.titre}</td>
                                     <td>${activite.type}</td>
                                     <td>${activite.indicateur_label}</td>
@@ -424,15 +429,14 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             if (data.effets.length === 0) {
-                tableBody.innerHTML += `<tr><td colspan="12" class="text-center">Aucune donnée trouvée</td></tr>`;
+                tableBody.innerHTML += `<tr><td colspan="13" class="text-center">Aucune donnée trouvée</td></tr>`;
             }
 
             filterTable();
-            attachTooltipEvents();
         })
         .catch(error => {
             console.error('Erreur AJAX:', error);
-            tableBody.innerHTML = `<tr><td colspan="12" class="text-center">Erreur de chargement</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="13" class="text-center">Erreur de chargement</td></tr>`;
             updatePagination();
         });
     }
@@ -470,39 +474,7 @@ document.addEventListener('DOMContentLoaded', function () {
         updateButton();
     });
 
-    // Tooltip pour matrix_status
-    const tooltip = document.createElement('div');
-    tooltip.id = 'matrix-tooltip';
-    tooltip.style.cssText = 'position: absolute; background: #333; color: #fff; padding: 5px 10px; border-radius: 5px; font-size: 12px; z-index: 1000; display: none; pointer-events: none;';
-    document.body.appendChild(tooltip);
-
-    function attachTooltipEvents() {
-        document.querySelectorAll('.activity-row').forEach(row => {
-            row.addEventListener('mouseover', function (e) {
-                const lastModified = this.getAttribute('data-last-modified');
-                if (lastModified !== 'Non défini') {
-                    tooltip.textContent = `Dernière modif. matrix_status : ${lastModified}`;
-                    tooltip.style.display = 'block';
-                    tooltip.style.left = `${e.pageX + 10}px`;
-                    tooltip.style.top = `${e.pageY + 10}px`;
-                }
-            });
-
-            row.addEventListener('mousemove', function (e) {
-                if (this.getAttribute('data-last-modified') !== 'Non défini') {
-                    tooltip.style.left = `${e.pageX + 10}px`;
-                    tooltip.style.top = `${e.pageY + 10}px`;
-                }
-            });
-
-            row.addEventListener('mouseout', function () {
-                tooltip.style.display = 'none';
-            });
-        });
-    }
-
     // Initialisation
-    attachTooltipEvents();
     updatePagination();
 });
 </script>

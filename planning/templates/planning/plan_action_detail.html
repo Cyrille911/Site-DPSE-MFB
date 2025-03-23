@@ -143,9 +143,28 @@
 
         <!-- Boutons -->
         <div class="text-center mt-4 mb-4 animate-section" style="animation-delay: 0.8s;">
-            <a href="{% url 'pao_list' plan.id %}" class="btn btn-lg me-3" style="background-color: #ff6200; color: white;">Modifier mes activités</a>
-            <a href="{% url 'hierarchy_review' plan.id %}" class="btn btn-lg me-3" style="background-color: #007bff; color: white;">Consulter la mise en oeuvre</a>
-            <a href="{% url 'track_execution_list' plan.id %}" class="btn btn-lg" style="background-color: #28a745; color: white;">Suivre l'exécution</a>
+            {% if request.user.is_authenticated %}
+                <!-- Bouton "Modifier mes activités" : visible pour Point Focal (PF) et Responsable -->
+                {% if request.user.role == "point_focal" or request.user.role == "responsable" %}
+                    <a href="{% url 'pao_list' plan.id %}" class="btn btn-lg me-3" style="background-color: #ff6200; color: white;">
+                        Modifier mes activités
+                    </a>
+                {% endif %}
+                
+                <!-- Bouton "Consulter la mise en œuvre" : visible pour les membres du Cabinet -->
+                {% if request.user.role == "cabinet" %}
+                    <a href="{% url 'hierarchy_review' plan.id %}" class="btn btn-lg me-3" style="background-color: #007bff; color: white;">
+                        Consulter la mise en oeuvre
+                    </a>
+                {% endif %}
+                
+                <!-- Bouton "Suivre l'exécution" : visible pour les Suiveurs Évaluateurs -->
+                {% if request.user.role == "suiveur_evaluateur" %}
+                    <a href="{% url 'track_execution_list' plan.id %}" class="btn btn-lg" style="background-color: #28a745; color: white;">
+                        Suivre l'exécution
+                    </a>
+                {% endif %}
+            {% endif %}
         </div>
 
         <!-- Barre-loupe flottante fixe -->
@@ -189,28 +208,6 @@
 
             const planImpact = "{{ plan.impact | escapejs }}";
 
-            function updateStats() {
-                const rows = tableBody.getElementsByTagName('tr');
-                const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none' && !row.classList.contains('hierarchy-row'));
-                const totalRows = Array.from(rows).filter(row => !row.classList.contains('hierarchy-row')).length;
-                visibleRowsSpan.textContent = visibleRows.length;
-                totalRowsSpan.textContent = totalRows;
-
-                const typeStats = {};
-                visibleRows.forEach(row => {
-                    const type = row.cells[1].textContent.trim() || 'N/A';
-                    typeStats[type] = (typeStats[type] || 0) + 1;
-                });
-
-                typeStatsBody.innerHTML = '';
-                Object.entries(typeStats).forEach(([type, count]) => {
-                    const percentage = totalRows > 0 ? ((count / totalRows) * 100).toFixed(1) : 0;
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `<td>${type}</td><td>${count}</td><td>${percentage}%</td>`;
-                    typeStatsBody.appendChild(tr);
-                });
-            }
-
             function updateHierarchyPositions() {
                 const rows = Array.from(tableBody.getElementsByTagName('tr'));
                 const scrollTop = tableContainer.scrollTop;
@@ -222,19 +219,10 @@
                     const firstCell = row.querySelector('td:first-child');
                     if (!firstCell) return;
 
-                    if (row.classList.contains('impact-row')) {
-                        firstCell.style.top = `${headerHeight}px`; // Impact reste fixe juste sous l'en-tête
-                    } else if (row.classList.contains('effet-row')) {
-                        firstCell.style.top = `${topOffset}px`;
-                        firstCell.style.display = row.offsetTop - scrollTop < topOffset ? 'none' : '';
-                        topOffset += row.offsetHeight;
-                    } else if (row.classList.contains('produit-row')) {
-                        firstCell.style.top = `${topOffset}px`;
-                        firstCell.style.display = row.offsetTop - scrollTop < topOffset ? 'none' : '';
-                        topOffset += row.offsetHeight;
-                    } else if (row.classList.contains('action-row')) {
-                        firstCell.style.top = `${topOffset}px`;
-                        firstCell.style.display = row.offsetTop - scrollTop < topOffset ? 'none' : '';
+                    if (row.classList.contains('hierarchy-row')) {
+                        row.style.position = 'sticky';
+                        row.style.top = `${topOffset}px`;
+                        row.style.zIndex = 20 - index; // Décrémenter z-index pour ordre correct
                         topOffset += row.offsetHeight;
                     }
                 });
@@ -318,10 +306,50 @@
                     .then(data => {
                         const annees = data.annees || [];
                         const anneeDebut = data.annee_debut;
-                        const colspanTotal = 6 + annees.length; // Intitulé, Type, Indicateur (Libellé + Réf + Cibles), Structure, Programme, Coûts
-                        const colspanToProgramme = 4 + annees.length; // Jusqu'à Programme inclus
+                        const colspanBeforeCosts = 5 + annees.length; // Intitulé, Type, Indicateur (Libellé + Réf + Cibles), Structure, Programme
 
                         tableBody.innerHTML = '';
+
+                        // Calcul des coûts totaux par année pour chaque niveau
+                        const effets = data.effets || [];
+                        effets.forEach(effet => {
+                            effet.coutsParAnnee = Array(annees.length).fill(0);
+                            effet.totalCost = 0;
+                            effet.produits.forEach(produit => {
+                                produit.coutsParAnnee = Array(annees.length).fill(0);
+                                produit.totalCost = 0;
+                                produit.actions.forEach(action => {
+                                    action.coutsParAnnee = Array(annees.length).fill(0);
+                                    action.totalCost = 0;
+                                    action.activites.forEach(activite => {
+                                        activite.couts = activite.couts || Array(annees.length).fill(0);
+                                        activite.totalCost = 0;
+                                        activite.couts.forEach((cout, index) => {
+                                            const coutNum = parseFloat(cout) || 0;
+                                            activite.totalCost += coutNum;
+                                            action.coutsParAnnee[index] += coutNum;
+                                            produit.coutsParAnnee[index] += coutNum;
+                                            effet.coutsParAnnee[index] += coutNum;
+                                        });
+                                        action.totalCost += activite.totalCost;
+                                    });
+                                    produit.totalCost += action.totalCost;
+                                });
+                                effet.totalCost += produit.totalCost;
+                            });
+                        });
+
+                        // Calcul du coût total global
+                        let totalCoutsParAnnee = Array(annees.length).fill(0);
+                        let totalCostGlobal = 0;
+                        effets.forEach(effet => {
+                            effet.coutsParAnnee.forEach((cout, index) => {
+                                totalCoutsParAnnee[index] += cout;
+                            });
+                            totalCostGlobal += effet.totalCost;
+                        });
+
+                        // Ajouter la ligne "Impact"
                         tableBody.innerHTML += `
                             <tr class="hierarchy-row impact-row impact-bg">
                                 <td colspan="${colspanBeforeCosts + annees.length + 1}">Impact : ${planImpact || 'Impact non défini'}</td>
@@ -339,35 +367,32 @@
 
                         effets.forEach((effet, i) => {
                             let row = `
-                                <tr class="hierarchy-row effet-row">
-                                    <td colspan="${colspanToProgramme}">Effet ${i + 1} : ${effet.titre}</td>
+                                <tr class="hierarchy-row effet-row effet-bg">
+                                    <td colspan="${colspanBeforeCosts}">Effet ${i + 1} : ${effet.titre}</td>
+                                    ${annees.map((annee, index) => `<td>${effet.coutsParAnnee[index].toFixed(2)}</td>`).join('')}
+                                    <td>${effet.totalCost.toFixed(2)}</td>
+                                </tr>
                             `;
-                            annees.forEach((annee, index) => {
-                                const cout = effet.couts && index < effet.couts.length ? effet.couts[index] : 'N/A';
-                                row += `<td>${cout}</td>`;
-                            });
                             tableBody.innerHTML += row;
 
                             effet.produits.forEach((produit, j) => {
                                 let produitRow = `
-                                    <tr class="hierarchy-row produit-row">
-                                        <td colspan="${colspanToProgramme}">Produit ${i + 1}.${j + 1} : ${produit.titre}</td>
+                                    <tr class="hierarchy-row produit-row produit-bg">
+                                        <td colspan="${colspanBeforeCosts}">Produit ${i + 1}.${j + 1} : ${produit.titre}</td>
+                                        ${annees.map((annee, index) => `<td>${produit.coutsParAnnee[index].toFixed(2)}</td>`).join('')}
+                                        <td>${produit.totalCost.toFixed(2)}</td>
+                                    </tr>
                                 `;
-                                annees.forEach((annee, index) => {
-                                    const cout = produit.couts && index < produit.couts.length ? produit.couts[index] : 'N/A';
-                                    produitRow += `<td>${cout}</td>`;
-                                });
                                 tableBody.innerHTML += produitRow;
 
                                 produit.actions.forEach((action, k) => {
                                     let actionRow = `
-                                        <tr class="hierarchy-row action-row">
-                                            <td colspan="${colspanToProgramme}">Action ${i + 1}.${j + 1}.${k + 1} : ${action.titre}</td>
+                                        <tr class="hierarchy-row action-row action-bg">
+                                            <td colspan="${colspanBeforeCosts}">Action ${i + 1}.${j + 1}.${k + 1} : ${action.titre}</td>
+                                            ${annees.map((annee, index) => `<td>${action.coutsParAnnee[index].toFixed(2)}</td>`).join('')}
+                                            <td>${action.totalCost.toFixed(2)}</td>
+                                        </tr>
                                     `;
-                                    annees.forEach((annee, index) => {
-                                        const cout = action.couts && index < action.couts.length ? action.couts[index] : 'N/A';
-                                        actionRow += `<td>${cout}</td>`;
-                                    });
                                     tableBody.innerHTML += actionRow;
 
                                     action.activites.forEach((activite, l) => {
@@ -389,11 +414,6 @@
                                             ${annees.map((annee, index) => `<td>${(activite.couts[index] || 0).toFixed(2)}</td>`).join('')}
                                             <td>${activite.totalCost.toFixed(2)}</td>
                                         `;
-                                        annees.forEach(annee => {
-                                            const index = parseInt(annee) - anneeDebut;
-                                            const cout = (activite.couts && index >= 0 && index < activite.couts.length) ? activite.couts[index] : 'N/A';
-                                            activiteRow += `<td>${cout}</td>`;
-                                        });
                                         tableBody.innerHTML += activiteRow;
                                     });
                                 });
@@ -411,7 +431,8 @@
                         console.error('Erreur AJAX:', error);
                         let totalColonnes = table.rows[0]?.cells.length || 1;
                         tableBody.innerHTML = `
-                            <tr class="hierarchy-row impact-row"><td colspan="${totalColonnes}">Impact : ${planImpact || 'Impact non défini'}</td></tr>
+                            <tr class="hierarchy-row impact-row impact-bg"><td colspan="${totalColonnes}">Impact : ${planImpact || 'Impact non défini'}</td></tr>
+                            <tr class="hierarchy-row total-row total-bg"><td colspan="${totalColonnes}">Coût Total : N/A</td></tr>
                             <tr><td colspan="${totalColonnes}" class="text-center">Erreur de chargement des données</td></tr>
                         `;
                         updateHierarchyPositions();
@@ -433,7 +454,7 @@
 
                 Array.from(rows).forEach(row => {
                     if (row.classList.contains('hierarchy-row')) {
-                        row.style.display = ''; // Toujours afficher les lignes hiérarchiques initialement
+                        row.style.display = ''; // Toujours afficher les lignes hiérarchiques
                     } else {
                         const cells = row.getElementsByTagName('td');
                         if (cells.length === 0) return;
@@ -446,26 +467,6 @@
                     }
                 });
 
-                // Masquer les lignes hiérarchiques si aucune activité visible en dessous
-                const allRows = Array.from(rows);
-                for (let i = allRows.length - 1; i >= 0; i--) {
-                    const row = allRows[i];
-                    if (row.classList.contains('hierarchy-row') && !row.classList.contains('impact-row')) {
-                        const nextRows = allRows.slice(i + 1);
-                        const hasVisibleActivity = nextRows.some(nextRow => 
-                            !nextRow.classList.contains('hierarchy-row') && nextRow.style.display !== 'none'
-                        );
-                        if (!hasVisibleActivity) {
-                            let j = i;
-                            while (j >= 0 && allRows[j].classList.contains('hierarchy-row') && !allRows[j].classList.contains('impact-row')) {
-                                allRows[j].style.display = 'none';
-                                j--;
-                            }
-                        }
-                    }
-                }
-
-                updateStats();
                 updateHierarchyPositions();
             }
 
@@ -746,6 +747,26 @@
             text-align: left;
         }
 
+        .impact-bg {
+            background-color: #d1e7dd; /* Vert clair pour Impact */
+        }
+
+        .total-bg {
+            background-color: #b8d8c9; /* Vert légèrement plus foncé pour Coût Total */
+        }
+
+        .effet-bg {
+            background-color: #f8d7da;
+        }
+
+        .produit-bg {
+            background-color: #fff3cd;
+        }
+
+        .action-bg {
+            background-color: #cce5ff;
+        }
+
         .table-container {
             margin-top: 40px;
             margin-bottom: 40px;
@@ -812,11 +833,11 @@
         }
 
         .impact-row td:first-child {
+            background-color: #d1e7dd; /* Fond opaque spécifique pour Impact */
             position: sticky;
             left: 0;
-            z-index: 25;
-            background-color: #d1e7dd;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            z-index: 16; /* Légèrement supérieur pour rester visible */
+            opacity: 1 !important;
         }
 
         .total-row td:first-child {
@@ -842,7 +863,7 @@
             opacity: 1 !important;
         }
 
-        .hierarchy-row, .total-row {
+        .hierarchy-row {
             font-weight: bold;
             background-color: inherit; /* Assure que la ligne entière hérite de la couleur */
         }
@@ -947,7 +968,7 @@
             position: fixed;
             z-index: 1000;
             top: 85px;
-            right: 35px; /* Décalé légèrement de 85px à 70px vers la droite */
+            right: 70px; /* Décalé légèrement de 85px à 70px vers la droite */
         }
 
         .download-icon {

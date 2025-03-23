@@ -1,18 +1,15 @@
+# users/models.py
 from django.db import models
-
-# Modèle d'utilisateur personnalisé
-from django.contrib.auth.models import AbstractUser
-from django.db import models
-
+from django.contrib.auth.models import AbstractUser, Group
+from django.db.models.signals import post_migrate
+from django.dispatch import receiver
 import os
 
 def user_directory_path(instance, filename):
-    
     return os.path.join('users', 'media', 'profiles', filename)
 
 class User(AbstractUser):
     ROLE_CHOICES = (
-        ('membre', 'Membre'),
         ('point_focal', 'Point Focal'),
         ('responsable', 'Responsable'),
         ('suiveur_evaluateur', 'Suiveur Evaluateur'),
@@ -32,29 +29,59 @@ class User(AbstractUser):
 
     # Champs communs
     email = models.EmailField(unique=True)
-    username = models.CharField(max_length=150, blank=True, null=True)  # Optionnel si email est principal
+    username = models.CharField(max_length=150, blank=True, null=True)
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']  # Aucun autre champ obligatoire pour le superutilisateur
+    REQUIRED_FIELDS = ['username']
 
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES)  # Rôle de l'utilisateur
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
     phone_number = models.CharField(max_length=50, blank=True, null=True)
     photo = models.ImageField(upload_to=user_directory_path, blank=True, null=True)
     
     # Champs spécifiques aux membres
-    program = models.CharField(max_length=50, blank=True, null=True, choices=PROGRAM_CHOICES)  # Programme de l'utilisateur
-    entity = models.CharField(max_length=50, blank=True, null=True)  # Entité à laquelle l'utilisateur appartient
-    function = models.CharField(max_length=100, blank=True, null=True)  # Fonction de l'utilisateur
+    program = models.CharField(max_length=50, blank=True, null=True, choices=PROGRAM_CHOICES)
+    entity = models.CharField(max_length=50, blank=True, null=True)
+    function = models.CharField(max_length=100, blank=True, null=True)
 
     # Champs spécifiques aux visiteurs
-    profession = models.CharField(max_length=100, blank=True, null=True)  # Profession de l'utilisateur
-    interest = models.CharField(max_length=100, blank=True, null=True)  # Intérêt à visiter le site
+    profession = models.CharField(max_length=100, blank=True, null=True)
+    interest = models.CharField(max_length=100, blank=True, null=True)
 
     def save(self, *args, **kwargs):
-        # Assigner l'email au username (pour compatibilité)
         if not self.username:
             self.username = self.email
         super().save(*args, **kwargs)
+        self.sync_groups()
+
+    def sync_groups(self):
+        """Synchronise le champ role avec les groupes correspondants."""
+        role_to_group = {
+            'point_focal': 'PointFocal',
+            'responsable': 'Responsable',
+            'suiveur_evaluateur': 'SuiveurEvaluateur',
+            'cabinet': 'CabinetMFB',
+            'visiteur': 'Visiteur',
+        }
+        group_name = role_to_group.get(self.role)
+        if group_name:
+            group, _ = Group.objects.get_or_create(name=group_name)
+            if not self.groups.filter(name=group_name).exists():
+                self.groups.clear()
+                self.groups.add(group)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.role})"
-    
+
+    def has_role(self, role_name):
+        return self.groups.filter(name=role_name).exists() or self.role == role_name.lower().replace(' ', '_')
+
+@receiver(post_migrate)
+def create_default_groups(sender, **kwargs):
+    group_names = [
+        'PointFocal',
+        'Responsable',
+        'SuiveurEvaluateur',
+        'CabinetMFB',
+        'Visiteur',
+    ]
+    for name in group_names:
+        Group.objects.get_or_create(name=name)

@@ -14,21 +14,21 @@ class InscriptionMembreForm(forms.ModelForm):
     
     # Ajout du champ 'role' avec les choix
     ROLE_CHOICES = (
-        ('membre', 'Membre simple'),
         ('responsable', 'Responsable'),
         ('point_focal', 'Point Focal'),
+        ('suiveur_evaluateur', 'Suiveur Evaluateur'),
         ('cabinet', 'Cabinet MFB'),
     )
     role = forms.ChoiceField(
         choices=ROLE_CHOICES, 
         label="Rôle", 
-        initial='membre',
+        initial='point_focal',
         widget=forms.Select(attrs={'class': 'input100'})
     )
 
     class Meta:
         model = User
-        fields = ['last_name', 'first_name', 'email', 'phone_number', 'program', 'entity', 'function', 'password', 'confirm_password', 'photo', 'role']
+        fields = ['last_name', 'first_name', 'email', 'phone_number', 'program', 'entity', 'function', 'role', 'password', 'confirm_password', 'photo']
         widgets = {
             'last_name': forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Nom'}),
             'first_name': forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Prénom'}),

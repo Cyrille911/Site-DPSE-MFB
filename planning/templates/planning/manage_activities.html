@@ -51,7 +51,7 @@ Gestion des Activités - {{ plan.titre }} - {{ annee }}
                     </thead>
                     <tbody>
                         {% for activite in activites %}
-                            <tr data-id="{{ activite.id }}" class="animate-slide-up" style="animation-delay: {{ forloop.counter0|mul:0.1 }}s;">
+                            <tr data-id="{{ activite.id }}" data-has-responsable="{{ activite.has_responsable|lower }}" class="animate-slide-up" style="animation-delay: {{ forloop.counter0|mul:0.1 }}s;">
                                 <td>{{ activite.reference }}</td>
                                 <td>{{ activite.titre }}</td>
                                 <td>{{ activite.type|default:'N/A' }}</td>
@@ -59,24 +59,36 @@ Gestion des Activités - {{ plan.titre }} - {{ annee }}
                                 <td>{{ activite.indicateur_reference|default:'N/A' }}</td>
                                 <td>{{ activite.cible|default:'N/A' }}</td>
                                 <td>
-                                    <input type="text" class="form-control" name="realisation" value="{{ activite.realisation }}" data-pending="{{ activite.pending_realisation }}" data-initial="{{ activite.realisation }}">
+                                    <input type="text" class="form-control" name="realisation"
+                                           value="{% if is_responsable %}{{ activite.resp_realisation }}{% else %}{{ activite.pf_realisation }}{% endif %}"
+                                           data-model="{{ activite.model_realisation }}"
+                                           data-pf="{{ activite.pf_realisation }}"
+                                           data-resp="{{ activite.resp_realisation }}">
                                 </td>
-                                <td {% if activite.trimestres_suivi.0 %}class="bg-blue"{% endif %}>T1</td>
-                                <td {% if activite.trimestres_suivi.1 %}class="bg-blue"{% endif %}>T2</td>
-                                <td {% if activite.trimestres_suivi.2 %}class="bg-blue"{% endif %}>T3</td>
-                                <td {% if activite.trimestres_suivi.3 %}class="bg-blue"{% endif %}>T4</td>
+                                <td {% if activite.trimestres_suivi.0 %}class="bg-blue"{% endif %}></td>
+                                <td {% if activite.trimestres_suivi.1 %}class="bg-blue"{% endif %}></td>
+                                <td {% if activite.trimestres_suivi.2 %}class="bg-blue"{% endif %}></td>
+                                <td {% if activite.trimestres_suivi.3 %}class="bg-blue"{% endif %}></td>
                                 <td>
-                                    <textarea class="form-control" name="etat_avancement" data-pending="{{ activite.pending_etat_avancement }}" data-initial="{{ activite.etat_avancement }}">{{ activite.etat_avancement }}</textarea>
+                                    <textarea class="form-control" name="etat_avancement"
+                                              data-model="{{ activite.model_etat_avancement }}"
+                                              data-pf="{{ activite.pf_etat_avancement }}"
+                                              data-resp="{{ activite.resp_etat_avancement }}">{% if is_responsable %}{{ activite.resp_etat_avancement }}{% else %}{{ activite.pf_etat_avancement }}{% endif %}</textarea>
                                 </td>
                                 <td>{{ activite.cout }}</td>
                                 <td>
-                                    <textarea class="form-control" name="commentaire" data-pending="{{ activite.pending_commentaire }}" data-initial="{{ activite.commentaire }}">{{ activite.commentaire }}</textarea>
+                                    <textarea class="form-control" name="commentaire"
+                                              data-model="{{ activite.model_commentaire }}"
+                                              data-pf="{{ activite.pf_commentaire }}"
+                                              data-resp="{{ activite.resp_commentaire }}">{% if is_responsable %}{{ activite.resp_commentaire }}{% else %}{{ activite.pf_commentaire }}{% endif %}</textarea>
                                 </td>
-                                <td>{{ activite.commentaire_se }}</td>
-                                <td>{{ activite.status }}</td>
-                                <td>{{ activite.matrix_status|json_script:"matrix_status"|safe }}</td>
+                                <td>{{ activite.model_commentaire_se }}</td>
+                                <td>{{ activite.model_status }}</td>
+                                <td>{{ activite.model_matrix_status }}</td>
                                 <td>
-                                    <button class="btn btn-success submit-btn">✔</button>
+                                    <button class="btn btn-success action-btn"
+                                            data-last-modified-by="{{ activite.last_modified_by }}"
+                                            data-last-is-responsable="{{ activite.last_is_responsable|lower }}">✔</button>
                                 </td>
                             </tr>
                         {% endfor %}
@@ -93,10 +105,45 @@ Gestion des Activités - {{ plan.titre }} - {{ annee }}
     <div class="text-center mt-4 animate-fade-in">
         <a href="{% url 'pao_list' plan.id %}" class="btn btn-secondary btn-lg px-5 py-2 fw-bold">Retour</a>
     </div>
+
+    <!-- Modale pour les points focaux sans responsable -->
+    {% if is_point_focal and has_no_responsable %}
+    <div class="modal fade" id="inviteResponsableModal" tabindex="-1" aria-labelledby="inviteResponsableModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-orange text-white">
+                    <h5 class="modal-title fw-bold text-white" id="inviteResponsableModalLabel">Rappel Important</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-dark">Veuillez inviter votre responsable avant de pouvoir modifier vos activités.</p>
+                    <p class="text-dark">Le suivi des activités de <strong>{{ entity }}</strong> requiert son implication.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    const isResponsable = {{ is_responsable|lower }};
+    const isPointFocal = {{ is_point_focal|lower }};
+    const hasNoResponsable = {{ has_no_responsable|lower }};
+
+    // Afficher la modale uniquement pour les points focaux sans responsable
+    if (isPointFocal && hasNoResponsable) {
+        const modal = new bootstrap.Modal(document.getElementById('inviteResponsableModal'), {
+            backdrop: 'static',  // Empêche de fermer en cliquant à l'extérieur
+            keyboard: false      // Empêche de fermer avec la touche Échap
+        });
+        modal.show();
+    }
+
+    // Fonction pour envoyer une requête AJAX
     function sendRequest(data, callback) {
         fetch('{% url "manage_activities" plan.id entity %}?annee={{ annee }}', {
             method: 'POST',
@@ -108,64 +155,139 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .then(response => response.json())
         .then(callback)
-        .catch(error => console.error('Erreur:', error));
+        .catch(error => {
+            console.error('Erreur:', error);
+            alert('Une erreur est survenue lors de la soumission.');
+        });
     }
 
+    // Gestion de chaque ligne de la table
     document.querySelectorAll('tr[data-id]').forEach(row => {
-        const submitBtn = row.querySelector('.submit-btn');
+        const actionBtn = row.querySelector('.action-btn');
         const inputs = row.querySelectorAll('input[name="realisation"], textarea[name="etat_avancement"], textarea[name="commentaire"]');
         const activiteId = row.dataset.id;
+        const lastModifiedBy = actionBtn.dataset.lastModifiedBy;
+        const lastIsResponsable = actionBtn.dataset.lastIsResponsable === 'true';
+        const hasResponsable = row.dataset.hasResponsable === 'true';
 
+        // Mettre à jour l'état du bouton en fonction des valeurs des champs
         function updateButtonState() {
-            let hasChanges = false;
+            let matchesModel = true;
+            let matchesPF = true;
+            let matchesResp = true;
+
             inputs.forEach(input => {
-                const pendingValue = input.dataset.pending || '';
-                const initialValue = input.dataset.initial || '';
+                const modelValue = input.dataset.model || '';
+                const pfValue = input.dataset.pf || '';
+                const respValue = input.dataset.resp || '';
                 const currentValue = input.value;
 
-                if (pendingValue === '' && currentValue !== initialValue) {
-                    hasChanges = true;
-                } else if (pendingValue !== '' && currentValue !== pendingValue) {
-                    hasChanges = true;
-                }
+                if (currentValue !== modelValue) matchesModel = false;
+                if (currentValue !== pfValue) matchesPF = false;
+                if (currentValue !== respValue) matchesResp = false;
             });
-            submitBtn.textContent = hasChanges ? 'Soumettre' : '✔';
+
+            if (isResponsable) {
+                if (matchesResp && lastIsResponsable) {
+                    actionBtn.textContent = '✔';
+                    actionBtn.disabled = true;
+                    actionBtn.classList.remove('btn-warning');
+                    actionBtn.classList.add('btn-success');
+                } else if (!matchesResp) {
+                    actionBtn.textContent = 'Soumettre';
+                    actionBtn.disabled = false;
+                    actionBtn.classList.remove('btn-warning');
+                    actionBtn.classList.add('btn-success');
+                } else {
+                    actionBtn.textContent = '✔';
+                    actionBtn.disabled = true;
+                    actionBtn.classList.remove('btn-warning');
+                    actionBtn.classList.add('btn-success');
+                }
+            } else if (isPointFocal) {
+                if (!hasResponsable) {
+                    actionBtn.textContent = 'Responsable requis';
+                    actionBtn.disabled = true;
+                    actionBtn.classList.remove('btn-success', 'btn-warning');
+                    actionBtn.classList.add('btn-secondary');
+                    inputs.forEach(input => {
+                        input.disabled = true;
+                        input.classList.add('bg-light');
+                    });
+                } else if (matchesPF && matchesResp && !lastIsResponsable) {
+                    actionBtn.textContent = '✔';
+                    actionBtn.disabled = true;
+                    actionBtn.classList.remove('btn-warning');
+                    actionBtn.classList.add('btn-success');
+                } else if (!matchesPF || (matchesPF && !matchesResp && lastIsResponsable)) {
+                    actionBtn.textContent = 'Proposer';
+                    actionBtn.disabled = false;
+                    actionBtn.classList.remove('btn-success');
+                    actionBtn.classList.add('btn-warning');
+                } else {
+                    actionBtn.textContent = '✔';
+                    actionBtn.disabled = true;
+                    actionBtn.classList.remove('btn-warning');
+                    actionBtn.classList.add('btn-success');
+                }
+            }
         }
 
+        // Ajouter des écouteurs sur les champs pour mettre à jour dynamiquement
         inputs.forEach(input => {
             input.addEventListener('input', updateButtonState);
             input.addEventListener('change', updateButtonState);
         });
 
+        // Initialiser l'état du bouton
         updateButtonState();
 
-        submitBtn.addEventListener('click', function () {
-            if (submitBtn.textContent === 'Soumettre') {
+        // Gestion du clic sur le bouton d'action
+        actionBtn.addEventListener('click', function () {
+            if (!actionBtn.disabled) {
                 const formData = {
                     activite_id: activiteId,
                     etat_avancement: row.querySelector('[name="etat_avancement"]').value,
                     realisation: row.querySelector('[name="realisation"]').value,
                     commentaire: row.querySelector('[name="commentaire"]').value,
-                    submit: true
                 };
 
-                sendRequest(formData, function(data) {
-                    alert(data.message);
-                    if (data.success) {
-                        row.style.backgroundColor = '#e6ffe6';
-                        inputs.forEach(input => {
-                            input.dataset.pending = input.value;
-                        });
-                        updateButtonState();
-                    } else {
-                        console.error('Erreur lors de la soumission:', data.message);
-                    }
-                });
+                if (isResponsable) {
+                    formData.submit = true;
+                    sendRequest(formData, function(data) {
+                        alert(data.message);
+                        if (data.success) {
+                            row.style.backgroundColor = '#e6ffe6';
+                            inputs.forEach(input => {
+                                input.dataset.resp = input.value;
+                                input.dataset.pf = input.value;
+                            });
+                            actionBtn.dataset.lastModifiedBy = '{{ request.user.username }}';
+                            actionBtn.dataset.lastIsResponsable = 'true';
+                            updateButtonState();
+                        }
+                    });
+                } else if (isPointFocal) {
+                    formData.propose = true;
+                    sendRequest(formData, function(data) {
+                        alert(data.message);
+                        if (data.success) {
+                            row.style.backgroundColor = '#fff3e6';
+                            inputs.forEach(input => {
+                                input.dataset.pf = input.value;
+                            });
+                            actionBtn.dataset.lastModifiedBy = '{{ request.user.username }}';
+                            actionBtn.dataset.lastIsResponsable = 'false';
+                            updateButtonState();
+                        }
+                    });
+                }
             }
         });
     });
 });
 </script>
+
 {% endblock %}
 
 {% block style %}
@@ -176,7 +298,6 @@ document.addEventListener('DOMContentLoaded', function () {
     .text-warning { color: #ffc107 !important; }
     .fw-bold { font-weight: bold; }
     .bg-blue { background-color: #cce5ff !important; }
-
     .table-container { 
         border-radius: 15px; 
         overflow: hidden; 
@@ -189,44 +310,24 @@ document.addEventListener('DOMContentLoaded', function () {
         overflow-x: auto;
         display: block;
     }
-    .table { 
-        margin-bottom: 0; 
-        width: 100%; 
-        border-collapse: collapse; 
-    }
-    .table th, .table td { 
-        vertical-align: middle; 
-        padding: 10px; 
-        min-width: 120px;
-    }
-    /* Bordures générales pour le corps du tableau (orange) */
-    .table td {
-        border: 1px solid #ff6200;
-    }
-    /* Bordures noires explicites pour l'en-tête */
+    .table { margin-bottom: 0; width: 100%; border-collapse: collapse; }
+    .table th, .table td { vertical-align: middle; padding: 10px; min-width: 120px; }
+    .table td { border: 1px solid #ff6200; }
     .table thead th {
-        border: 1px solid black !important; /* Bordures noires pour l'en-tête */
+        border: 1px solid black !important;
         text-align: center; 
         background: #ff6200; 
         color: white; 
         position: sticky;
         z-index: 10;
     }
-    .header-row-1 th {
-        top: 0;
-    }
-    .header-row-2 th {
-        top: 40px;
-    }
+    .header-row-1 th { top: 0; }
+    .header-row-2 th { top: 40px; }
     .table th.trimestre, .table td:nth-child(8), .table td:nth-child(9), 
-    .table td:nth-child(10), .table td:nth-child(11) { 
-        min-width: 50px;
-        width: 50px;
-    }
+    .table td:nth-child(10), .table td:nth-child(11) { min-width: 50px; width: 50px; }
     .table-striped tbody tr:nth-of-type(odd) { background-color: #fff3e6; }
     .form-control { min-width: 100px; }
     textarea.form-control { min-height: 80px; resize: vertical; }
-
     .btn-success { 
         background: #28a745; 
         color: white; 
@@ -234,24 +335,66 @@ document.addEventListener('DOMContentLoaded', function () {
         border-radius: 25px; 
         padding: 6px 15px; 
         font-size: 1rem; 
-        min-width: 80px; 
+        min-width: 120px; 
         text-align: center;
     }
-    .btn-secondary { background: #6c757d; border: none; border-radius: 25px; padding: 10px 30px; font-size: 1.25rem; }
-    .btn:hover { opacity: 0.9; transform: scale(1.05); transition: all 0.3s ease; }
-
-    .animate-fade-in { animation: fadeIn 1s ease-in-out forwards; }
-    .animate-slide-up { animation: slideUp 0.8s ease-in-out forwards; }
-
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
+    .btn-warning { 
+        background: #ffc107; 
+        color: black; 
+        border: none; 
+        border-radius: 25px; 
+        padding: 6px 15px; 
+        font-size: 1rem; 
+        min-width: 120px; 
+        text-align: center;
+    }
+    .btn-secondary { 
+        background: #6c757d; 
+        border: none; 
+        border-radius: 25px; 
+        padding: 10px 30px; 
+        font-size: 1.25rem; 
+    }
+    .btn:hover:not(:disabled) { 
+        opacity: 0.9; 
+        transform: scale(1.05); 
+        transition: all 0.3s ease; 
+    }
+    .btn:disabled { 
+        opacity: 0.6; 
+        cursor: not-allowed; 
+    }
+    .animate-fade-in { 
+        animation: fadeIn 1s ease-in-out forwards; 
+    }
+    .animate-slide-up { 
+        animation: slideUp 0.8s ease-in-out forwards; 
+    }
+    @keyframes fadeIn { 
+        from { opacity: 0; } 
+        to { opacity: 1; } 
+    }
+    @keyframes slideUp { 
+        from { opacity: 0; transform: translateY(20px); } 
+        to { opacity: 1; transform: translateY(0); } 
+    }
     @media (max-width: 768px) {
         .scrollable-table { max-height: 300px; }
         .table th, .table td { min-width: 100px; }
         .table th.trimestre, .table td:nth-child(8), .table td:nth-child(9), 
         .table td:nth-child(10), .table td:nth-child(11) { min-width: 40px; width: 40px; }
         .header-row-2 th { top: 35px; }
+    }
+    .modal-content { 
+        border-radius: 15px; 
+        overflow: hidden; 
+    }
+    .modal-header.bg-orange { 
+        border-bottom: none; 
+    }
+    .modal-body { 
+        padding: 20px; 
+        font-size: 1.1rem; 
     }
 </style>
 {% endblock %}
