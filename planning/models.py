@@ -599,7 +599,7 @@ class Activite(models.Model):
             else:
                 position = list(self.action.action_activite.order_by('id')).index(self) + 1
             self.reference = f"{self.action.reference}.{position}"
-
+            
     def propose_changes(self, user, index, etat_avancement=None, realisation=None, commentaire=None, commentaire_se=None, status=None):
         horizon = self.action.produit.effet.plan.horizon
         if index >= horizon:
@@ -609,7 +609,16 @@ class Activite(models.Model):
         if user == self.point_focal and not self.responsable:
             raise PermissionDenied("Vous ne pouvez pas proposer de modifications tant qu'un responsable n'est pas assigné à cette activité.")
 
-        if user == self.responsable:
+        # Assurer que les listes ont la bonne taille
+        if len(self.pending_changes) <= index:
+            self.pending_changes.extend([{}] * (index + 1 - len(self.pending_changes)))
+        if len(self.proposed_changes) <= index:
+            self.proposed_changes.extend([{}] * (index + 1 - len(self.proposed_changes)))
+        if len(self.matrix_status) <= index:
+            self.matrix_status.extend(['En cours'] * (index + 1 - len(self.matrix_status)))
+
+        if user == self.responsable or user.groups.filter(name='SuiveurEvaluateur').exists():
+            # Gestion pour Responsable ou Suiveur/Évaluateur : mise à jour de pending_changes et écrasement de proposed_changes
             if not self.pending_changes[index]:
                 self.pending_changes[index] = {
                     'etat_avancement': self.etat_avancement[index],
@@ -618,7 +627,7 @@ class Activite(models.Model):
                     'commentaire_se': self.commentaire_se[index],
                     'status': self.status[index],
                     'last_modified_by': user.username,
-                    'is_processed_by_se': False
+                    'is_processed_by_se': user.groups.filter(name='SuiveurEvaluateur').exists()
                 }
             if etat_avancement is not None:
                 self.pending_changes[index]['etat_avancement'] = etat_avancement
@@ -635,9 +644,10 @@ class Activite(models.Model):
             self.pending_changes[index]['last_modified_by'] = user.username
             self.pending_changes[index]['is_processed_by_se'] = user.groups.filter(name='SuiveurEvaluateur').exists()
             self.matrix_status[index] = 'En cours'
+            # Écraser proposed_changes avec les valeurs de pending_changes
+            self.proposed_changes[index] = self.pending_changes[index].copy()
         elif user == self.point_focal:
-            if self.pending_changes[index] and self.pending_changes[index].get('last_modified_by') == self.responsable.username:
-                raise PermissionDenied("Le responsable a déjà soumis des modifications. Vous ne pouvez plus proposer de changements.")
+            # Gestion pour Point Focal : mise à jour de proposed_changes uniquement
             if not self.proposed_changes[index]:
                 self.proposed_changes[index] = {
                     'etat_avancement': self.etat_avancement[index],
@@ -652,32 +662,6 @@ class Activite(models.Model):
             if commentaire is not None:
                 self.proposed_changes[index]['commentaire'] = commentaire
             self.proposed_changes[index]['last_modified_by'] = user.username
-            self.matrix_status[index] = 'En cours'
-        elif user.groups.filter(name='SuiveurEvaluateur').exists():
-            if not self.pending_changes[index]:
-                self.pending_changes[index] = {
-                    'etat_avancement': self.etat_avancement[index],
-                    'realisation': self.realisation[index],
-                    'commentaire': self.commentaire[index],
-                    'commentaire_se': self.commentaire_se[index],
-                    'status': self.status[index],
-                    'last_modified_by': user.username,
-                    'is_processed_by_se': True
-                }
-            if etat_avancement is not None:
-                self.pending_changes[index]['etat_avancement'] = etat_avancement
-            if realisation is not None:
-                self.pending_changes[index]['realisation'] = realisation
-            if commentaire is not None:
-                self.pending_changes[index]['commentaire'] = commentaire
-            if commentaire_se is not None:
-                self.pending_changes[index]['commentaire_se'] = commentaire_se
-            if status is not None:
-                if status not in ['Non entamée', 'En cours', 'Réalisée', 'Non réalisée', 'Supprimée', 'Reprogrammée']:
-                    raise ValueError("Statut invalide.")
-                self.pending_changes[index]['status'] = status
-            self.pending_changes[index]['last_modified_by'] = user.username
-            self.pending_changes[index]['is_processed_by_se'] = True
             self.matrix_status[index] = 'En cours'
         else:
             raise PermissionDenied("Vous n'avez pas les permissions nécessaires pour proposer des changements.")

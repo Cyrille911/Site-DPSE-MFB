@@ -129,165 +129,169 @@ Gestion des Activités - {{ plan.titre }} - {{ annee }}
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const isResponsable = {{ is_responsable|lower }};
-    const isPointFocal = {{ is_point_focal|lower }};
-    const hasNoResponsable = {{ has_no_responsable|lower }};
-
-    // Afficher la modale uniquement pour les points focaux sans responsable
-    if (isPointFocal && hasNoResponsable) {
-        const modal = new bootstrap.Modal(document.getElementById('inviteResponsableModal'), {
-            backdrop: 'static',  // Empêche de fermer en cliquant à l'extérieur
-            keyboard: false      // Empêche de fermer avec la touche Échap
-        });
-        modal.show();
-    }
-
-    // Fonction pour envoyer une requête AJAX
-    function sendRequest(data, callback) {
-        fetch('{% url "manage_activities" plan.id entity %}?annee={{ annee }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-CSRFToken': '{{ csrf_token }}',
-            },
-            body: new URLSearchParams(data)
-        })
-        .then(response => response.json())
-        .then(callback)
-        .catch(error => {
-            console.error('Erreur:', error);
-            alert('Une erreur est survenue lors de la soumission.');
-        });
-    }
-
-    // Gestion de chaque ligne de la table
-    document.querySelectorAll('tr[data-id]').forEach(row => {
-        const actionBtn = row.querySelector('.action-btn');
-        const inputs = row.querySelectorAll('input[name="realisation"], textarea[name="etat_avancement"], textarea[name="commentaire"]');
-        const activiteId = row.dataset.id;
-        const lastModifiedBy = actionBtn.dataset.lastModifiedBy;
-        const lastIsResponsable = actionBtn.dataset.lastIsResponsable === 'true';
-        const hasResponsable = row.dataset.hasResponsable === 'true';
-
-        // Mettre à jour l'état du bouton en fonction des valeurs des champs
-        function updateButtonState() {
-            let matchesModel = true;
-            let matchesPF = true;
-            let matchesResp = true;
-
-            inputs.forEach(input => {
-                const modelValue = input.dataset.model || '';
-                const pfValue = input.dataset.pf || '';
-                const respValue = input.dataset.resp || '';
-                const currentValue = input.value;
-
-                if (currentValue !== modelValue) matchesModel = false;
-                if (currentValue !== pfValue) matchesPF = false;
-                if (currentValue !== respValue) matchesResp = false;
+    document.addEventListener('DOMContentLoaded', function () {
+        const isResponsable = {{ is_responsable|lower }};
+        const isPointFocal = {{ is_point_focal|lower }};
+        const hasNoResponsable = {{ has_no_responsable|lower }};
+    
+        if (isPointFocal && hasNoResponsable) {
+            const modal = new bootstrap.Modal(document.getElementById('inviteResponsableModal'), {
+                backdrop: 'static',
+                keyboard: false
             });
-
-            if (isResponsable) {
-                if (matchesResp && lastIsResponsable) {
-                    actionBtn.textContent = '✔';
-                    actionBtn.disabled = true;
-                    actionBtn.classList.remove('btn-warning');
-                    actionBtn.classList.add('btn-success');
-                } else if (!matchesResp) {
-                    actionBtn.textContent = 'Soumettre';
-                    actionBtn.disabled = false;
-                    actionBtn.classList.remove('btn-warning');
-                    actionBtn.classList.add('btn-success');
-                } else {
-                    actionBtn.textContent = '✔';
-                    actionBtn.disabled = true;
-                    actionBtn.classList.remove('btn-warning');
-                    actionBtn.classList.add('btn-success');
-                }
-            } else if (isPointFocal) {
-                if (!hasResponsable) {
-                    actionBtn.textContent = 'Responsable requis';
-                    actionBtn.disabled = true;
-                    actionBtn.classList.remove('btn-success', 'btn-warning');
-                    actionBtn.classList.add('btn-secondary');
-                    inputs.forEach(input => {
-                        input.disabled = true;
-                        input.classList.add('bg-light');
-                    });
-                } else if (matchesPF && matchesResp && !lastIsResponsable) {
-                    actionBtn.textContent = '✔';
-                    actionBtn.disabled = true;
-                    actionBtn.classList.remove('btn-warning');
-                    actionBtn.classList.add('btn-success');
-                } else if (!matchesPF || (matchesPF && !matchesResp && lastIsResponsable)) {
-                    actionBtn.textContent = 'Proposer';
-                    actionBtn.disabled = false;
-                    actionBtn.classList.remove('btn-success');
-                    actionBtn.classList.add('btn-warning');
-                } else {
-                    actionBtn.textContent = '✔';
-                    actionBtn.disabled = true;
-                    actionBtn.classList.remove('btn-warning');
-                    actionBtn.classList.add('btn-success');
-                }
-            }
+            modal.show();
         }
-
-        // Ajouter des écouteurs sur les champs pour mettre à jour dynamiquement
-        inputs.forEach(input => {
-            input.addEventListener('input', updateButtonState);
-            input.addEventListener('change', updateButtonState);
-        });
-
-        // Initialiser l'état du bouton
-        updateButtonState();
-
-        // Gestion du clic sur le bouton d'action
-        actionBtn.addEventListener('click', function () {
-            if (!actionBtn.disabled) {
-                const formData = {
-                    activite_id: activiteId,
-                    etat_avancement: row.querySelector('[name="etat_avancement"]').value,
-                    realisation: row.querySelector('[name="realisation"]').value,
-                    commentaire: row.querySelector('[name="commentaire"]').value,
-                };
-
+    
+        function sendRequest(data, callback) {
+            fetch('{% url "manage_activities" plan.id entity %}?annee={{ annee }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token }}',
+                },
+                body: new URLSearchParams(data)
+            })
+            .then(response => response.json())
+            .then(callback)
+            .catch(error => {
+                console.error('Erreur:', error);
+                alert('Une erreur est survenue lors de la soumission.');
+            });
+        }
+    
+        document.querySelectorAll('tr[data-id]').forEach(row => {
+            const actionBtn = row.querySelector('.action-btn');
+            const inputs = row.querySelectorAll('input[name="realisation"], textarea[name="etat_avancement"], textarea[name="commentaire"]');
+            const activiteId = row.dataset.id;
+            let lastModifiedBy = actionBtn.dataset.lastModifiedBy;
+            let lastIsResponsable = actionBtn.dataset.lastIsResponsable === 'true';
+            const hasResponsable = row.dataset.hasResponsable === 'true';
+            let isSubmitted = false;
+    
+            function updateButtonState() {
+                let matchesModel = true;
+                let matchesLatest = true;
+                let matchesPFProposed = true;  // Pour vérifier si les valeurs actuelles diffèrent de proposed_changes
+    
+                inputs.forEach(input => {
+                    const modelValue = input.dataset.model || '';
+                    const pfValue = input.dataset.pf || '';
+                    const respValue = input.dataset.resp || '';
+                    const currentValue = input.value;
+    
+                    if (currentValue !== modelValue) matchesModel = false;
+                    if (isResponsable && currentValue !== respValue) matchesLatest = false;
+                    if (isPointFocal && currentValue !== pfValue) {
+                        matchesLatest = false;
+                        matchesPFProposed = false;  // Les valeurs actuelles diffèrent de proposed_changes
+                    }
+                });
+    
                 if (isResponsable) {
-                    formData.submit = true;
-                    sendRequest(formData, function(data) {
-                        alert(data.message);
-                        if (data.success) {
-                            row.style.backgroundColor = '#e6ffe6';
-                            inputs.forEach(input => {
-                                input.dataset.resp = input.value;
-                                input.dataset.pf = input.value;
-                            });
-                            actionBtn.dataset.lastModifiedBy = '{{ request.user.username }}';
-                            actionBtn.dataset.lastIsResponsable = 'true';
-                            updateButtonState();
-                        }
-                    });
+                    if (isSubmitted && matchesLatest) {
+                        actionBtn.textContent = '✔';
+                        actionBtn.disabled = true;
+                        actionBtn.classList.remove('btn-warning');
+                        actionBtn.classList.add('btn-success');
+                    } else {
+                        actionBtn.textContent = 'Soumettre';
+                        actionBtn.disabled = false;
+                        actionBtn.classList.remove('btn-warning');
+                        actionBtn.classList.add('btn-success');
+                    }
                 } else if (isPointFocal) {
-                    formData.propose = true;
-                    sendRequest(formData, function(data) {
-                        alert(data.message);
-                        if (data.success) {
-                            row.style.backgroundColor = '#fff3e6';
-                            inputs.forEach(input => {
-                                input.dataset.pf = input.value;
-                            });
-                            actionBtn.dataset.lastModifiedBy = '{{ request.user.username }}';
-                            actionBtn.dataset.lastIsResponsable = 'false';
-                            updateButtonState();
-                        }
-                    });
+                    if (!hasResponsable) {
+                        actionBtn.textContent = 'Responsable requis';
+                        actionBtn.disabled = true;
+                        actionBtn.classList.remove('btn-success', 'btn-warning');
+                        actionBtn.classList.add('btn-secondary');
+                        inputs.forEach(input => {
+                            input.disabled = true;
+                            input.classList.add('bg-light');
+                        });
+                    } else if (isSubmitted && matchesLatest) {
+                        actionBtn.textContent = '✔';
+                        actionBtn.disabled = true;
+                        actionBtn.classList.remove('btn-warning');
+                        actionBtn.classList.add('btn-success');
+                    } else if (!matchesPFProposed) {
+                        actionBtn.textContent = 'Proposer';
+                        actionBtn.disabled = false;
+                        actionBtn.classList.remove('btn-success');
+                        actionBtn.classList.add('btn-warning');
+                    } else {
+                        actionBtn.textContent = '✔';
+                        actionBtn.disabled = true;
+                        actionBtn.classList.remove('btn-warning');
+                        actionBtn.classList.add('btn-success');
+                    }
                 }
             }
+    
+            inputs.forEach(input => {
+                input.addEventListener('input', () => {
+                    isSubmitted = false;
+                    updateButtonState();
+                });
+                input.addEventListener('change', () => {
+                    isSubmitted = false;
+                    updateButtonState();
+                });
+            });
+    
+            updateButtonState();
+    
+            actionBtn.addEventListener('click', function () {
+                if (!actionBtn.disabled) {
+                    const formData = {
+                        activite_id: activiteId,
+                        etat_avancement: row.querySelector('[name="etat_avancement"]').value,
+                        realisation: row.querySelector('[name="realisation"]').value,
+                        commentaire: row.querySelector('[name="commentaire"]').value,
+                    };
+    
+                    if (isResponsable && actionBtn.textContent === 'Soumettre') {
+                        formData.submit = true;
+                        sendRequest(formData, function(data) {
+                            alert(data.message);
+                            if (data.success) {
+                                row.style.backgroundColor = '#e6ffe6';
+                                inputs.forEach(input => {
+                                    input.dataset.resp = input.value;
+                                    input.dataset.pf = input.value;  // Synchro avec PF après soumission
+                                });
+                                lastModifiedBy = '{{ request.user.username }}';
+                                lastIsResponsable = true;
+                                actionBtn.dataset.lastModifiedBy = lastModifiedBy;
+                                actionBtn.dataset.lastIsResponsable = 'true';
+                                isSubmitted = true;
+                                updateButtonState();
+                            }
+                        });
+                    } else if (isPointFocal && actionBtn.textContent === 'Proposer') {
+                        formData.propose = true;
+                        sendRequest(formData, function(data) {
+                            alert(data.message);
+                            if (data.success) {
+                                row.style.backgroundColor = '#fff3e6';
+                                inputs.forEach(input => {
+                                    input.dataset.pf = input.value;
+                                    input.dataset.resp = input.value;  // Remplacer visuellement les valeurs Resp
+                                });
+                                lastModifiedBy = '{{ request.user.username }}';
+                                lastIsResponsable = false;
+                                actionBtn.dataset.lastModifiedBy = lastModifiedBy;
+                                actionBtn.dataset.lastIsResponsable = 'false';
+                                isSubmitted = true;
+                                updateButtonState();
+                            }
+                        });
+                    }
+                }
+            });
         });
     });
-});
 </script>
-
 {% endblock %}
 
 {% block style %}

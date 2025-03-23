@@ -81,10 +81,10 @@ Traitement des Activités - {{ plan.titre }} - {{ annee }}
                                             <td>{{ activite.indicateur_reference|default:'N/A' }}</td>
                                             <td>{{ activite.cible|default:'N/A' }}</td>
                                             <td>{{ activite.realisation }}</td>
-                                            <td {% if activite.trimestres_suivi.0 %}class="bg-blue"{% endif %}></td>
-                                            <td {% if activite.trimestres_suivi.1 %}class="bg-blue"{% endif %}></td>
-                                            <td {% if activite.trimestres_suivi.2 %}class="bg-blue"{% endif %}></td>
-                                            <td {% if activite.trimestres_suivi.3 %}class="bg-blue"{% endif %}></td>
+                                            <td {% if activite.trimestres_suivi.0 %}class="bg-blue"{% endif %}>T1</td>
+                                            <td {% if activite.trimestres_suivi.1 %}class="bg-blue"{% endif %}>T2</td>
+                                            <td {% if activite.trimestres_suivi.2 %}class="bg-blue"{% endif %}>T3</td>
+                                            <td {% if activite.trimestres_suivi.3 %}class="bg-blue"{% endif %}>T4</td>
                                             <td>{{ activite.etat_avancement }}</td>
                                             <td>{{ activite.cout }}</td>
                                             <td>{{ activite.commentaire }}</td>
@@ -105,8 +105,9 @@ Traitement des Activités - {{ plan.titre }} - {{ annee }}
                                                 <button class="btn btn-success action-btn" 
                                                         data-model-status="{{ activite.model_status }}" 
                                                         data-model-commentaire-se="{{ activite.model_commentaire_se }}"
-                                                        data-last-modified-by="{{ activite.last_modified_by }}"
-                                                        data-last-modified-group="{{ activite.last_modified_group }}">Soumettre</button>
+                                                        data-pending-status="{{ activite.pending_status }}"
+                                                        data-pending-commentaire-se="{{ activite.pending_commentaire_se }}"
+                                                        data-last-modified-by="{{ activite.last_modified_by }}">Soumettre</button>
                                             </td>
                                         </tr>
                                     {% endfor %}
@@ -124,7 +125,15 @@ Traitement des Activités - {{ plan.titre }} - {{ annee }}
     {% endif %}
 
     <div class="text-center mt-4 animate-fade-in">
-        <a href="{% url 'track_execution_list' plan.id %}" class="btn btn-secondary btn-lg px-5 py-2 fw-bold">Retour</a>
+        {% if user.role == 'PF' or user.role == 'Resp' %}
+            <a href="{% url 'pao_list' plan.id %}" class="btn btn-secondary btn-lg px-5 py-2 fw-bold me-3">Liste des PAO (PF)</a>
+        {% endif %}
+        {% if user.role == 'Cabinet' %}
+            <a href="{% url 'hierarchy_review' plan.id %}" class="btn btn-secondary btn-lg px-5 py-2 fw-bold me-3">Liste des PAO (H)</a>
+        {% endif %}
+        {% if user.role == 'Suiveur' or user.role == 'Evaluateur' %}
+            <a href="{% url 'track_execution_list' plan.id %}" class="btn btn-secondary btn-lg px-5 py-2 fw-bold me-3">Liste des PAO (SE)</a>
+        {% endif %}
     </div>
 </div>
 
@@ -158,50 +167,36 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.querySelectorAll('tr[data-id]').forEach(row => {
         const actionBtn = row.querySelector('.action-btn');
-        const inputs = row.querySelectorAll('select[name="status"], textarea[name="commentaire_se"]');
+        const statusSelect = row.querySelector('select[name="status"]');
+        const commentaireSeTextarea = row.querySelector('textarea[name="commentaire_se"]');
         const activiteId = row.dataset.id;
-        let modelStatus = actionBtn.dataset.modelStatus;
-        let modelCommentaireSe = actionBtn.dataset.modelCommentaireSe;
-        let lastModifiedBy = actionBtn.dataset.lastModifiedBy;
-        let lastModifiedGroup = actionBtn.dataset.lastModifiedGroup;
+
+        const modelStatus = actionBtn.dataset.modelStatus;
+        const modelCommentaireSe = actionBtn.dataset.modelCommentaireSe;
+        const pendingStatus = actionBtn.dataset.pendingStatus;
+        const pendingCommentaireSe = actionBtn.dataset.pendingCommentaireSe;
+        const lastModifiedBy = actionBtn.dataset.lastModifiedBy;
 
         function updateButtonState() {
-            let matchesPending = true;  // Current === Pending
-            let matchesInitial = true;  // Current === Initial
+            const currentStatus = statusSelect.value;
+            const currentCommentaireSe = commentaireSeTextarea.value;
 
-            inputs.forEach(input => {
-                const pendingValue = input.dataset.pending || '';
-                const initialValue = input.dataset.initial || '';
-                const currentValue = input.value;
+            const matchesPending = (
+                currentStatus === pendingStatus &&
+                currentCommentaireSe === pendingCommentaireSe
+            );
 
-                if (currentValue !== pendingValue) {
-                    matchesPending = false;
-                }
-                if (currentValue !== initialValue) {
-                    matchesInitial = false;
-                }
-            });
-
-            if (isSE && matchesPending && !matchesInitial && lastModifiedGroup === 'PointFocal') {
-                // Current === Pending, Initial !== Current, dernier modificateur est PF
+            if (isSE && matchesPending && lastModifiedBy && lastModifiedBy !== currentUser) {
                 actionBtn.textContent = 'Soumettre';
                 actionBtn.disabled = false;
                 actionBtn.classList.remove('btn-warning');
                 actionBtn.classList.add('btn-success');
-            } else if (isSE && matchesPending && !matchesInitial && lastModifiedGroup === 'SuiveurEvaluateur') {
-                // Current === Pending, Initial !== Current, dernier modificateur est SE
-                actionBtn.textContent = '✔';
-                actionBtn.disabled = true;
-                actionBtn.classList.remove('btn-warning');
-                actionBtn.classList.add('btn-success');
-            } else if (isSE && !matchesPending) {
-                // Current !== Pending
+            } else if (isSE) {
                 actionBtn.textContent = 'Renvoyer';
                 actionBtn.disabled = false;
                 actionBtn.classList.remove('btn-success');
                 actionBtn.classList.add('btn-warning');
             } else {
-                // Cas par défaut : rien à faire
                 actionBtn.textContent = '✔';
                 actionBtn.disabled = true;
                 actionBtn.classList.remove('btn-warning');
@@ -209,40 +204,30 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
-        inputs.forEach(input => {
-            input.addEventListener('input', updateButtonState);
-            input.addEventListener('change', updateButtonState);
-        });
-
+        statusSelect.addEventListener('change', updateButtonState);
+        commentaireSeTextarea.addEventListener('input', updateButtonState);
         updateButtonState();
 
         actionBtn.addEventListener('click', function () {
             if (!actionBtn.disabled) {
                 const formData = {
                     activite_id: activiteId,
-                    status: row.querySelector('[name="status"]').value,
-                    commentaire_se: row.querySelector('[name="commentaire_se"]').value,
+                    status: statusSelect.value,
+                    commentaire_se: commentaireSeTextarea.value,
                     submit: true
                 };
                 sendRequest(formData, data => {
                     if (data.success) {
-                        modelStatus = data.model_status;
-                        modelCommentaireSe = data.model_commentaire_se;
-                        inputs.forEach(input => {
-                            if (input.name === 'status') {
-                                input.dataset.initial = data.model_status;
-                                input.dataset.pending = data.pending_status;
-                            } else if (input.name === 'commentaire_se') {
-                                input.dataset.initial = data.model_commentaire_se;
-                                input.dataset.pending = data.pending_commentaire_se;
-                            }
-                        });
+                        statusSelect.dataset.initial = data.model_status;
+                        statusSelect.dataset.pending = data.pending_status;
+                        commentaireSeTextarea.dataset.initial = data.model_commentaire_se;
+                        commentaireSeTextarea.dataset.pending = data.pending_commentaire_se;
+
                         actionBtn.dataset.modelStatus = data.model_status;
                         actionBtn.dataset.modelCommentaireSe = data.model_commentaire_se;
-                        lastModifiedBy = data.last_modified_by;
+                        actionBtn.dataset.pendingStatus = data.pending_status;
+                        actionBtn.dataset.pendingCommentaireSe = data.pending_commentaire_se;
                         actionBtn.dataset.lastModifiedBy = data.last_modified_by;
-                        lastModifiedGroup = data.last_modified_group;
-                        actionBtn.dataset.lastModifiedGroup = lastModifiedGroup;
 
                         if (data.action === 'model' || data.action === 'pending') {
                             row.style.backgroundColor = data.action === 'model' ? '#d4edda' : '#fff3cd';
@@ -266,7 +251,6 @@ document.addEventListener('DOMContentLoaded', function () {
     checkEntitySections();
 });
 </script>
-
 {% endblock %}
 
 {% block style %}
@@ -302,7 +286,7 @@ document.addEventListener('DOMContentLoaded', function () {
         min-width: 120px;
     }
     .table thead th {
-        border: 1px solid black !important;
+        border: 2px solid black !important;
         text-align: center;
         background: #ff6200;
         color: white;
