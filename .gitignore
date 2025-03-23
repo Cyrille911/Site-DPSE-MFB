@@ -45,6 +45,6 @@ yarn.lock
 staticfiles/
 media/
 
-# Docker et virtualisation (au besoin)
+# Docker et virtualisation (optionnel)
 .dockerignore
 docker-compose.override.yml
