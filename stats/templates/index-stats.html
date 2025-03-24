@@ -1,58 +1,232 @@
 {% load static %}
 {% load table_tags %}
-
+<link rel="stylesheet" href="{% static 'adminlte/plugins/fontawesome-free/css/all.min.css' %}">
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <!-- Métadonnées -->
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="title" content="AdminLTE v4 | Dashboard" />
-    <meta name="author" content="ColorlibHQ" />
-    <meta name="description" content="AdminLTE is a Free Bootstrap 5 Admin Dashboard, 30 example pages using Vanilla JS." />
-    <meta name="keywords" content="bootstrap 5, bootstrap, bootstrap 5 admin dashboard, bootstrap 5 dashboard, bootstrap 5 charts, bootstrap 5 calendar, bootstrap 5 datepicker, bootstrap 5 tables, bootstrap 5 datatable, vanilla js datatable, colorlibhq, colorlibhq dashboard, colorlibhq admin dashboard" />
-    <title>Statistiques</title>
-
-    <!-- Styles externes -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/source-sans-3@5.0.12/index.css" integrity="sha256-tXJfXfp6Ewt1ilPzLDtQnJV4hclT9XuaZUKyUvmyr+Q=" crossorigin="anonymous" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.10.1/styles/overlayscrollbars.min.css" integrity="sha256-tZHrRjVqNSRyWg2wbppGnT833E/Ys0DHWGwT04GiqQg=" crossorigin="anonymous" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" integrity="sha256-9kPW/n5nn53j4WMRYAxe9c1rCY96Oogo/MKSVdKzPmI=" crossorigin="anonymous" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/apexcharts@3.37.1/dist/apexcharts.css" integrity="sha256-4MX+61mt9NVvvuPjUWdUdyfZfxSB1/Rf9WtqRHgG5S0=" crossorigin="anonymous" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsvectormap@1.5.3/dist/css/jsvectormap.min.css" integrity="sha256-+uGLJmmTKOqBr+2E6KDYs/NRsHxSkONXFHUL0fy2O/4=" crossorigin="anonymous" />
-
-    <!-- Styles locaux -->
-    <link rel="stylesheet" href="{% static 'adminlte/plugins/fontawesome-free/css/all.min.css' %}" />
-    <link rel="stylesheet" href="{% static 'adminlte/dist/css/adminlte.css' %}" />
-    <link rel="stylesheet" href="{% static 'adminlte/custom.css' %}" />
-
-    <!-- Styles personnalisés -->
-    <style>
-        .app-header {
-            background-color: #FF6200;
+      <!--begin::Head-->
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>AdminLTE v4 | Dashboard</title>
+        <!--begin::Primary Meta Tags-->
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="title" content="AdminLTE v4 | Dashboard" />
+        <meta name="author" content="ColorlibHQ" />
+        <meta
+          name="description"
+          content="AdminLTE is a Free Bootstrap 5 Admin Dashboard, 30 example pages using Vanilla JS."
+        />
+        <meta
+          name="keywords"
+          content="bootstrap 5, bootstrap, bootstrap 5 admin dashboard, bootstrap 5 dashboard, bootstrap 5 charts, bootstrap 5 calendar, bootstrap 5 datepicker, bootstrap 5 tables, bootstrap 5 datatable, vanilla js datatable, colorlibhq, colorlibhq dashboard, colorlibhq admin dashboard"
+        />
+        <!--end::Primary Meta Tags-->
+        <!--begin::Fonts-->
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/@fontsource/source-sans-3@5.0.12/index.css"
+          integrity="sha256-tXJfXfp6Ewt1ilPzLDtQnJV4hclT9XuaZUKyUvmyr+Q="
+          crossorigin="anonymous"
+        />
+        <!--end::Fonts-->
+        <!--begin::Third Party Plugin(OverlayScrollbars)-->
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.10.1/styles/overlayscrollbars.min.css"
+          integrity="sha256-tZHrRjVqNSRyWg2wbppGnT833E/Ys0DHWGwT04GiqQg="
+          crossorigin="anonymous"
+        />
+        <!--end::Third Party Plugin(OverlayScrollbars)-->
+        <!--begin::Third Party Plugin(Bootstrap Icons)-->
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+          integrity="sha256-9kPW/n5nn53j4WMRYAxe9c1rCY96Oogo/MKSVdKzPmI="
+          crossorigin="anonymous"
+        />
+        <!--end::Third Party Plugin(Bootstrap Icons)-->
+        <!--begin::Required Plugin(AdminLTE)-->
+        <link rel="stylesheet" href="{% static 'adminlte/dist/css/adminlte.css' %}" />
+        <link rel="stylesheet" href="{% static 'adminlte/custom.css' %}">
+        <!--end::Required Plugin(AdminLTE)-->
+        <!-- apexcharts -->
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/apexcharts@3.37.1/dist/apexcharts.css"
+          integrity="sha256-4MX+61mt9NVvvuPjUWdUdyfZfxSB1/Rf9WtqRHgG5S0="
+          crossorigin="anonymous"
+        />
+        <!-- jsvectormap -->
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/jsvectormap@1.5.3/dist/css/jsvectormap.min.css"
+          integrity="sha256-+uGLJmmTKOqBr+2E6KDYs/NRsHxSkONXFHUL0fy2O/4="
+          crossorigin="anonymous"
+        />
+        <style>
+          #evolution-chart .apexcharts-line-series path {
+              stroke-width: 5px !important;
+              opacity: 1 !important;
+          }
+          #pie-chart, #bar-chart {
+              max-height: 300px;
+          }
+          #dataTable th {
+              cursor: pointer;
+              position: sticky;
+              top: 0;
+              background: #f9ecd1;
+              z-index: 1;
+          }
+          #dataTable th.asc::after {
+              content: ' ↑';
+          }
+          .table-responsive {
+              max-height: 400px;
+              overflow-y: auto;
+          }
+          /* Style des cartes KPI */
+          .card {
+              border: none;
+              border-radius: 8px;
+              box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+          }
+          .card-body {
+              padding: 1rem;
+          }
+          .card-title {
+              font-size: 1.1rem;
+              margin-bottom: 0.5rem;
+          }
+          .card-text {
+              font-size: 1.5rem;
+              font-weight: bold;
+              margin-bottom: 0.25rem;
+          }
+          .card small {
+              font-size: 0.9rem;
+          }
+          /* Style du tableau */
+        #dataTable {
+            border-collapse: separate;
+            border-spacing: 0;
+            background-color: #FFFFFF; /* Fond blanc */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        #dataTable th {
+            cursor: pointer;
+            position: sticky;
+            top: 0;
+            background-color: #FF6200; /* Orange pour en-têtes */
             color: #FFFFFF;
-            border-bottom: 2px solid #FFFFFF;
+            border-bottom: 2px solid #FFFFFF; /* Séparation blanche */
+            padding: 10px;
+        }
+        #dataTable th.asc::after {
+            content: ' ↑';
+        }
+        #dataTable td {
+            padding: 8px;
+            border-bottom: 1px solid #F5F5F5; /* Gris clair subtil */
+        }
+        #dataTable tr:hover {
+            background-color: #FFF5E6; /* Nuance orange pâle au survol */
+        }
+        #dataTable tbody tr:nth-child(even) {
+            background-color: #F9FCF9; /* Nuance verte très pâle pour alternance */
+        }
+        .table-responsive {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #009A49; /* Bordure verte */
+            border-radius: 4px;
+        }
+        /* Style de la sidebar */
+        .app-sidebar {
+        background: #f47729db; /* Dégradé vert */
+        color: #FFFFFF !important;
+        transition: all 0.3s ease; /* Transition fluide pour les changements */
+        }
+        .app-sidebar .sidebar-brand .brand-link {
+        color: #FFFFFF !important; /* Blanc pour le texte du brand */
+        }
+    
+        .app-sidebar .sidebar-brand .brand-link span.brand-text {
+        color: #FFFFFF !important; /* Cible spécifiquement le span */
+        }
+    
+        .app-sidebar .nav-link {
+        color: #FFFFFF !important; /* Blanc pour les liens */
+        }
+    
+        .app-sidebar .nav-link p {
+        color: #FFFFFF !important; /* Blanc pour le texte dans les <p> */
+        }
+    
+        .app-sidebar .nav-link:hover,
+        .app-sidebar .nav-link.active {
+        color: #FFFFFF !important; /* Blanc au survol et actif */
+        }
+        .sidebar-brand {
+        background: #1e7e01;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+    
+        .sidebar-brand:hover {
+        transform: scale(1.05); /* Légère expansion */
+        box-shadow: 0 4px 10px rgb(247, 109, 3); /* Ombre au survol */
+        }
+    
+        .nav-link {
+        color: #f87511;
+        position: relative;
+        overflow: hidden;
+        transition: background-color 0.3s ease, padding-left 0.3s ease;
+        }
+    
+        .nav-link::after {
+        content: '';
+        position: absolute;
+        left: -100%;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(2, 91, 6, 0.101); /* Survol orange translucide */
+        transition: left 0.3s ease;
+        }
+    
+        .nav-link:hover, .nav-link.active {
+        background-color: #FF8C00;
+        padding-left: 25px; /* Décalage à gauche au survol */
+        }
+    
+        .nav-link:hover::after {
+        left: 0; /* Glissement de l’effet */
+        }
+        /* Style de la navbar */
+        .app-header {
+            background-color: #FF6200; /* Orange pour la barre */
+            color: #FFFFFF;
+            border-bottom: 2px solid #FFFFFF; /* Séparation subtile */
         }
         .app-header .nav-link {
             color: #FFFFFF;
-            display: flex;
-            align-items: center;
         }
         .app-header .nav-link:hover {
-            background-color: #FF8C00;
+            background-color: #FF8C00; /* Orange moyen au survol */
         }
         .app-header .navbar-badge {
-            background-color: #FFFFFF;
-            color: #FF6200;
+            background-color: #FFFFFF; /* Badge blanc pour contraste */
+            color: #FF6200; /* Texte orange */
         }
         .app-header .dropdown-menu {
-            background-color: #FFFFFF;
+            background-color: #FFFFFF; /* Fond blanc pour dropdowns */
             color: #000000;
         }
         .app-header .dropdown-item:hover {
-            background-color: #FFF5E6;
+            background-color: #FFF5E6; /* Orange pâle au survol */
         }
-        /* Styles pour la barre de recherche */
-        .search-container {
+                /* Styles pour la barre de recherche */
+                .search-container {
             position: relative;
             width: 40px;
             transition: width 0.3s ease-in-out;
@@ -113,36 +287,9 @@
         #search-suggestions li:hover {
             background-color: #f8f9fa;
         }
-        /* Style de la sidebar */
-        .app-sidebar {
-      background: #ee7225db;
-      color: #FFFFFF !important;
-      transition: all 0.3s ease;
-  }
-  .app-sidebar .sidebar-brand .brand-link {
-      color: #FFFFFF !important;
-  }
-  .app-sidebar .sidebar-brand .brand-link span.brand-text {
-      color: #FFFFFF !important;
-  }
-  .app-sidebar .nav-link {
-      color: #FFFFFF !important;
-  }
-  .app-sidebar .nav-link p {
-      color: #FFFFFF !important;
-      overflow: visible !important;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      max-width: 180px;
-      position: relative;
-      padding-right: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      width: 100%;
-  }
     </style>
-</head>
+      </head>
+
 
 <body class="layout-fixed sidebar-expand-lg bg-body-tertiary">
     <div class="app-wrapper">
@@ -195,39 +342,6 @@
                 </ul>
             </div>
         </nav>
-
-        <!-- Sidebar -->
-        <aside class="app-sidebar shadow" id="sidebar">
-            <div class="sidebar-brand" style="background-color: #FF6200;">
-                <a href="{% url 'accueil' %}" class="brand-link">
-                    <span class="brand-text fw-light">Dashboard</span>
-                </a>
-            </div>
-            <div class="sidebar-wrapper">
-                <nav class="mt-2">
-                    <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="menu" data-accordion="false">
-                        <li class="nav-item">
-                            <a href="{% url 'dashboard_TOFE' %}" class="nav-link">
-                                <i class="nav-icon bi bi-speedometer"></i>
-                                <p>TOFE</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{% url 'douanes_dashboard' %}" class="nav-link">
-                                <i class="nav-icon bi bi-circle"></i>
-                                <p>Douanes</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{% url 'financements_dashboard' %}" class="nav-link">
-                                <i class="nav-icon bi bi-circle"></i>
-                                <p>Financements</p>
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
-            </div>
-        </aside>
 
         <!-- Modale Profil -->
         <div class="modal fade" id="profileModal" tabindex="-1" aria-labelledby="profileModalLabel" aria-hidden="true">
@@ -283,20 +397,9 @@
         {% block content %}{% endblock %}
 
         <!-- Scripts -->
-        <script src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.10.1/browser/overlayscrollbars.browser.es6.min.js" integrity="sha256-dghWARbRe2eLlIJ56wNB+b760ywulqK3DzZYEpsg2fQ=" crossorigin="anonymous"></script>
-        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
-        <script src="{% static 'adminlte/dist/js/adminlte.js' %}"></script>
+        {% block scripts %}
+        {% endblock %}
         <script>
-            // Vérification du chargement d'AdminLTE
-            document.addEventListener('DOMContentLoaded', function() {
-                if (typeof AdminLTE === 'undefined') {
-                    console.error('AdminLTE n\'est pas chargé. Vérifiez le chemin de adminlte.js.');
-                } else {
-                    console.log('AdminLTE est chargé correctement.');
-                }
-            });
-
             // Gestion manuelle du toggle sidebar (solution de secours)
             const sidebarToggle = document.getElementById('sidebar-toggle');
             const sidebar = document.getElementById('sidebar');
