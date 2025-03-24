@@ -5,293 +5,359 @@
 
 {% block content %}
 
-    <!-- Google Web Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet"> 
+<!-- Google Web Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link
+    href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap"
+    rel="stylesheet">
 
-    <!-- Icon Font Stylesheet -->
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"/>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
+<!-- Icon Font Stylesheet -->
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css" />
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
 
-    <!-- Libraries Stylesheet -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-    <link href="{% static 'lib/animate/animate.min.css' %}" rel="stylesheet">
-    <link href="{% static 'lib/owlcarousel/assets/owl.carousel.min.css' %}" rel="stylesheet">
-    <link href="{% static 'lib/lightbox/css/lightbox.min.css' %}" rel="stylesheet">
+<!-- Libraries Stylesheet -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+<link href="{% static 'lib/animate/animate.min.css' %}" rel="stylesheet">
+<link href="{% static 'lib/owlcarousel/assets/owl.carousel.min.css' %}" rel="stylesheet">
+<link href="{% static 'lib/lightbox/css/lightbox.min.css' %}" rel="stylesheet">
 
-    <!-- Customized Bootstrap Stylesheet -->
-    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+<!-- Customized Bootstrap Stylesheet -->
+<link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
 
-    <!-- Template Stylesheet -->
-    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+<!-- Template Stylesheet -->
+<link href="{% static 'css/style.css' %}" rel="stylesheet">
 
 
+<style>
+    :root {
+        --bs-primary: #F77F00;
+        /* Orange ivoirien */
+        --bs-dark: #009E60;
+        /* Vert ivoirien */
+    }
 
-    <style>
-        :root {
-            --bs-primary: #F77F00; /* Orange ivoirien */
-            --bs-dark: #009E60;    /* Vert ivoirien */
-        }
-        .btn-primary { background-color: #F77F00; border-color: #F77F00; }
-        .btn-dark { background-color: #009E60; border-color: #009E60; }
-        .text-primary { color: #F77F00 !important; }
-        .bg-light { background-color: #f8f9fa !important; }
+    .btn-primary {
+        background-color: #F77F00;
+        border-color: #F77F00;
+    }
 
-        /* Uniformisation des images */
-        img:not(.rounded-circle) {
-            width: 100%;
-            height: 300px;
-            object-fit: cover;
-            border-radius: 10px;
-        }
+    .btn-dark {
+        background-color: #009E60;
+        border-color: #009E60;
+    }
 
-        /* Styles de l'organigramme */
-        .org-chart {
-            position: relative;
-            padding-top: 20px;
-        }
-        .org-card {
-            background: #fff;
-            border: 2px solid var(--bs-primary);
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s;
-        }
-        .org-card:hover {
-            transform: translateY(-5px);
-        }
-        .org-level-1 {
-            background: var(--bs-primary); /* Orange pour le chef */
-            border-color: var(--bs-dark);
-            color: #fff;
-        }
-        .org-level-2 {
-            background: #fff;
-            border-color: var(--bs-dark); /* Vert pour les divisions */
-        }
-        .org-level-3 {
-            background: #fff;
-            border-color: var(--bs-primary); /* Orange pour les équipes */
-        }
+    .text-primary {
+        color: #F77F00 !important;
+    }
+
+    .bg-light {
+        background-color: #f8f9fa !important;
+    }
+
+    /* Uniformisation des images */
+    img:not(.rounded-circle):not(.logo) {
+        width: 100%;
+        height: 300px;
+        object-fit: cover;
+        border-radius: 10px;
+    }
+
+    /* Styles de l'organigramme */
+    .org-chart {
+        position: relative;
+        padding-top: 20px;
+    }
+
+    .org-card {
+        background: #fff;
+        border: 2px solid var(--bs-primary);
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s;
+    }
+
+    .org-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .org-level-1 {
+        background: var(--bs-primary);
+        /* Orange pour le chef */
+        border-color: var(--bs-dark);
+        color: #fff;
+    }
+
+    .org-level-2 {
+        background: #fff;
+        border-color: var(--bs-dark);
+        /* Vert pour les divisions */
+    }
+
+    .org-level-3 {
+        background: #fff;
+        border-color: var(--bs-primary);
+        /* Orange pour les équipes */
+    }
+
+    .org-connector {
+        position: relative;
+        height: 30px;
+    }
+
+    .line-down {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        width: 2px;
+        height: 30px;
+        background: var(--bs-dark);
+        /* Lignes vertes */
+        transform: translateX(-50%);
+    }
+
+    .org-card h4,
+    .org-card h5,
+    .org-card p {
+        margin: 0;
+    }
+
+    .org-card small {
+        font-size: 0.9rem;
+    }
+
+    /* Styles des cartes des membres */
+    .member-card {
+        transition: transform 0.3s;
+    }
+
+    .member-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .chief-card {
+        background: #fff;
+        /* Blanc pour Qualité */
+        border: 3px solid var(--bs-dark);
+    }
+
+    .norm-card {
+        background: #fff;
+        /* Blanc pour Qualité */
+        border: 3px solid var(--bs-primary);
+    }
+
+    .quality-card {
+        background: #fff;
+        /* Blanc pour Qualité */
+        border: 3px solid var(--bs-primary);
+        /* Bordure orange */
+    }
+
+    .member-img {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .member-img .img {
+        width: 150px;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 767px) {
         .org-connector {
-            position: relative;
-            height: 30px;
-        }
-        .line-down {
-            position: absolute;
-            top: 0;
-            left: 50%;
-            width: 2px;
-            height: 30px;
-            background: var(--bs-dark); /* Lignes vertes */
-            transform: translateX(-50%);
-        }
-        .org-card h4, .org-card h5, .org-card p {
-            margin: 0;
-        }
-        .org-card small {
-            font-size: 0.9rem;
+            display: none;
         }
 
-        /* Styles des cartes des membres */
-        .member-card {
-            transition: transform 0.3s;
+        /* Cache les lignes sur mobile */
+        .org-card {
+            margin-bottom: 20px;
         }
-        .member-card:hover {
-            transform: translateY(-5px);
-        }
-        .chief-card {
-            background: #fff; /* Blanc pour Qualité */
-            border: 3px solid var(--bs-dark);
-        }
-        .norm-card {
-            background: #fff; /* Blanc pour Qualité */
-            border: 3px solid var(--bs-primary);
-        }
-        .quality-card {
-            background: #fff; /* Blanc pour Qualité */
-            border: 3px solid var(--bs-primary); /* Bordure orange */
-        }
-        .member-img {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .member-img img {
-            width: 150px;
-            height: 150px;
-            object-fit: cover;
-            border-radius: 50%;
-        }
+    }
 
-        /* Responsive adjustments */
-        @media (max-width: 767px) {
-            .org-connector { display: none; } /* Cache les lignes sur mobile */
-            .org-card { margin-bottom: 20px; }
-        }
-        /* Centrage des photos dans la section Membres */
-        .member-img {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .member-img img {
-            width: 150px;
-            height: 150px;
-            object-fit: cover;
-            border-radius: 50%;
-        }
-    </style>
-    <!-- Spinner Start -->
-    <div id="spinner" class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
-        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
-            <span class="sr-only">Chargement...</span>
+    /* Centrage des photos dans la section Membres */
+    .member-img {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .member-img .img {
+        width: 150px;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+</style>
+<!-- Spinner Start -->
+<div id="spinner"
+    class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+        <span class="sr-only">Chargement...</span>
+    </div>
+</div>
+<!-- Spinner End -->
+
+<!-- Header Section Start -->
+<div class="container-fluid header-bg py-5"
+    style="background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('{% static 'img/quality-hero.jpg' %}?v={% now 'U' %}') no-repeat center center; background-size: cover;">
+    <div class="container py-5 text-center">
+        <h1 class="display-4 text-white mb-4 wow fadeInUp" data-wow-delay="0.1s">Service Qualité et Normalisation</h1>
+        <p class="lead text-white mb-5 wow fadeInUp" data-wow-delay="0.3s">
+            Découvrez en détail notre engagement pour l’excellence et la conformité dans la gestion financière publique.
+        </p>
+    </div>
+</div>
+<!-- Header Section End -->
+
+<!-- Introduction Start -->
+<div class="container-fluid py-5">
+    <div class="container">
+        <div class="row g-5 align-items-center">
+            <div class="col-lg-6 wow fadeInLeft" data-wow-delay="0.1s">
+                <img class="img" src="{% static 'img/quality-detail.jpg' %}?v={% now 'U' %}" class="img-fluid rounded"
+                    alt="Service Qualité">
+            </div>
+            <div class="col-lg-6 wow fadeInRight" data-wow-delay="0.3s">
+                <h2 class="text-primary mb-3">Introduction</h2>
+                <p class="mb-4">
+                    Le Service Qualité et Normalisation (SQN) est une entité clé au sein du Ministère des Finances et du
+                    Budget de Côte d'Ivoire. Notre mission est d’assurer la mise en place de standards rigoureux pour
+                    optimiser les processus financiers, améliorer la transparence et garantir la conformité aux normes
+                    internationales. Créé en 2018, le SQN travaille en étroite collaboration avec les directions
+                    financières et les partenaires externes pour promouvoir une gestion publique exemplaire.
+                </p>
+            </div>
         </div>
     </div>
-    <!-- Spinner End -->
+</div>
+<!-- Introduction End -->
 
-    <!-- Header Section Start -->
-    <div class="container-fluid header-bg py-5" style="background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('{% static 'img/quality-hero.jpg' %}?v={% now 'U' %}') no-repeat center center; background-size: cover;">
-        <div class="container py-5 text-center">
-            <h1 class="display-4 text-white mb-4 wow fadeInUp" data-wow-delay="0.1s">Service Qualité et Normalisation</h1>
-            <p class="lead text-white mb-5 wow fadeInUp" data-wow-delay="0.3s">
-                Découvrez en détail notre engagement pour l’excellence et la conformité dans la gestion financière publique.
-            </p>
-        </div>
-    </div>
-    <!-- Header Section End -->
-
-    <!-- Introduction Start -->
-    <div class="container-fluid py-5">
-        <div class="container">
-            <div class="row g-5 align-items-center">
-                <div class="col-lg-6 wow fadeInLeft" data-wow-delay="0.1s">
-                    <img src="{% static 'img/quality-detail.jpg' %}?v={% now 'U' %}" class="img-fluid rounded" alt="Service Qualité">
+<!-- Organigramme Start -->
+<div class="container-fluid bg-light py-5">
+    <div class="container">
+        <h2 class="text-primary text-center mb-5 wow fadeInUp" data-wow-delay="0.1s">Organigramme</h2>
+        <div class="row g-4 org-chart">
+            <!-- Niveau 1 : Chef du Service -->
+            <div class="col-12 text-center wow fadeInUp" data-wow-delay="0.2s">
+                <div class="org-card org-level-1">
+                    <h4 class="text-white">Koffi Yao</h4>
+                    <p class="text-white">Chef du Service</p>
                 </div>
-                <div class="col-lg-6 wow fadeInRight" data-wow-delay="0.3s">
-                    <h2 class="text-primary mb-3">Introduction</h2>
-                    <p class="mb-4">
-                        Le Service Qualité et Normalisation (SQN) est une entité clé au sein du Ministère des Finances et du Budget de Côte d'Ivoire. Notre mission est d’assurer la mise en place de standards rigoureux pour optimiser les processus financiers, améliorer la transparence et garantir la conformité aux normes internationales. Créé en 2018, le SQN travaille en étroite collaboration avec les directions financières et les partenaires externes pour promouvoir une gestion publique exemplaire.
-                    </p>
+            </div>
+            <!-- Connecteurs vers Niveau 2 -->
+            <div class="col-12 org-connector">
+                <div class="line-down"></div>
+            </div>
+            <!-- Niveau 2 : Divisions -->
+            <div class="col-md-6 text-center wow fadeInUp" data-wow-delay="0.3s">
+                <div class="org-card org-level-2">
+                    <h5 class="text-dark">Aminata Kouassi</h5>
+                    <p class="text-muted">Division Normalisation</p>
+                </div>
+            </div>
+            <div class="col-md-6 text-center wow fadeInUp" data-wow-delay="0.4s">
+                <div class="org-card org-level-2">
+                    <h5 class="text-dark">Jean-Marc Kouadio</h5>
+                    <p class="text-muted">Division Qualité</p>
+                </div>
+            </div>
+            <!-- Connecteurs vers Niveau 3 -->
+            <div class="col-md-6 org-connector">
+                <div class="line-down"></div>
+            </div>
+            <div class="col-md-6 org-connector">
+                <div class="line-down"></div>
+            </div>
+            <!-- Niveau 3 : Équipes -->
+            <div class="col-md-4 text-center wow fadeInUp" data-wow-delay="0.5s">
+                <div class="org-card org-level-3">
+                    <p class="text-dark">Équipe Normes</p>
+                    <small class="text-muted">5 agents</small>
+                </div>
+            </div>
+            <div class="col-md-4 text-center wow fadeInUp" data-wow-delay="0.6s">
+                <div class="org-card org-level-3">
+                    <p class="text-dark">Équipe Audits</p>
+                    <small class="text-muted">4 agents</small>
+                </div>
+            </div>
+            <div class="col-md-4 text-center wow fadeInUp" data-wow-delay="0.7s">
+                <div class="org-card org-level-3">
+                    <p class="text-dark">Équipe Formation</p>
+                    <small class="text-muted">3 agents</small>
                 </div>
             </div>
         </div>
     </div>
-    <!-- Introduction End -->
-    
-        <!-- Organigramme Start -->
-        <div class="container-fluid bg-light py-5">
-            <div class="container">
-                <h2 class="text-primary text-center mb-5 wow fadeInUp" data-wow-delay="0.1s">Organigramme</h2>
-                <div class="row g-4 org-chart">
-                    <!-- Niveau 1 : Chef du Service -->
-                    <div class="col-12 text-center wow fadeInUp" data-wow-delay="0.2s">
-                        <div class="org-card org-level-1">
-                            <h4 class="text-white">Koffi Yao</h4>
-                            <p class="text-white">Chef du Service</p>
-                        </div>
-                    </div>
-                    <!-- Connecteurs vers Niveau 2 -->
-                    <div class="col-12 org-connector">
-                        <div class="line-down"></div>
-                    </div>
-                    <!-- Niveau 2 : Divisions -->
-                    <div class="col-md-6 text-center wow fadeInUp" data-wow-delay="0.3s">
-                        <div class="org-card org-level-2">
-                            <h5 class="text-dark">Aminata Kouassi</h5>
-                            <p class="text-muted">Division Normalisation</p>
-                        </div>
-                    </div>
-                    <div class="col-md-6 text-center wow fadeInUp" data-wow-delay="0.4s">
-                        <div class="org-card org-level-2">
-                            <h5 class="text-dark">Jean-Marc Kouadio</h5>
-                            <p class="text-muted">Division Qualité</p>
-                        </div>
-                    </div>
-                    <!-- Connecteurs vers Niveau 3 -->
-                    <div class="col-md-6 org-connector">
-                        <div class="line-down"></div>
-                    </div>
-                    <div class="col-md-6 org-connector">
-                        <div class="line-down"></div>
-                    </div>
-                    <!-- Niveau 3 : Équipes -->
-                    <div class="col-md-4 text-center wow fadeInUp" data-wow-delay="0.5s">
-                        <div class="org-card org-level-3">
-                            <p class="text-dark">Équipe Normes</p>
-                            <small class="text-muted">5 agents</small>
-                        </div>
-                    </div>
-                    <div class="col-md-4 text-center wow fadeInUp" data-wow-delay="0.6s">
-                        <div class="org-card org-level-3">
-                            <p class="text-dark">Équipe Audits</p>
-                            <small class="text-muted">4 agents</small>
-                        </div>
-                    </div>
-                    <div class="col-md-4 text-center wow fadeInUp" data-wow-delay="0.7s">
-                        <div class="org-card org-level-3">
-                            <p class="text-dark">Équipe Formation</p>
-                            <small class="text-muted">3 agents</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Organigramme End -->
+</div>
+<!-- Organigramme End -->
 
-    <!-- Membres Start -->
-    <div class="container-fluid py-5">
-        <div class="container">
-            <h2 class="text-primary text-center mb-5 wow fadeInUp" data-wow-delay="0.1s">Équipe Dirigeante</h2>
-            <div class="row g-4">
-                <div class="col-md-4 wow fadeInUp" data-wow-delay="0.3s">
-                    <div class="card member-card norm-card p-4 rounded shadow-sm text-center">
-                        <div class="member-img">
-                        <img src="{% static 'img/team/membre(3).jpg' %}?v={% now 'U' %}" class="img-fluid rounded-circle mb-3" alt="Aminata Kouassi" style="width: 150px; height: 150px; object-fit: cover;">
-                        </div>
-                        <h5 class="text-dark">Aminata Kouassi</h5>
-                        <p class="text-muted">Superviseuse Normalisation</p>
-                        <p>Experte en élaboration de normes depuis près de 10ans, Aminata assure la conformité des processus financiers.</p>
+<!-- Membres Start -->
+<div class="container-fluid py-5">
+    <div class="container">
+        <h2 class="text-primary text-center mb-5 wow fadeInUp" data-wow-delay="0.1s">Équipe Dirigeante</h2>
+        <div class="row g-4">
+            <div class="col-md-4 wow fadeInUp" data-wow-delay="0.3s">
+                <div class="card member-card norm-card p-4 rounded shadow-sm text-center">
+                    <div class="member-img">
+                        <img class="img" src="{% static 'img/team/membre(3).jpg' %}?v={% now 'U' %}"
+                            class="img-fluid rounded-circle mb-3" alt="Aminata Kouassi"
+                            style="width: 150px; height: 150px; object-fit: cover;">
                     </div>
+                    <h5 class="text-dark">Aminata Kouassi</h5>
+                    <p class="text-muted">Superviseuse Normalisation</p>
+                    <p>Experte en élaboration de normes depuis près de 10ans, Aminata assure la conformité des processus
+                        financiers.</p>
                 </div>
-                <div class="col-md-4 wow fadeInUp" data-wow-delay="0.2s">
-                    <div class="card member-card chief-card p-4 rounded shadow-sm text-center">
-                        <div class="member-img">
-                        <img src="{% static 'img/team/membre(2).jpg' %}?v={% now 'U' %}" class="img-fluid rounded-circle mb-3" alt="Koffi Yao" style="width: 150px; height: 150px; object-fit: cover;">
-                        </div>
-                        <h5 class="text-dark">Koffi Yao</h5>
-                        <p class="text-muted">Chef du Service</p>
-                        <p>Avec plus de 15 ans d’expérience en gestion publique, Koffi dirige le SQN avec une vision axée sur l’excellence.</p>
+            </div>
+            <div class="col-md-4 wow fadeInUp" data-wow-delay="0.2s">
+                <div class="card member-card chief-card p-4 rounded shadow-sm text-center">
+                    <div class="member-img">
+                        <img class="img" src="{% static 'img/team/membre(2).jpg' %}?v={% now 'U' %}"
+                            class="img-fluid rounded-circle mb-3" alt="Koffi Yao"
+                            style="width: 150px; height: 150px; object-fit: cover;">
                     </div>
+                    <h5 class="text-dark">Koffi Yao</h5>
+                    <p class="text-muted">Chef du Service</p>
+                    <p>Avec plus de 15 ans d’expérience en gestion publique, Koffi dirige le SQN avec une vision axée
+                        sur l’excellence.</p>
                 </div>
-                <div class="col-md-4 wow fadeInUp" data-wow-delay="0.4s">
-                    <div class="card member-card quality-card p-4 rounded shadow-sm text-center">
-                        <div class="member-img">
-                        <img src="{% static 'img/team/membre(4).jpg' %}?v={% now 'U' %}" class="img-fluid rounded-circle mb-3" alt="Jean-Marc Kouadio" style="width: 150px; height: 150px; object-fit: cover;">
-                        </div>
-                        <h5 class="text-dark">Jean-Marc Kouadio</h5>
-                        <p class="text-muted">Superviseur Qualité</p>
-                        <p>En tant que superviseur qualité, Jean-Marc pilote les initiatives d’amélioration continue au sein du service.</p>
+            </div>
+            <div class="col-md-4 wow fadeInUp" data-wow-delay="0.4s">
+                <div class="card member-card quality-card p-4 rounded shadow-sm text-center">
+                    <div class="member-img">
+                        <img class="img" src="{% static 'img/team/membre(4).jpg' %}?v={% now 'U' %}"
+                            class="img-fluid rounded-circle mb-3" alt="Jean-Marc Kouadio"
+                            style="width: 150px; height: 150px; object-fit: cover;">
                     </div>
+                    <h5 class="text-dark">Jean-Marc Kouadio</h5>
+                    <p class="text-muted">Superviseur Qualité</p>
+                    <p>En tant que superviseur qualité, Jean-Marc pilote les initiatives d’amélioration continue au sein
+                        du service.</p>
                 </div>
             </div>
         </div>
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
-        <script src="{% static 'lib/wow/wow.min.js' %}"></script>
-        <script src="{% static 'lib/easing/easing.min.js' %}"></script>
-        <script src="{% static 'lib/waypoints/waypoints.min.js' %}"></script>
-        <script src="{% static 'lib/counterup/counterup.min.js' %}"></script>
-        <script src="{% static 'lib/owlcarousel/owl.carousel.min.js' %}"></script>
-        <script src="{% static 'lib/lightbox/js/lightbox.min.js' %}"></script>
-        <script src="{% static 'js/main.js' %}"></script>
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'lib/wow/wow.min.js' %}"></script>
+    <script src="{% static 'lib/easing/easing.min.js' %}"></script>
+    <script src="{% static 'lib/waypoints/waypoints.min.js' %}"></script>
+    <script src="{% static 'lib/counterup/counterup.min.js' %}"></script>
+    <script src="{% static 'lib/owlcarousel/owl.carousel.min.js' %}"></script>
+    <script src="{% static 'lib/lightbox/js/lightbox.min.js' %}"></script>
+    <script src="{% static 'js/main.js' %}"></script>
     <!-- Membres End -->
     <script>
         new WOW().init();
     </script>
-</body>
-</html>
-{% endblock %}
+    </body>
 
+    </html>
+    {% endblock %}
