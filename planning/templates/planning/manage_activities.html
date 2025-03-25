@@ -332,6 +332,16 @@ Gestion des Activités - {{ plan.titre }} - {{ annee }}
     .table-striped tbody tr:nth-of-type(odd) { background-color: #fff3e6; }
     .form-control { min-width: 100px; }
     textarea.form-control { min-height: 80px; resize: vertical; }
+    /* Élargir les colonnes Commentaire et Commentaire SE */
+    .table th:nth-child(12), /* Etat d'avancement - en-tête */
+    .table td:nth-child(12), /* Etat d'avancement - données */
+    .table th:nth-child(14), /* Commentaire - en-tête */
+    .table td:nth-child(14), /* Commentaire - données */
+    .table th:nth-child(15), /* Commentaire SE - en-tête */
+    .table td:nth-child(15) { /* Commentaire SE - données */
+        min-width: 200px; /* Ajustez cette valeur selon vos besoins */
+        width: 200px; /* Optionnel : fixe la largeur */
+    }
     .btn-success { 
         background: #28a745; 
         color: white; 

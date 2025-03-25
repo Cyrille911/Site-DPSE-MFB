@@ -4,16 +4,10 @@ from django.shortcuts import render, get_object_or_404, redirect
 from .models import PlanAction, Effet, Produit, Action, Activite, ActiviteLog
 from django.http import JsonResponse
 from django.db.models import Q
-from datetime import datetime
-from reversion import revisions as reversion
 from django.contrib import messages
-from django.core.paginator import Paginator
 from .forms import PaoStatusForm  # Import du formulaire
-from django.core.exceptions import ValidationError
 from django.db import transaction
 import logging
-from django.core.exceptions import PermissionDenied
-from django import forms
 
 from users.models import User  # Import corrigé
 
@@ -21,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 def add_plan_action(request):
-    # Vérification des rôles
+
     is_authenticated = request.user.is_authenticated
     if not (is_authenticated):
         return render(request, 'planning/access_denied.html')
@@ -1015,8 +1009,9 @@ def operational_plan_matrix(request, plan_id, annee):
                         ('couts', 0.0),
                         ('cibles', None),
                         ('etat_avancement', ''),
+                        ('commentaire', ''),
                         ('commentaire_se', ''),
-                        ('status', 'Non entamée'),  # Changement de 'Draft' à 'Non entamée' pour cohérence
+                        ('status', 'Non entamée'),
                         ('matrix_status', 'en cours')
                     ]:
                         current = getattr(activite, field)
@@ -1038,10 +1033,11 @@ def operational_plan_matrix(request, plan_id, annee):
                         'cout': float(activite.couts[annee_index]),
                         'realisation': activite.realisation[annee_index],
                         'etat_avancement': activite.etat_avancement[annee_index],
-                        'commentaire': activite.commentaire or '',
+                        'commentaire': activite.commentaire[annee_index],
                         'commentaire_se': activite.commentaire_se[annee_index],
                         'status': activite.status[annee_index],
                         'matrix_status': activite.matrix_status[annee_index],
+                        'programme': activite.point_focal.program,
                     })
                 if activites_data:
                     actions_data.append({

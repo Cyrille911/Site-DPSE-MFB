@@ -10,22 +10,10 @@ Matrice Opérationnelle - {{ plan.titre }} - {{ annee }}
 <div class="container mt-4">
     <h2 class="text-center mb-5 text-orange fw-bold animate-fade-in">Matrice Opérationnelle - {{ plan.titre }} - {{ annee }}</h2>
 
-    <!-- Sélecteur d'année -->
-    <div class="row justify-content-center mb-4">
-        <div class="col-md-4">
-            <label for="annee-select" class="fw-bold text-orange">Année :</label>
-            <select id="annee-select" class="form-control">
-                {% for a in annees %}
-                    <option value="{{ a }}" {% if a == annee %}selected{% endif %}>{{ a }}</option>
-                {% endfor %}
-            </select>
-        </div>
-    </div>
-
-    <!-- Filtres -->
-    <div class="row my-3 g-3 mx-0 animate-slide-up">
+    <!-- Filtres sur une seule ligne avec espacement uniforme -->
+    <div class="row my-3 g-3 mx-0 animate-slide-up justify-content-between">
         {% for filter_group in filter_groups %}
-            <div class="col-12 col-sm-6 col-md-{{ filter_group.col_width }}">
+            <div class="col-12 col-md-2 filter-item">
                 <label class="mb-2 fw-bold text-orange">{{ filter_group.label }} :</label>
                 <div class="dropdown">
                     <button class="btn btn-outline-orange dropdown-toggle w-100" type="button" data-group="{{ filter_group.group }}" data-bs-toggle="dropdown">
@@ -49,15 +37,15 @@ Matrice Opérationnelle - {{ plan.titre }} - {{ annee }}
                 <table class="unfixed-table" id="matrix-table">
                     <thead class="thead-dark">
                         <tr id="table-header-top">
-                            <th rowspan="2" class="sortable" data-sort="titre">Intitulé</th>
-                            <th rowspan="2" class="sortable" data-sort="type">Type</th>
-                            <th colspan="3">Indicateur</th>
+                            <th rowspan="2" class="fixed-column">Référence</th>
+                            <th rowspan="2" class="fixed-column" style="left: 150px;">Intitulé</th>
+                            <th rowspan="2">Type</th>
+                            <th colspan="4">Indicateur</th>
                             <th rowspan="2" class="sortable" data-sort="structure">Structure</th>
                             <th rowspan="2">Coût {{ annee }} (M)</th>
-                            <th rowspan="2">Réalisation {{ annee }}</th>
                             <th rowspan="2" class="sortable" data-sort="etat_avancement">État d’avancement</th>
                             <th rowspan="2">Commentaire</th>
-                            <th rowspan="2">Commentaire SE</th>
+                            <th rowspan="2">Commentaire DPSE</th>
                             <th rowspan="2" class="sortable" data-sort="status">Statut</th>
                             <th rowspan="2">Programme</th>
                         </tr>
@@ -65,45 +53,93 @@ Matrice Opérationnelle - {{ plan.titre }} - {{ annee }}
                             <th>Libellé</th>
                             <th>Référence</th>
                             <th>Cible {{ annee }}</th>
+                            <th>Réalisation {{ annee }}</th>
                         </tr>
                     </thead>
                     <tbody id="matrix-table-body">
                         <tr class="hierarchy-row impact-row">
-                            <td colspan="13">Impact : {{ impact }}</td>
+                            <td class="impact-bg">Impact</td>
+                            <td class="impact-bg">{{ impact }}</td>
+                            <td class="impact-bg"></td>
+                            <td class="impact-bg"></td>
+                            <td class="impact-bg"></td>
+                            <td class="impact-bg"></td>
+                            <td class="impact-bg"></td>
+                            <td class="impact-bg"></td>
+                            <td class="impact-bg"></td>
+                            <td class="impact-bg"></td>
+                            <td class="impact-bg"></td>
+                            <td class="impact-bg"></td>
+                            <td class="impact-bg"></td>
+                            <td class="impact-bg"></td>
                         </tr>
                         {% for effet in effets %}
                             <tr class="hierarchy-row effet-row">
-                                <td colspan="6">Effet : {{ effet.titre }}</td>
-                                <td>{{ effet.cout }}</td>
-                                <td colspan="6"></td>
+                                <td class="effet-bg">Effet {{ forloop.counter }}</td>
+                                <td class="effet-bg">{{ effet.titre }}</td>
+                                <td class="effet-bg"></td>
+                                <td class="effet-bg"></td>
+                                <td class="effet-bg"></td>
+                                <td class="effet-bg"></td>
+                                <td class="effet-bg"></td>
+                                <td class="effet-bg"></td>
+                                <td class="effet-bg">{{ effet.cout }}</td>
+                                <td class="effet-bg"></td>
+                                <td class="effet-bg"></td>
+                                <td class="effet-bg"></td>
+                                <td class="effet-bg"></td>
+                                <td class="effet-bg"></td>
                             </tr>
                             {% for produit in effet.produits %}
                                 <tr class="hierarchy-row produit-row">
-                                    <td colspan="6">Produit : {{ produit.titre }}</td>
-                                    <td>{{ produit.cout }}</td>
-                                    <td colspan="6"></td>
+                                    <td class="produit-bg">Produit {{ forloop.parentloop.counter }}.{{ forloop.counter }}</td>
+                                    <td class="produit-bg">{{ produit.titre }}</td>
+                                    <td class="produit-bg"></td>
+                                    <td class="produit-bg"></td>
+                                    <td class="produit-bg"></td>
+                                    <td class="produit-bg"></td>
+                                    <td class="produit-bg"></td>
+                                    <td class="produit-bg"></td>
+                                    <td class="produit-bg">{{ produit.cout }}</td>
+                                    <td class="produit-bg"></td>
+                                    <td class="produit-bg"></td>
+                                    <td class="produit-bg"></td>
+                                    <td class="produit-bg"></td>
+                                    <td class="produit-bg"></td>
                                 </tr>
                                 {% for action in produit.actions %}
                                     <tr class="hierarchy-row action-row">
-                                        <td colspan="6">Action : {{ action.titre }}</td>
-                                        <td>{{ action.cout }}</td>
-                                        <td colspan="6"></td>
+                                        <td class="action-bg">Action {{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}</td>
+                                        <td class="action-bg">{{ action.titre }}</td>
+                                        <td class="action-bg"></td>
+                                        <td class="action-bg"></td>
+                                        <td class="action-bg"></td>
+                                        <td class="action-bg"></td>
+                                        <td class="action-bg"></td>
+                                        <td class="action-bg"></td>
+                                        <td class="action-bg">{{ action.cout }}</td>
+                                        <td class="action-bg"></td>
+                                        <td class="action-bg"></td>
+                                        <td class="action-bg"></td>
+                                        <td class="action-bg"></td>
+                                        <td class="action-bg"></td>
                                     </tr>
                                     {% for activite in action.activites %}
                                         <tr class="activity-row">
-                                            <td>{{ activite.titre }}</td>
-                                            <td>{{ activite.type }}</td>
-                                            <td>{{ activite.indicateur_label }}</td>
-                                            <td>{{ activite.indicateur_reference }}</td>
-                                            <td>{{ activite.cible }}</td>
-                                            <td>{{ activite.structure }}</td>
-                                            <td>{{ activite.cout }}</td>
-                                            <td>{{ activite.realisation }}</td>
-                                            <td>{{ activite.etat_avancement }}</td>
-                                            <td>{{ activite.commentaire }}</td>
-                                            <td>{{ activite.commentaire_se }}</td>
-                                            <td>{{ activite.status }}</td>
-                                            <td>{{ plan.titre }}</td>
+                                            <td class="activite-bg">Activité {{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}</td>
+                                            <td class="activite-bg">{{ activite.titre }}</td>
+                                            <td class="activite-bg">{{ activite.type }}</td>
+                                            <td class="activite-bg">{{ activite.indicateur_label }}</td>
+                                            <td class="activite-bg">{{ activite.indicateur_reference }}</td>
+                                            <td class="activite-bg">{{ activite.cible }}</td>
+                                            <td class="activite-bg">{{ activite.realisation }}</td>
+                                            <td class="activite-bg">{{ activite.structure }}</td>
+                                            <td class="activite-bg">{{ activite.cout }}</td>
+                                            <td class="activite-bg">{{ activite.etat_avancement }}</td>
+                                            <td class="activite-bg">{{ activite.commentaire }}</td>
+                                            <td class="activite-bg">{{ activite.commentaire_se }}</td>
+                                            <td class="activite-bg">{{ activite.status }}</td>
+                                            <td class="activite-bg">{{ activite.programme }}</td>
                                         </tr>
                                     {% endfor %}
                                 {% endfor %}
@@ -115,28 +151,29 @@ Matrice Opérationnelle - {{ plan.titre }} - {{ annee }}
         </div>
     </div>
 
-    <!-- Pagination -->
-    <div class="pagination-container text-center mt-3">
-        <button id="prev-page" class="btn btn-outline-orange" disabled>Précédent</button>
-        <span id="page-info">Page <span id="current-page">1</span> sur <span id="total-pages">1</span></span>
-        <button id="next-page" class="btn btn-outline-orange">Suivant</button>
-    </div>
-
-    <!-- Statistiques -->
+    <!-- Tableau croisé Effet vs Type avec totaux -->
     <div class="stats-and-download-container mx-0 animate-fade-in">
         <div class="stats-container">
-            <h3>Statistiques</h3>
+            <h3>Tableau Croisé Effet vs Type</h3>
             <p>Lignes : <span id="visible-rows">0</span> visibles sur <span id="total-rows">0</span> totales</p>
-            <table id="type-stats-table" class="stats-table">
-                <thead>
-                    <tr>
-                        <th>Type</th>
-                        <th>Nombre</th>
-                        <th>Proportion (%)</th>
-                    </tr>
-                </thead>
-                <tbody id="type-stats-body"></tbody>
-            </table>
+            <div class="table-responsive">
+                <table id="cross-table" class="stats-table">
+                    <thead>
+                        <tr>
+                            <th>Effet</th>
+                            <!-- Les colonnes "Type" seront ajoutées dynamiquement -->
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cross-table-body"></tbody>
+                    <tfoot>
+                        <tr id="cross-table-footer">
+                            <th>Total</th>
+                            <!-- Les totaux par type seront ajoutés dynamiquement -->
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -164,6 +201,15 @@ Matrice Opérationnelle - {{ plan.titre }} - {{ annee }}
             <input type="text" id="search-input" class="form-control" placeholder="Rechercher..." aria-label="Rechercher">
         </div>
     </div>
+
+    <!-- Icône flottante de téléchargement -->
+    <div id="floating-download" class="floating-download-container animate-section" style="animation-delay: 1.2s;">
+        <button id="download-excel-btn" class="download-icon" title="Télécharger Excel">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" fill="#ff6200"/>
+            </svg>
+        </button>
+    </div>
 </div>
 
 <!-- Inclusion de SheetJS -->
@@ -180,15 +226,26 @@ document.addEventListener('DOMContentLoaded', function () {
     const downloadBtn = document.getElementById('download-excel-btn');
     const visibleRowsSpan = document.getElementById('visible-rows');
     const totalRowsSpan = document.getElementById('total-rows');
-    const typeStatsBody = document.getElementById('type-stats-body');
-    const anneeSelect = document.getElementById('annee-select');
-    const prevPageBtn = document.getElementById('prev-page');
-    const nextPageBtn = document.getElementById('next-page');
-    const currentPageSpan = document.getElementById('current-page');
-    const totalPagesSpan = document.getElementById('total-pages');
+    const crossTable = document.getElementById('cross-table');
+    const crossTableBody = document.getElementById('cross-table-body');
+    const crossTableFooter = document.getElementById('cross-table-footer');
 
-    let currentPage = 1;
-    const rowsPerPage = 50;
+    // Gestion des positions sticky pour les lignes hiérarchiques
+    function updateHierarchyPositions() {
+        const rows = Array.from(tableBody.getElementsByTagName('tr'));
+        const scrollTop = tableContainer.scrollTop;
+        const headerHeight = 76; // Hauteur totale des deux lignes d'en-tête
+
+        let topOffset = headerHeight;
+        rows.forEach((row, index) => {
+            if (row.classList.contains('hierarchy-row')) {
+                row.style.position = 'sticky';
+                row.style.top = `${topOffset}px`;
+                row.style.zIndex = 25 - index;
+                topOffset += row.offsetHeight;
+            }
+        });
+    }
 
     // Filtrer avec regex
     function filterTable() {
@@ -211,38 +268,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 row.style.display = regex && !regex.test(rowText) ? 'none' : '';
             }
         });
-        updatePagination();
+        updateCrossTable();
+        updateHierarchyPositions();
     }
 
-    // Pagination
-    function updatePagination() {
-        const rows = Array.from(tableBody.getElementsByTagName('tr')).filter(row => 
-            !row.classList.contains('hierarchy-row') && row.style.display !== 'none'
-        );
-        const totalRows = rows.length;
-        const totalPages = Math.ceil(totalRows / rowsPerPage);
-
-        totalRowsSpan.textContent = totalRows;
-        totalPagesSpan.textContent = totalPages;
-        currentPage = Math.min(currentPage, totalPages || 1);
-        currentPageSpan.textContent = currentPage;
-
-        const start = (currentPage - 1) * rowsPerPage;
-        const end = start + rowsPerPage;
-
-        rows.forEach((row, index) => {
-            row.style.display = (index >= start && index < end) ? '' : 'none';
-        });
-
-        visibleRowsSpan.textContent = Math.min(rowsPerPage, totalRows - start);
-        prevPageBtn.disabled = currentPage === 1;
-        nextPageBtn.disabled = currentPage === totalPages || totalPages === 0;
-
-        updateStats();
-    }
-
-    // Mettre à jour les statistiques
-    function updateStats() {
+    // Mettre à jour le tableau croisé Effet vs Type avec totaux
+    function updateCrossTable() {
         const visibleRows = Array.from(tableBody.getElementsByTagName('tr')).filter(row => 
             row.style.display !== 'none' && !row.classList.contains('hierarchy-row')
         );
@@ -250,19 +281,63 @@ document.addEventListener('DOMContentLoaded', function () {
             !row.classList.contains('hierarchy-row')
         ).length;
 
-        const typeStats = {};
+        visibleRowsSpan.textContent = visibleRows.length;
+        totalRowsSpan.textContent = totalRows;
+
+        // Collecter les effets et types uniques
+        const effets = new Set();
+        const types = new Set();
+        const crossData = {};
+
         visibleRows.forEach(row => {
-            const type = row.cells[1].textContent.trim();
-            typeStats[type] = (typeStats[type] || 0) + 1;
+            const effetMatch = row.cells[0].textContent.match(/^(\d+)\./); // Extraire le numéro de l'effet
+            const effet = effetMatch ? `Effet ${effetMatch[1]}` : 'Non défini';
+            const type = row.cells[2].textContent.trim(); // Colonne "Type"
+
+            effets.add(effet);
+            types.add(type);
+
+            if (!crossData[effet]) crossData[effet] = {};
+            crossData[effet][type] = (crossData[effet][type] || 0) + 1;
         });
 
-        typeStatsBody.innerHTML = '';
-        Object.entries(typeStats).forEach(([type, count]) => {
-            const percentage = totalRows > 0 ? ((count / totalRows) * 100).toFixed(1) : 0;
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${type}</td><td>${count}</td><td>${percentage}%</td>`;
-            typeStatsBody.appendChild(tr);
+        const typeArray = Array.from(types);
+
+        // Mettre à jour l'en-tête du tableau croisé
+        crossTable.querySelector('thead tr').innerHTML = '<th>Effet</th>';
+        typeArray.forEach(type => {
+            crossTable.querySelector('thead tr').innerHTML += `<th>${type}</th>`;
         });
+        crossTable.querySelector('thead tr').innerHTML += '<th>Total</th>';
+
+        // Mettre à jour le corps du tableau croisé
+        crossTableBody.innerHTML = '';
+        const effetArray = Array.from(effets).sort();
+        effetArray.forEach(effet => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${effet}</td>`;
+            let rowTotal = 0;
+            typeArray.forEach(type => {
+                const count = crossData[effet][type] || 0;
+                rowTotal += count;
+                tr.innerHTML += `<td>${count}</td>`;
+            });
+            tr.innerHTML += `<td>${rowTotal}</td>`;
+            crossTableBody.appendChild(tr);
+        });
+
+        // Mettre à jour le pied du tableau croisé (totaux par type)
+        crossTableFooter.innerHTML = '<th>Total</th>';
+        let grandTotal = 0;
+        typeArray.forEach(type => {
+            let colTotal = 0;
+            effetArray.forEach(effet => {
+                colTotal += crossData[effet][type] || 0;
+            });
+            grandTotal += colTotal;
+            crossTableFooter.innerHTML += `<td>${colTotal}</td>`;
+        });
+        crossTableFooter.innerHTML += `<td>${grandTotal}</td>`;
     }
 
     // Tri des colonnes
@@ -279,13 +354,14 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             rows.forEach(row => tableBody.appendChild(row));
-            updatePagination();
+            updateCrossTable();
+            updateHierarchyPositions();
         });
     });
 
     function getColumnIndex(column) {
-        const headers = ['titre', 'type', 'structure', 'etat_avancement', 'status'];
-        return headers.indexOf(column) + 1;
+        const headers = ['titre', 'structure', 'etat_avancement', 'status'];
+        return headers.indexOf(column) + (column === 'titre' ? 2 : column === 'structure' ? 8 : column === 'etat_avancement' ? 10 : 11);
     }
 
     // Gestion barre de recherche
@@ -310,47 +386,46 @@ document.addEventListener('DOMContentLoaded', function () {
 
     searchInput.addEventListener('input', filterTable);
 
-    // Changement d'année
-    anneeSelect.addEventListener('change', function () {
-        window.location.href = `{% url 'operational_plan_matrix' plan.id 0 %}`.replace('0', this.value);
-    });
-
-    // Pagination boutons
-    prevPageBtn.addEventListener('click', () => {
-        if (currentPage > 1) {
-            currentPage--;
-            updatePagination();
-        }
-    });
-
-    nextPageBtn.addEventListener('click', () => {
-        const totalPages = parseInt(totalPagesSpan.textContent);
-        if (currentPage < totalPages) {
-            currentPage++;
-            updatePagination();
-        }
-    });
-
-    // Télécharger Excel
+    // Télécharger Excel avec deux feuilles
     downloadBtn.addEventListener('click', function () {
         try {
             const wb = XLSX.utils.book_new();
-            const ws_data = [];
 
+            // Feuille 1 : PAO (grand tableau)
+            const ws_pao_data = [];
             const headerTop = Array.from(document.querySelectorAll('#table-header-top th')).map(th => th.textContent.trim());
-            ws_data.push(headerTop);
+            ws_pao_data.push(headerTop);
             const headerBottom = Array.from(document.querySelectorAll('#table-header-bottom th')).map(th => th.textContent.trim());
-            ws_data.push(['', '', ...headerBottom]);
+            ws_pao_data.push(['', '', '', ...headerBottom]);
 
             const visibleRows = Array.from(tableBody.getElementsByTagName('tr')).filter(row => row.style.display !== 'none');
             visibleRows.forEach(row => {
                 const cells = Array.from(row.cells).map(cell => cell.textContent.trim());
-                ws_data.push(cells);
+                ws_pao_data.push(cells);
             });
 
-            const ws = XLSX.utils.aoa_to_sheet(ws_data);
-            XLSX.utils.book_append_sheet(wb, ws, "Matrice");
-            XLSX.writeFile(wb, `matrice_${"{{ plan.titre|escapejs }}"}}_${"{{ annee }}"}.xlsx`);
+            const ws_pao = XLSX.utils.aoa_to_sheet(ws_pao_data);
+            XLSX.utils.book_append_sheet(wb, ws_pao, "PAO");
+
+            // Feuille 2 : Stats (tableau croisé)
+            const ws_stats_data = [];
+            const crossHeader = Array.from(crossTable.querySelector('thead tr').children).map(th => th.textContent.trim());
+            ws_stats_data.push(crossHeader);
+
+            const crossRows = Array.from(crossTableBody.getElementsByTagName('tr'));
+            crossRows.forEach(row => {
+                const cells = Array.from(row.cells).map(cell => cell.textContent.trim());
+                ws_stats_data.push(cells);
+            });
+
+            const crossFooter = Array.from(crossTableFooter.children).map(cell => cell.textContent.trim());
+            ws_stats_data.push(crossFooter);
+
+            const ws_stats = XLSX.utils.aoa_to_sheet(ws_stats_data);
+            XLSX.utils.book_append_sheet(wb, ws_stats, "Stats");
+
+            // Nom du fichier : "PAO Année"
+            XLSX.writeFile(wb, `PAO_${"{{ annee }}"}.xlsx`);
         } catch (error) {
             console.error('Erreur Excel:', error);
             alert('Erreur lors du téléchargement.');
@@ -377,67 +452,126 @@ document.addEventListener('DOMContentLoaded', function () {
         .then(data => {
             tableBody.innerHTML = `
                 <tr class="hierarchy-row impact-row">
-                    <td colspan="13">Impact : ${data.impact}</td>
+                    <td class="impact-bg">Impact</td>
+                    <td class="impact-bg">Impact : ${data.impact}</td>
+                    <td class="impact-bg"></td>
+                    <td class="impact-bg"></td>
+                    <td class="impact-bg"></td>
+                    <td class="impact-bg"></td>
+                    <td class="impact-bg"></td>
+                    <td class="impact-bg"></td>
+                    <td class="impact-bg"></td>
+                    <td class="impact-bg"></td>
+                    <td class="impact-bg"></td>
+                    <td class="impact-bg"></td>
+                    <td class="impact-bg"></td>
+                    <td class="impact-bg"></td>
                 </tr>
             `;
 
+            let effetCounter = 1;
             data.effets.forEach(effet => {
                 tableBody.innerHTML += `
                     <tr class="hierarchy-row effet-row">
-                        <td colspan="6">Effet : ${effet.titre}</td>
-                        <td>${effet.cout}</td>
-                        <td colspan="6"></td>
+                        <td class="effet-bg">Effet ${effetCounter}</td>
+                        <td class="effet-bg">Effet : ${effet.titre}</td>
+                        <td class="effet-bg"></td>
+                        <td class="effet-bg"></td>
+                        <td class="effet-bg"></td>
+                        <td class="effet-bg"></td>
+                        <td class="effet-bg"></td>
+                        <td class="effet-bg"></td>
+                        <td class="effet-bg">${effet.cout}</td>
+                        <td class="effet-bg"></td>
+                        <td class="effet-bg"></td>
+                        <td class="effet-bg"></td>
+                        <td class="effet-bg"></td>
+                        <td class="effet-bg"></td>
                     </tr>
                 `;
+                effetCounter++;
+
+                let produitCounter = 1;
                 effet.produits.forEach(produit => {
                     tableBody.innerHTML += `
                         <tr class="hierarchy-row produit-row">
-                            <td colspan="6">Produit : ${produit.titre}</td>
-                            <td>${produit.cout}</td>
-                            <td colspan="6"></td>
+                            <td class="produit-bg">Produit ${effetCounter - 1}.${produitCounter}</td>
+                            <td class="produit-bg">Produit : ${produit.titre}</td>
+                            <td class="produit-bg"></td>
+                            <td class="produit-bg"></td>
+                            <td class="produit-bg"></td>
+                            <td class="produit-bg"></td>
+                            <td class="produit-bg"></td>
+                            <td class="produit-bg"></td>
+                            <td class="produit-bg">${produit.cout}</td>
+                            <td class="produit-bg"></td>
+                            <td class="produit-bg"></td>
+                            <td class="produit-bg"></td>
+                            <td class="produit-bg"></td>
+                            <td class="produit-bg"></td>
                         </tr>
                     `;
+                    produitCounter++;
+
+                    let actionCounter = 1;
                     produit.actions.forEach(action => {
                         tableBody.innerHTML += `
                             <tr class="hierarchy-row action-row">
-                                <td colspan="6">Action : ${action.titre}</td>
-                                <td>${action.cout}</td>
-                                <td colspan="6"></td>
+                                <td class="action-bg">Action ${effetCounter - 1}.${produitCounter - 1}.${actionCounter}</td>
+                                <td class="action-bg">Action : ${action.titre}</td>
+                                <td class="action-bg"></td>
+                                <td class="action-bg"></td>
+                                <td class="action-bg"></td>
+                                <td class="action-bg"></td>
+                                <td class="action-bg"></td>
+                                <td class="action-bg"></td>
+                                <td class="action-bg">${action.cout}</td>
+                                <td class="action-bg"></td>
+                                <td class="action-bg"></td>
+                                <td class="action-bg"></td>
+                                <td class="action-bg"></td>
+                                <td class="action-bg"></td>
                             </tr>
                         `;
+                        actionCounter++;
+
+                        let activiteCounter = 1;
                         action.activites.forEach(activite => {
                             tableBody.innerHTML += `
                                 <tr class="activity-row">
-                                    <td>${activite.titre}</td>
-                                    <td>${activite.type}</td>
-                                    <td>${activite.indicateur_label}</td>
-                                    <td>${activite.indicateur_reference}</td>
-                                    <td>${activite.cible}</td>
-                                    <td>${activite.structure}</td>
-                                    <td>${activite.cout}</td>
-                                    <td>${activite.realisation}</td>
-                                    <td>${activite.etat_avancement}</td>
-                                    <td>${activite.commentaire}</td>
-                                    <td>${activite.commentaire_se}</td>
-                                    <td>${activite.status}</td>
-                                    <td>${data.plan_titre}</td>
+                                    <td class="activite-bg">${effetCounter - 1}.${produitCounter - 1}.${actionCounter - 1}.${activiteCounter}</td>
+                                    <td class="activite-bg">${activite.titre}</td>
+                                    <td class="activite-bg">${activite.type}</td>
+                                    <td class="activite-bg">${activite.indicateur_label}</td>
+                                    <td class="activite-bg">${activite.indicateur_reference}</td>
+                                    <td class="activite-bg">${activite.cible}</td>
+                                    <td class="activite-bg">${activite.realisation}</td>
+                                    <td class="activite-bg">${activite.structure}</td>
+                                    <td class="activite-bg">${activite.cout}</td>
+                                    <td class="activite-bg">${activite.etat_avancement}</td>
+                                    <td class="activite-bg">${activite.commentaire}</td>
+                                    <td class="activite-bg">${activite.commentaire_se}</td>
+                                    <td class="activite-bg">${activite.status}</td>
+                                    <td class="activite-bg">${activite.programme}</td>
                                 </tr>
                             `;
+                            activiteCounter++;
                         });
                     });
                 });
             });
 
             if (data.effets.length === 0) {
-                tableBody.innerHTML += `<tr><td colspan="13" class="text-center">Aucune donnée trouvée</td></tr>`;
+                tableBody.innerHTML += `<tr><td colspan="14" class="text-center">Aucune donnée trouvée</td></tr>`;
             }
 
             filterTable();
         })
         .catch(error => {
             console.error('Erreur AJAX:', error);
-            tableBody.innerHTML = `<tr><td colspan="13" class="text-center">Erreur de chargement</td></tr>`;
-            updatePagination();
+            tableBody.innerHTML = `<tr><td colspan="14" class="text-center">Erreur de chargement</td></tr>`;
+            updateCrossTable();
+            updateHierarchyPositions();
         });
     }
 
@@ -475,7 +609,9 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Initialisation
-    updatePagination();
+    updateCrossTable();
+    updateHierarchyPositions();
+    tableContainer.addEventListener('scroll', updateHierarchyPositions);
 });
 </script>
 {% endblock %}
@@ -488,47 +624,162 @@ document.addEventListener('DOMContentLoaded', function () {
 
     .container { padding-left: 75px; padding-right: 75px; width: 100%; max-width: none; }
 
-    .dropdown-menu { max-height: 250px; overflow-y: auto; }
+    .dropdown-menu { 
+        max-height: 250px; 
+        overflow-y: auto; 
+        z-index: 40; /* Augmente le z-index pour être au-dessus du tableau */
+    }
     .checkbox-option { margin-right: 10px; }
-    .btn-outline-orange { border-color: #ff6200; color: #ff6200; padding: 10px; }
-    .btn-outline-orange:hover { background-color: #ff6200; color: white; }
+    .btn-outline-orange { 
+        border-color: #ff6200; 
+        color: #ff6200; 
+        padding: 10px; 
+        white-space: normal; 
+        display: -webkit-box; 
+        -webkit-line-clamp: 2; 
+        -webkit-box-orient: vertical; 
+        overflow: hidden; 
+        text-overflow: ellipsis; 
+        max-height: 4.5em; 
+        line-height: 1.5em; 
+    }
+    .btn-outline-orange:hover { 
+        background-color: #ff6200; 
+        color: white; 
+    }
+
+    /* Espacement uniforme des filtres */
+    .filter-item { 
+        padding: 0 10px; 
+        display: flex; 
+        flex-direction: column; 
+        position: relative; /* Assure que les dropdowns restent dans le flux */
+    }
+    .row.justify-content-between { 
+        margin-left: -10px; 
+        margin-right: -10px; 
+    }
 
     .table-container { 
-        border-radius: 15px; overflow: hidden; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); 
-        background: #fff; margin: 40px 0; padding: 20px; max-height: 800px; border: 5px solid #ff6200; 
+        border-radius: 15px; 
+        overflow: hidden; 
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); 
+        background: #fff; 
+        margin: 40px 0; 
+        padding: 20px; 
+        max-height: 800px; 
+        border: 5px solid #ff6200; 
+        position: relative; 
+        z-index: 10; /* z-index inférieur aux dropdowns */
     }
-    .table-wrapper { position: relative; height: 100%; width: 100%; overflow: hidden; }
-    .table-horizontal-container { max-height: 760px; overflow: auto; border: 1px solid #ff6200; border-radius: 5px; }
-    .unfixed-table { width: 100%; border-collapse: collapse; border: 1px solid #ff6200; }
-    th, td { border: 1px solid #ff6200; padding: 10px; min-width: 150px; text-align: left; }
-    thead th { position: sticky; top: 0; z-index: 30; background: #ff6200 !important; color: white !important; text-align: center; }
-    #table-header-bottom th { position: sticky; top: 38px; z-index: 29; background: #ff6200 !important; color: white !important; }
-    tr > td:first-child { position: sticky; left: 0; z-index: 10; background: white; box-shadow: 2px 0 5px rgba(0,0,0,0.1); }
-    .impact-row td:first-child { top: 76px; z-index: 25; background-color: #d1e7dd; }
-    .effet-row td:first-child { z-index: 20; background-color: #f8d7da; }
-    .produit-row td:first-child { z-index: 19; background-color: #fff3cd; }
-    .action-row td:first-child { z-index: 18; background-color: #cce5ff; }
+    .table-wrapper { 
+        position: relative; 
+        height: 100%; 
+        width: 100%; 
+        overflow: hidden; 
+    }
+    .table-horizontal-container { 
+        max-height: 760px; 
+        overflow: auto; 
+        border: 1px solid #ff6200; 
+        border-radius: 5px; 
+        z-index: 10; /* z-index inférieur aux dropdowns */
+    }
+    .unfixed-table { 
+        width: 100%; 
+        border-collapse: collapse; 
+        border: 1px solid #ff6200; 
+    }
+    th, td { 
+        border: 1px solid #ff6200; 
+        padding: 10px; 
+        min-width: 150px; 
+        text-align: left; 
+    }
+
+    thead th { 
+        position: sticky; 
+        top: 0; 
+        z-index: 30; /* z-index pour les en-têtes sticky, inférieur aux dropdowns */
+        background: #ff6200 !important; 
+        color: white !important; 
+        text-align: center; 
+    }
+    #table-header-bottom th { 
+        position: sticky; 
+        top: 38px; 
+        z-index: 29; /* z-index inférieur aux dropdowns */
+        background: #ff6200 !important; 
+        color: white !important; 
+    }
+    .fixed-column:nth-child(1) { 
+        position: sticky; 
+        left: 0; 
+        z-index: 35; /* z-index pour colonnes fixes, inférieur aux dropdowns */
+        background: #ff6200 !important; 
+        color: white !important; 
+    }
+    .fixed-column:nth-child(2) { 
+        position: sticky; 
+        left: 150px; 
+        z-index: 35; /* z-index inférieur aux dropdowns */
+        background: #ff6200 !important; 
+        color: white !important; 
+    }
+    tr > td:first-child { 
+        position: sticky; 
+        left: 0; 
+        z-index: 15; 
+        box-shadow: 2px 0 5px rgba(0,0,0,0.1); 
+    }
+    tr > td:nth-child(2) { 
+        position: sticky; 
+        left: 150px; 
+        z-index: 15; 
+        box-shadow: 2px 0 5px rgba(0,0,0,0.1); 
+    }
+    tbody tr > td { 
+        background-color: inherit; 
+    }
+
+    .impact-bg { background-color: #d1e7dd; }
+    .effet-bg { background-color: #f8d7da; }
+    .produit-bg { background-color: #fff3cd; }
+    .action-bg { background-color: #cce5ff; }
+    .activite-bg { background-color: #ffffff; }
+
     .hierarchy-row { font-weight: bold; }
     .sortable { cursor: pointer; }
     .sortable.asc::after { content: ' ↑'; }
     .sortable:not(.asc)::after { content: ' ↓'; }
 
-    .pagination-container { margin: 20px 0; }
-    .pagination-container button { margin: 0 10px; }
-
-    .stats-and-download-container { padding: 20px; background: #f9f9f9; border-radius: 10px; box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1); }
+    .stats-and-download-container { 
+        padding: 20px; 
+        background: #f9f9f9; 
+        border-radius: 10px; 
+        box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1); 
+    }
     .stats-container h3 { font-size: 18px; margin-bottom: 10px; text-align: center; }
-    .stats-table { width: 100%; max-width: 400px; margin: 0 auto; border-collapse: collapse; }
-    .stats-table th, .stats-table td { border: 1px solid #ccc; padding: 5px; text-align: center; background: white; }
-    .stats-table th { background: #e0e0e0; }
+    .stats-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    .stats-table th, .stats-table td { border: 1px solid #ccc; padding: 8px; text-align: center; background: white; }
+    .stats-table th { background: #e0e0e0; font-weight: bold; }
+    .stats-table tfoot th, .stats-table tfoot td { background: #d0d0d0; font-weight: bold; }
+    .table-responsive { max-height: 300px; overflow-y: auto; }
 
     .btn-orange { background: #ff6200; color: white; border: none; border-radius: 25px; padding: 6px 15px; }
     .btn:hover { opacity: 0.9; transform: scale(1.05); transition: all 0.3s ease; }
 
     .floating-search-container { 
-        position: fixed; z-index: 1000; display: flex; align-items: center; 
-        background: rgba(255, 255, 255, 0.5); border-radius: 25px; padding: 5px; 
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); top: 85px; left: 85px; 
+        position: fixed; 
+        z-index: 1000; 
+        display: flex; 
+        align-items: center; 
+        background: rgba(255, 255, 255, 0.5); 
+        border-radius: 25px; 
+        padding: 5px; 
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); 
+        top: 85px; 
+        left: 85px; 
     }
     .search-icon { background: none; border: none; padding: 5px; cursor: pointer; transition: transform 0.2s ease; }
     .search-icon:hover { transform: scale(1.1); }
@@ -536,6 +787,25 @@ document.addEventListener('DOMContentLoaded', function () {
     .search-container.active { max-width: 200px; }
     #search-input { border: 2px solid #ff6200; border-radius: 5px; padding: 5px 10px; font-size: 16px; width: 100%; }
     #search-input:focus { outline: none; border-color: #ff6200; box-shadow: 0 0 5px rgba(255, 98, 0, 0.5); }
+
+    .floating-download-container {
+        position: fixed; 
+        z-index: 1000; 
+        top: 85px; 
+        right: 35px;
+    }
+    .download-icon {
+        background: none; 
+        border: none; 
+        padding: 10px; 
+        cursor: pointer; 
+        opacity: 0.5;
+        transition: opacity 0.3s ease, transform 0.2s ease;
+    }
+    .download-icon:hover {
+        opacity: 1; 
+        transform: scale(1.1);
+    }
 
     .animate-fade-in { animation: fadeIn 1s ease-in-out forwards; }
     .animate-slide-up { animation: slideUp 0.8s ease-in-out forwards; }

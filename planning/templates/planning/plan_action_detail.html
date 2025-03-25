@@ -103,7 +103,8 @@
                     <table class="unfixed-table" id="plan-table">
                         <thead class="thead-dark">
                             <tr id="table-header-top">
-                                <th rowspan="2">Intitulé</th>
+                                <th rowspan="2" class="fixed-column">Référence</th>
+                                <th rowspan="2" class="fixed-column" style="left: 150px;">Intitulé</th>
                                 <th rowspan="2">Type</th>
                                 <th colspan="{{ annees|length|add:2 }}">Indicateur</th>
                                 <th rowspan="2">Structure Responsable</th>
@@ -144,21 +145,18 @@
         <!-- Boutons -->
         <div class="text-center mt-4 mb-4 animate-section" style="animation-delay: 0.8s;">
             {% if request.user.is_authenticated %}
-                <!-- Bouton "Modifier mes activités" : visible pour Point Focal (PF) et Responsable -->
                 {% if request.user.role == "point_focal" or request.user.role == "responsable" %}
                     <a href="{% url 'pao_list' plan.id %}" class="btn btn-lg me-3" style="background-color: #ff6200; color: white;">
                         Modifier mes activités
                     </a>
                 {% endif %}
                 
-                <!-- Bouton "Consulter la mise en œuvre" : visible pour les membres du Cabinet -->
                 {% if request.user.role == "cabinet" %}
                     <a href="{% url 'hierarchy_review' plan.id %}" class="btn btn-lg me-3" style="background-color: #007bff; color: white;">
                         Consulter la mise en oeuvre
                     </a>
                 {% endif %}
                 
-                <!-- Bouton "Suivre l'exécution" : visible pour les Suiveurs Évaluateurs -->
                 {% if request.user.role == "suiveur_evaluateur" %}
                     <a href="{% url 'track_execution_list' plan.id %}" class="btn btn-lg" style="background-color: #28a745; color: white;">
                         Suivre l'exécution
@@ -306,7 +304,6 @@
                     .then(data => {
                         const annees = data.annees || [];
                         const anneeDebut = data.annee_debut;
-                        const colspanBeforeCosts = 5 + annees.length; // Intitulé, Type, Indicateur (Libellé + Réf + Cibles), Structure, Programme
 
                         tableBody.innerHTML = '';
 
@@ -350,69 +347,114 @@
                         });
 
                         // Ajouter la ligne "Impact"
-                        tableBody.innerHTML += `
-                            <tr class="hierarchy-row impact-row impact-bg">
-                                <td colspan="${colspanBeforeCosts + annees.length + 1}">Impact : ${planImpact || 'Impact non défini'}</td>
-                            </tr>
+                        let impactRow = `
+                            <tr class="hierarchy-row impact-row">
+                                <td class="impact-bg">Impact : ${planImpact || 'Impact non défini'}</td>
+                                <td class="impact-bg"></td>
+                                <td class="impact-bg"></td>
+                                <td class="impact-bg"></td>
+                                <td class="impact-bg"></td>
                         `;
+                        annees.forEach(() => impactRow += `<td class="impact-bg"></td>`);
+                        impactRow += `
+                                <td class="impact-bg"></td>
+                                <td class="impact-bg"></td>
+                        `;
+                        annees.forEach(() => impactRow += `<td class="impact-bg"></td>`);
+                        impactRow += `<td class="impact-bg"></td></tr>`;
+                        tableBody.innerHTML += impactRow;
 
                         // Ajouter la ligne "Coût Total"
-                        tableBody.innerHTML += `
-                            <tr class="hierarchy-row total-row total-bg">
-                                <td colspan="${colspanBeforeCosts}">Coût Total</td>
-                                ${annees.map((annee, index) => `<td>${totalCoutsParAnnee[index].toFixed(2)}</td>`).join('')}
-                                <td>${totalCostGlobal.toFixed(2)}</td>
-                            </tr>
+                        let totalRow = `
+                            <tr class="hierarchy-row total-row">
+                                <td class="total-bg">Coût Total</td>
+                                <td class="total-bg"></td>
+                                <td class="total-bg"></td>
+                                <td class="total-bg"></td>
+                                <td class="total-bg"></td>
                         `;
+                        annees.forEach(() => totalRow += `<td class="total-bg"></td>`);
+                        totalRow += `
+                                <td class="total-bg"></td>
+                                <td class="total-bg"></td>
+                        `;
+                        annees.forEach((annee, index) => totalRow += `<td class="total-bg">${totalCoutsParAnnee[index].toFixed(2)}</td>`);
+                        totalRow += `<td class="total-bg">${totalCostGlobal.toFixed(2)}</td></tr>`;
+                        tableBody.innerHTML += totalRow;
 
                         effets.forEach((effet, i) => {
-                            let row = `
-                                <tr class="hierarchy-row effet-row effet-bg">
-                                    <td colspan="${colspanBeforeCosts}">Effet ${i + 1} : ${effet.titre}</td>
-                                    ${annees.map((annee, index) => `<td>${effet.coutsParAnnee[index].toFixed(2)}</td>`).join('')}
-                                    <td>${effet.totalCost.toFixed(2)}</td>
-                                </tr>
+                            let effetRow = `
+                                <tr class="hierarchy-row effet-row">
+                                    <td class="effet-bg">Effet ${i + 1}</td>
+                                    <td class="effet-bg">${effet.titre}</td>
+                                    <td class="effet-bg"></td>
+                                    <td class="effet-bg"></td>
+                                    <td class="effet-bg"></td>
                             `;
-                            tableBody.innerHTML += row;
+                            annees.forEach(() => effetRow += `<td class="effet-bg"></td>`);
+                            effetRow += `
+                                    <td class="effet-bg"></td>
+                                    <td class="effet-bg"></td>
+                            `;
+                            annees.forEach((annee, index) => effetRow += `<td class="effet-bg">${effet.coutsParAnnee[index].toFixed(2)}</td>`);
+                            effetRow += `<td class="effet-bg">${effet.totalCost.toFixed(2)}</td></tr>`;
+                            tableBody.innerHTML += effetRow;
 
                             effet.produits.forEach((produit, j) => {
                                 let produitRow = `
-                                    <tr class="hierarchy-row produit-row produit-bg">
-                                        <td colspan="${colspanBeforeCosts}">Produit ${i + 1}.${j + 1} : ${produit.titre}</td>
-                                        ${annees.map((annee, index) => `<td>${produit.coutsParAnnee[index].toFixed(2)}</td>`).join('')}
-                                        <td>${produit.totalCost.toFixed(2)}</td>
-                                    </tr>
+                                    <tr class="hierarchy-row produit-row">
+                                        <td class="produit-bg">Produit ${i + 1}.${j + 1}</td>
+                                        <td class="produit-bg">${produit.titre}</td>
+                                        <td class="produit-bg"></td>
+                                        <td class="produit-bg"></td>
+                                        <td class="produit-bg"></td>
                                 `;
+                                annees.forEach(() => produitRow += `<td class="produit-bg"></td>`);
+                                produitRow += `
+                                        <td class="produit-bg"></td>
+                                        <td class="produit-bg"></td>
+                                `;
+                                annees.forEach((annee, index) => produitRow += `<td class="produit-bg">${produit.coutsParAnnee[index].toFixed(2)}</td>`);
+                                produitRow += `<td class="produit-bg">${produit.totalCost.toFixed(2)}</td></tr>`;
                                 tableBody.innerHTML += produitRow;
 
                                 produit.actions.forEach((action, k) => {
                                     let actionRow = `
-                                        <tr class="hierarchy-row action-row action-bg">
-                                            <td colspan="${colspanBeforeCosts}">Action ${i + 1}.${j + 1}.${k + 1} : ${action.titre}</td>
-                                            ${annees.map((annee, index) => `<td>${action.coutsParAnnee[index].toFixed(2)}</td>`).join('')}
-                                            <td>${action.totalCost.toFixed(2)}</td>
-                                        </tr>
+                                        <tr class="hierarchy-row action-row">
+                                            <td class="action-bg">Action ${i + 1}.${j + 1}.${k + 1}</td>
+                                            <td class="action-bg">${action.titre}</td>
+                                            <td class="action-bg"></td>
+                                            <td class="action-bg"></td>
+                                            <td class="action-bg"></td>
                                     `;
+                                    annees.forEach(() => actionRow += `<td class="action-bg"></td>`);
+                                    actionRow += `
+                                            <td class="action-bg"></td>
+                                            <td class="action-bg"></td>
+                                    `;
+                                    annees.forEach((annee, index) => actionRow += `<td class="action-bg">${action.coutsParAnnee[index].toFixed(2)}</td>`);
+                                    actionRow += `<td class="action-bg">${action.totalCost.toFixed(2)}</td></tr>`;
                                     tableBody.innerHTML += actionRow;
 
                                     action.activites.forEach((activite, l) => {
                                         let activiteRow = `
-                                            <tr>
-                                                <td>${activite.titre}</td>
-                                                <td>${activite.type || 'N/A'}</td>
-                                                <td>${activite.indicateur_label || 'N/A'}</td>
-                                                <td>${activite.indicateur_reference || 'N/A'}</td>
+                                            <tr class="activite-row">
+                                                <td class="activite-bg">${i + 1}.${j + 1}.${k + 1}.${l + 1}</td>
+                                                <td class="activite-bg">${activite.titre}</td>
+                                                <td class="activite-bg">${activite.type || 'N/A'}</td>
+                                                <td class="activite-bg">${activite.indicateur_label || 'N/A'}</td>
+                                                <td class="activite-bg">${activite.indicateur_reference || 'N/A'}</td>
                                         `;
                                         annees.forEach(annee => {
                                             const index = parseInt(annee) - anneeDebut;
                                             const cible = (activite.cibles && index >= 0 && index < activite.cibles.length) ? activite.cibles[index] : 'N/A';
-                                            activiteRow += `<td>${cible}</td>`;
+                                            activiteRow += `<td class="activite-bg">${cible}</td>`;
                                         });
                                         activiteRow += `
-                                            <td>${activite.structure || 'N/A'}</td>
-                                            <td>${activite.programme || 'N/A'}</td>
-                                            ${annees.map((annee, index) => `<td>${(activite.couts[index] || 0).toFixed(2)}</td>`).join('')}
-                                            <td>${activite.totalCost.toFixed(2)}</td>
+                                            <td class="activite-bg">${activite.structure || 'N/A'}</td>
+                                            <td class="activite-bg">${activite.programme || 'N/A'}</td>
+                                            ${annees.map((annee, index) => `<td class="activite-bg">${(activite.couts[index] || 0).toFixed(2)}</td>`).join('')}
+                                            <td class="activite-bg">${activite.totalCost.toFixed(2)}</td>
                                         `;
                                         tableBody.innerHTML += activiteRow;
                                     });
@@ -421,7 +463,7 @@
                         });
 
                         if (effets.length === 0) {
-                            tableBody.innerHTML += `<tr><td colspan="${colspanBeforeCosts + annees.length + 1}" class="text-center">Aucune donnée trouvée</td></tr>`;
+                            tableBody.innerHTML += `<tr><td colspan="${annees.length * 2 + 8}" class="text-center">Aucune donnée trouvée</td></tr>`;
                         }
 
                         updateHierarchyPositions();
@@ -431,9 +473,16 @@
                         console.error('Erreur AJAX:', error);
                         let totalColonnes = table.rows[0]?.cells.length || 1;
                         tableBody.innerHTML = `
-                            <tr class="hierarchy-row impact-row impact-bg"><td colspan="${totalColonnes}">Impact : ${planImpact || 'Impact non défini'}</td></tr>
-                            <tr class="hierarchy-row total-row total-bg"><td colspan="${totalColonnes}">Coût Total : N/A</td></tr>
-                            <tr><td colspan="${totalColonnes}" class="text-center">Erreur de chargement des données</td></tr>
+                            <tr class="hierarchy-row impact-row">
+                                <td class="impact-bg">Impact : ${planImpact || 'Impact non défini'}</td>
+                                <td class="impact-bg"></td>
+                                <td class="impact-bg" colspan="${totalColonnes - 2}">Erreur de chargement des données</td>
+                            </tr>
+                            <tr class="hierarchy-row total-row">
+                                <td class="total-bg">Coût Total</td>
+                                <td class="total-bg"></td>
+                                <td class="total-bg" colspan="${totalColonnes - 2}"></td>
+                            </tr>
                         `;
                         updateHierarchyPositions();
                         crosstabBody.innerHTML = `<tr><td colspan="${totalColonnes}" class="text-center">Erreur de chargement des données</td></tr>`;
@@ -505,36 +554,114 @@
                 const headersTop = Array.from(tableHeaderTop.cells).map(cell => cell.textContent.trim());
                 planData.push(headersTop);
                 const headersBottom = Array.from(tableHeaderBottom.cells).map(cell => cell.textContent.trim());
-                planData.push(['', '', ...headersBottom.slice(2)]); // Ajuster pour aligner avec les colonnes
+                planData.push(['', '', '', ...headersBottom.slice(3)]); // Ajuster pour aligner avec les colonnes
 
                 // Ajouter les lignes du corps du grand tableau
-                Array.from(tableBody.getElementsByTagName('tr'))
-                    .filter(row => row.style.display !== 'none') // Respecter le filtre de recherche
-                    .forEach(row => {
-                        const cells = Array.from(row.cells).map(cell => cell.textContent.trim());
-                        planData.push(cells);
-                    });
+                const rows = Array.from(tableBody.getElementsByTagName('tr'))
+                    .filter(row => row.style.display !== 'none'); // Respecter le filtre de recherche
+
+                rows.forEach(row => {
+                    const cells = Array.from(row.cells).map(cell => cell.textContent.trim());
+                    planData.push(cells);
+                });
 
                 const planSheet = XLSX.utils.aoa_to_sheet(planData);
+
+                // Définir les styles pour le tableau "Plan"
+                const range = XLSX.utils.decode_range(planSheet['!ref']);
+                for (let R = range.s.r; R <= range.e.r; ++R) {
+                    for (let C = range.s.c; C <= range.e.c; ++C) {
+                        const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+                        if (!planSheet[cellAddress]) planSheet[cellAddress] = { t: 's', v: '' };
+
+                        // Style par défaut : bordures et alignement
+                        planSheet[cellAddress].s = {
+                            border: {
+                                top: { style: 'thin', color: { rgb: '007A3D' } },
+                                bottom: { style: 'thin', color: { rgb: '007A3D' } },
+                                left: { style: 'thin', color: { rgb: '007A3D' } },
+                                right: { style: 'thin', color: { rgb: '007A3D' } }
+                            },
+                            alignment: { horizontal: 'left', vertical: 'center' }
+                        };
+
+                        // En-têtes (lignes 0 et 1)
+                        if (R === 0 || R === 1) {
+                            planSheet[cellAddress].s.fill = { fgColor: { rgb: 'FFA500' } }; // Orange
+                            planSheet[cellAddress].s.font = { color: { rgb: 'FFFFFF' } }; // Texte blanc
+                            planSheet[cellAddress].s.alignment.horizontal = 'center';
+                        }
+                        // Corps du tableau
+                        else {
+                            const row = rows[R - 2]; // Ajuster pour les 2 lignes d'en-tête
+                            if (row.classList.contains('impact-row')) {
+                                planSheet[cellAddress].s.fill = { fgColor: { rgb: 'D1E7DD' } }; // Vert clair
+                            } else if (row.classList.contains('total-row')) {
+                                planSheet[cellAddress].s.fill = { fgColor: { rgb: 'B8D8C9' } }; // Vert moyen
+                            } else if (row.classList.contains('effet-row')) {
+                                planSheet[cellAddress].s.fill = { fgColor: { rgb: 'F8D7DA' } }; // Rouge clair
+                            } else if (row.classList.contains('produit-row')) {
+                                planSheet[cellAddress].s.fill = { fgColor: { rgb: 'FFF3CD' } }; // Jaune clair
+                            } else if (row.classList.contains('action-row')) {
+                                planSheet[cellAddress].s.fill = { fgColor: { rgb: 'CCE5FF' } }; // Bleu clair
+                            } else if (row.classList.contains('activite-row')) {
+                                planSheet[cellAddress].s.fill = { fgColor: { rgb: 'FFFFFF' } }; // Blanc
+                            }
+                        }
+                    }
+                }
+
+                // Ajuster la largeur des colonnes
+                planSheet['!cols'] = Array(range.e.c + 1).fill({ wch: 20 });
+
                 XLSX.utils.book_append_sheet(wb, planSheet, "Plan");
 
                 // Deuxième feuille : Tableau des stats (Stats)
                 const statsData = [];
-
-                // Ajouter le titre du tableau croisé
                 statsData.push(["Nombre d'activités par effet et par type"]);
-
-                // Ajouter les en-têtes du tableau croisé
                 const crosstabHeaderRow = Array.from(crosstabHeader.getElementsByTagName('tr')[0].cells).map(cell => cell.textContent.trim());
                 statsData.push(crosstabHeaderRow);
-
-                // Ajouter les lignes du corps du tableau croisé
-                Array.from(crosstabBody.getElementsByTagName('tr')).forEach(row => {
+                const crosstabRows = Array.from(crosstabBody.getElementsByTagName('tr'));
+                crosstabRows.forEach(row => {
                     const cells = Array.from(row.cells).map(cell => cell.textContent.trim());
                     statsData.push(cells);
                 });
 
                 const statsSheet = XLSX.utils.aoa_to_sheet(statsData);
+
+                // Définir les styles pour le tableau "Stats"
+                const statsRange = XLSX.utils.decode_range(statsSheet['!ref']);
+                for (let R = statsRange.s.r; R <= statsRange.e.r; ++R) {
+                    for (let C = statsRange.s.c; C <= statsRange.e.c; ++C) {
+                        const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+                        if (!statsSheet[cellAddress]) statsSheet[cellAddress] = { t: 's', v: '' };
+
+                        statsSheet[cellAddress].s = {
+                            border: {
+                                top: { style: 'thin', color: { rgb: '007A3D' } },
+                                bottom: { style: 'thin', color: { rgb: '007A3D' } },
+                                left: { style: 'thin', color: { rgb: '007A3D' } },
+                                right: { style: 'thin', color: { rgb: '007A3D' } }
+                            },
+                            alignment: { horizontal: 'center', vertical: 'center' }
+                        };
+
+                        // En-tête
+                        if (R === 1) {
+                            statsSheet[cellAddress].s.fill = { fgColor: { rgb: 'E0E0E0' } }; // Gris clair
+                            statsSheet[cellAddress].s.font = { bold: true };
+                        }
+                        // Ligne Total
+                        else if (R === statsRange.e.r) {
+                            statsSheet[cellAddress].s.fill = { fgColor: { rgb: 'E0E0E0' } }; // Gris clair
+                            statsSheet[cellAddress].s.font = { bold: true };
+                        }
+                    }
+                }
+
+                // Ajuster la largeur des colonnes
+                statsSheet['!cols'] = Array(statsRange.e.c + 1).fill({ wch: 15 });
+
                 XLSX.utils.book_append_sheet(wb, statsSheet, "Stats");
 
                 // Générer et télécharger le fichier Excel
@@ -676,16 +803,6 @@
 
 {% block style %}
     <style>
-        .container {
-            margin-left: 0;
-            margin-right: 0;
-            padding-left: 75px;
-            padding-right: 75px;
-            width: 100%;
-            max-width: none;
-            opacity: 0;
-        }
-
         .animate-container {
             animation: fadeIn 0.8s ease-in-out forwards;
         }
@@ -756,15 +873,19 @@
         }
 
         .effet-bg {
-            background-color: #f8d7da;
+            background-color: #f8d7da; /* Rouge clair pour Effet */
         }
 
         .produit-bg {
-            background-color: #fff3cd;
+            background-color: #fff3cd; /* Jaune clair pour Produit */
         }
 
         .action-bg {
-            background-color: #cce5ff;
+            background-color: #cce5ff; /* Bleu clair pour Action */
+        }
+
+        .activite-bg {
+            background-color: #ffffff; /* Fond blanc pour les activités */
         }
 
         .table-container {
@@ -823,53 +944,41 @@
             opacity: 1 !important;
         }
 
+        .fixed-column:nth-child(1) {
+            position: sticky;
+            left: 0;
+            z-index: 35; /* Plus élevé que le thead pour rester au-dessus */
+            background: orange !important;
+            color: white !important;
+        }
+
+        .fixed-column:nth-child(2) {
+            position: sticky;
+            left: 150px; /* Ajusté pour suivre la première colonne */
+            z-index: 35;
+            background: orange !important;
+            color: white !important;
+        }
+
         tr > td:first-child {
             position: sticky;
             left: 0;
-            z-index: 15; /* Augmenté pour rester au-dessus des autres cellules */
+            z-index: 15; /* Suffisant pour le tbody, sous le thead */
             box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-            background-color: inherit; /* Hérite de la couleur de la ligne */
-            opacity: 1 !important; /* Force l'opacité complète */
+            opacity: 1;
         }
 
-        .impact-row td:first-child {
-            background-color: #d1e7dd; /* Fond opaque spécifique pour Impact */
+        tr > td:nth-child(2) {
             position: sticky;
-            left: 0;
-            z-index: 16; /* Légèrement supérieur pour rester visible */
-            opacity: 1 !important;
+            left: 150px; /* Ajusté pour suivre la première colonne */
+            z-index: 15;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            opacity: 1;
         }
 
-        .total-row td:first-child {
-            background-color: #b8d8c9; /* Fond opaque spécifique pour Coût Total */
-            position: sticky;
-            left: 0;
-            z-index: 16; /* Même niveau que Impact */
-            opacity: 1 !important;
-        }
-
-        .effet-row td:first-child {
-            background-color: #f8d7da; /* Fond opaque pour les lignes Effet */
-            opacity: 1 !important;
-        }
-
-        .produit-row td:first-child {
-            background-color: #fff3cd; /* Fond opaque pour les lignes Produit */
-            opacity: 1 !important;
-        }
-
-        .action-row td:first-child {
-            background-color: #cce5ff; /* Fond opaque pour les lignes Action */
-            opacity: 1 !important;
-        }
-
-        .hierarchy-row {
-            font-weight: bold;
-            background-color: inherit; /* Assure que la ligne entière hérite de la couleur */
-        }
-
-        .hierarchy-row td {
-            opacity: 1 !important; /* Assure que toutes les cellules des lignes hiérarchiques sont opaques */
+        /* Assurer que les cellules du tbody héritent de leur couleur de fond */
+        tbody tr > td {
+            background-color: inherit;
         }
 
         .crosstab-container {
@@ -922,7 +1031,7 @@
             border-radius: 25px;
             padding: 5px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            top: 100px; /* Descendu légèrement de 85px à 100px */
+            top: 85px;
             left: 85px;
         }
 
@@ -968,7 +1077,7 @@
             position: fixed;
             z-index: 1000;
             top: 85px;
-            right: 70px; /* Décalé légèrement de 85px à 70px vers la droite */
+            right: 70px;
         }
 
         .download-icon {

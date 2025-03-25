@@ -31,14 +31,6 @@ Suivi des Plans d'Actions Opérationnels (PAO) - {{ plan.titre }}
                                     {{ pao.statut }}
                                 </span>
                             </p>
-                            {% if pao.has_pending %}
-                                <p class="text-muted mb-0 text-center mt-2">
-                                    <span class="fw-bold">En attente :</span>
-                                    <span class="text-warning">
-                                        {% if pao.last_modified_by_se %}Validation par PF/R{% else %}Validation par SE{% endif %}
-                                    </span>
-                                </p>
-                            {% endif %}
                         </div>
                     </a>
                 </div>
