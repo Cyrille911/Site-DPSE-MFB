@@ -1,6 +1,6 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import Group
 from django.contrib.sites.shortcuts import get_current_site
 from django.template.loader import render_to_string
@@ -10,6 +10,7 @@ from django.utils.html import strip_tags
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.conf import settings
+from django.db.models import Q
 
 # Imports spécifiques au projet
 from .forms import (
@@ -17,7 +18,168 @@ from .forms import (
 )
 from .models import User
 from .tokens import account_activation_token
+from django.contrib.auth.models import Permission
+from .permissions_config import get_grouped_permissions
 
+def is_suiveur_evaluateur(user):
+    return user.is_authenticated and (user.role == 'suiveur_evaluateur' or user.is_superuser)
+
+@login_required
+@user_passes_test(is_suiveur_evaluateur)
+def manage_users(request):
+    """Vue pour l'interface de gestion des utilisateurs (réservée aux suiveurs évaluateurs)"""
+    users = User.objects.all().order_by('-date_joined').prefetch_related('user_permissions')
+    
+    # Filtrage simple
+    role_filter = request.GET.get('role')
+    if role_filter:
+        users = users.filter(role=role_filter)
+        
+    search_query = request.GET.get('search')
+    if search_query:
+        users = users.filter(
+            Q(username__icontains=search_query) | 
+            Q(email__icontains=search_query) |
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query)
+        )
+
+    # Récupérer les permissions brutes pour le traitement
+    raw_permissions = Permission.objects.exclude(
+        content_type__app_label__in=['admin', 'contenttypes', 'sessions', 'auth']
+    ).select_related('content_type')
+    
+    # Grouper et traduire les permissions
+    grouped_permissions = get_grouped_permissions(raw_permissions)
+
+    # Pré-calculer les permissions pour chaque utilisateur pour l'affichage
+    for user in users:
+        # Permissions via les groupes
+        user.group_perm_ids = set()
+        for group in user.groups.all():
+            user.group_perm_ids.update(group.permissions.values_list('id', flat=True))
+        
+        # Permissions spécifiques directes
+        user.direct_perm_ids = set(user.user_permissions.values_list('id', flat=True))
+
+    context = {
+        'users': users,
+        'title': "Gestion des utilisateurs",
+        'roles': User.ROLE_CHOICES,
+        'current_role_filter': role_filter,
+        'search_query': search_query,
+        'grouped_permissions': grouped_permissions,
+    }
+    return render(request, 'users/manage_users.html', context)
+
+@login_required
+@user_passes_test(is_suiveur_evaluateur)
+def update_user_details(request, user_id):
+    if request.method == 'POST':
+        user = get_object_or_404(User, id=user_id)
+        
+        # Sauvegarde des anciennes valeurs pour comparaison
+        old_email = user.email
+        old_first_name = user.first_name
+        old_last_name = user.last_name
+        old_role = user.role
+        
+        # Récupération des données du formulaire
+        user.first_name = request.POST.get('first_name', user.first_name)
+        user.last_name = request.POST.get('last_name', user.last_name)
+        user.email = request.POST.get('email', user.email)
+        user.phone_number = request.POST.get('phone_number', user.phone_number)
+        
+        # Champs spécifiques
+        if user.role != 'visiteur':
+            user.entity = request.POST.get('entity', user.entity)
+            user.function = request.POST.get('function', user.function)
+            user.program = request.POST.get('program', user.program)
+        else:
+            user.profession = request.POST.get('profession', user.profession)
+            user.interest = request.POST.get('interest', user.interest)
+
+        try:
+            user.save()
+            
+            # Notification par email si des infos importantes ont changé
+            if user.email != old_email or user.first_name != old_first_name or user.last_name != old_last_name:
+                subject = "Mise à jour de votre profil"
+                message = f"""Bonjour {user.first_name},
+                
+Votre profil sur la plateforme DPSE a été mis à jour par un administrateur.
+Voici vos nouvelles informations :
+Nom : {user.last_name}
+Prénom : {user.first_name}
+Email : {user.email}
+
+Si vous n'êtes pas à l'origine de ces changements ou si vous constatez une erreur, veuillez contacter l'administrateur.
+"""
+                send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email])
+            
+            messages.success(request, f"Les informations de {user.email} ont été mises à jour.")
+        except Exception as e:
+            messages.error(request, f"Erreur lors de la mise à jour : {str(e)}")
+            
+    return redirect('manage_users')
+
+@login_required
+@user_passes_test(is_suiveur_evaluateur)
+def toggle_user_active(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    if user != request.user:  # Empêcher de se désactiver soi-même
+        user.is_active = not user.is_active
+        user.save()
+        status = "activé" if user.is_active else "désactivé"
+        messages.success(request, f"L'utilisateur {user.email} a été {status}.")
+    else:
+        messages.error(request, "Vous ne pouvez pas désactiver votre propre compte ici.")
+    return redirect('manage_users')
+
+@login_required
+@user_passes_test(is_suiveur_evaluateur)
+def update_user_permissions(request, user_id):
+    if request.method == 'POST':
+        user = get_object_or_404(User, id=user_id)
+        if user == request.user:
+            messages.error(request, "Vous ne pouvez pas modifier vos propres permissions.")
+            return redirect('manage_users')
+            
+        # Récupérer la liste des IDs de permissions cochées
+        permission_ids = request.POST.getlist('permissions')
+        
+        # Mettre à jour les permissions de l'utilisateur
+        # On efface les anciennes permissions spécifiques et on met les nouvelles
+        user.user_permissions.set(permission_ids)
+        
+        messages.success(request, f"Les permissions de {user.email} ont été mises à jour.")
+    
+    return redirect('manage_users')
+
+@login_required
+@user_passes_test(is_suiveur_evaluateur)
+def delete_user(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    if user != request.user:
+        user.delete()
+        messages.success(request, f"L'utilisateur {user.email} a été supprimé.")
+    else:
+        messages.error(request, "Vous ne pouvez pas supprimer votre propre compte.")
+    return redirect('manage_users')
+
+@login_required
+@user_passes_test(is_suiveur_evaluateur)
+def update_user_role(request, user_id):
+    if request.method == 'POST':
+        user = get_object_or_404(User, id=user_id)
+        new_role = request.POST.get('role')
+        if new_role and new_role in dict(User.ROLE_CHOICES):
+            user.role = new_role
+            user.save()  # La méthode save() du modèle User gère déjà la synchro des groupes
+            messages.success(request, f"Le rôle de {user.email} a été changé en {user.get_role_display()}.")
+        else:
+            messages.error(request, "Rôle invalide.")
+    return redirect('manage_users')
 
 def inscription_membre(request):
     context = {
@@ -222,10 +384,8 @@ def connexion_membre(request):
                 user_exists = User.objects.get(email=email)
                 # Si l'utilisateur existe mais n'est pas actif, afficher un message spécifique
                 if not user_exists.is_active:
-                    # Activer l'utilisateur pour ce test (à supprimer en production)
-                    user_exists.is_active = True
-                    user_exists.save()
-                    messages.warning(request, "Votre compte a été activé automatiquement pour ce test.")
+                    messages.error(request, "Votre compte est inactif. Veuillez contacter l'administrateur.")
+                    # On continue pour laisser l'authentification échouer naturellement ou on arrête là
             except User.DoesNotExist:
                 pass
 
@@ -238,6 +398,10 @@ def connexion_membre(request):
 
             # Vérifier le rôle (avec plus de flexibilité)
             if user is not None:
+                if not user.is_active:
+                     messages.error(request, "Ce compte a été désactivé.")
+                     return redirect('connexion_membre')
+
                 # Convertir en minuscules et supprimer le 's' final pour la comparaison
                 user_role = user.role.lower().rstrip('s')
                 allowed_roles = ['responsable', 'point_focal', 'cabinet', 'membre', 'suiveur_evaluateur']
@@ -249,15 +413,7 @@ def connexion_membre(request):
                 else:
                     messages.error(request, f"Vous n'avez pas les autorisations nécessaires. Votre rôle: {user.role}")
             else:
-                # Afficher des informations de débogage
                 messages.error(request, "Échec d'authentification. Vérifiez votre email et mot de passe.")
-                
-                # Informations de débogage (à supprimer en production)
-                try:
-                    debug_user = User.objects.get(email=email)
-                    messages.warning(request, f"Débogage: Utilisateur trouvé avec email {email}, rôle: {debug_user.role}, actif: {debug_user.is_active}")
-                except User.DoesNotExist:
-                    messages.warning(request, f"Débogage: Aucun utilisateur trouvé avec email {email}")
     else:
         form = ConnexionForm()
 
@@ -278,10 +434,7 @@ def connexion_visiteur(request):
                 user_exists = User.objects.get(email=email)
                 # Si l'utilisateur existe mais n'est pas actif, afficher un message spécifique
                 if not user_exists.is_active:
-                    # Activer l'utilisateur pour ce test (à supprimer en production)
-                    user_exists.is_active = True
-                    user_exists.save()
-                    messages.warning(request, "Votre compte a été activé automatiquement pour ce test.")
+                    messages.error(request, "Votre compte est inactif. Veuillez contacter l'administrateur.")
             except User.DoesNotExist:
                 pass
 
@@ -294,6 +447,10 @@ def connexion_visiteur(request):
 
             # Vérifier le rôle et le groupe
             if user is not None:
+                if not user.is_active:
+                     messages.error(request, "Ce compte a été désactivé.")
+                     return redirect('connexion_visiteur')
+
                 user_role = user.role.lower().rstrip('s')
                 if user_role == 'visiteur' or user.groups.filter(name="Visiteur").exists():
                     login(request, user)
@@ -302,15 +459,7 @@ def connexion_visiteur(request):
                 else:
                     messages.error(request, f"Vous n'avez pas les autorisations nécessaires. Votre rôle: {user.role}")
             else:
-                # Afficher des informations de débogage
                 messages.error(request, "Échec d'authentification. Vérifiez votre email et mot de passe.")
-                
-                # Informations de débogage (à supprimer en production)
-                try:
-                    debug_user = User.objects.get(email=email)
-                    messages.warning(request, f"Débogage: Utilisateur trouvé avec email {email}, rôle: {debug_user.role}, actif: {debug_user.is_active}")
-                except User.DoesNotExist:
-                    messages.warning(request, f"Débogage: Aucun utilisateur trouvé avec email {email}")
     else:
         form = ConnexionForm()
 

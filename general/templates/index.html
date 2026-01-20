@@ -162,6 +162,7 @@
               <li><a href="{% url 'financements_dashboard' %}">Dashboard Financements</a></li>
             </ul>
           </li>
+
           <li class="dropdown">
             <a href="#"><span>Voir plus</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
             <ul>
@@ -169,6 +170,11 @@
               <li><a href="{% url 'faq' %}">Foire aux questions</a></li>
               <li><a href="{% url 'blog_list' %}">Blog du MFB</a></li>
               <li><a href="{% url 'glossaire' %}">Glossaire du MFB</a></li>
+              {% if request.user.is_authenticated %}
+                {% if request.user.role == 'suiveur_evaluateur' or request.user.is_superuser %}
+                <li><a href="{% url 'manage_users' %}" style="color: #ff7200;">Administration</a></li>
+                {% endif %}
+              {% endif %}
             </ul>
           </li>
           
