@@ -1,0 +1,475 @@
+{% extends 'index.html' %}
+{% load static %}
+
+{% block title %}Gestion des utilisateurs{% endblock %}
+
+{% block style %}
+<style>
+    .avatar-cell {
+        width: 50px;
+    }
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+    .user-avatar-lg {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 3px solid #fff;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .user-avatar-placeholder {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #0d6efd;
+        color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: bold;
+        font-size: 14px;
+    }
+    .user-avatar-placeholder-lg {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background-color: #0d6efd;
+        color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: bold;
+        font-size: 36px;
+        border: 3px solid #fff;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .status-badge {
+        font-size: 0.8em;
+        padding: 5px 10px;
+        border-radius: 20px;
+    }
+    .action-btn {
+        padding: 2px 8px;
+        font-size: 0.9em;
+    }
+    .search-box {
+        max-width: 300px;
+    }
+    .filter-box {
+        max-width: 200px;
+    }
+    .clickable-row {
+        cursor: pointer;
+    }
+    .clickable-row:hover {
+        background-color: #f8f9fa;
+    }
+    /* Custom scrollbar for permissions list */
+    .permissions-list::-webkit-scrollbar {
+        width: 6px;
+    }
+    .permissions-list::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+    .permissions-list::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 3px;
+    }
+    .permissions-list::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5" style="min-height: 60vh;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Gestion des Utilisateurs</h1>
+        <div class="d-flex gap-2">
+            <span class="badge bg-primary rounded-pill align-self-center px-3 py-2">Total: {{ users.count }}</span>
+        </div>
+    </div>
+
+    <!-- Filtres et Recherche -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <!-- Recherche textuelle -->
+                <div class="col-md-3">
+                    <label class="form-label small text-muted fw-bold">Recherche</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" name="search" class="form-control" placeholder="Nom, email..." value="{{ search_query|default:'' }}">
+                    </div>
+                </div>
+                
+                <!-- Filtre Rôle -->
+                <div class="col-md-2">
+                    <label class="form-label small text-muted fw-bold">Rôle</label>
+                    <select name="role" class="form-select" onchange="this.form.submit()">
+                        <option value="">Tous</option>
+                        {% for role_code, role_name in roles %}
+                        <option value="{{ role_code }}" {% if current_role_filter == role_code %}selected{% endif %}>{{ role_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Filtre Structure/Entité -->
+                <div class="col-md-3">
+                    <label class="form-label small text-muted fw-bold">Structure / Entité</label>
+                    <select name="entity" class="form-select" onchange="this.form.submit()">
+                        <option value="">Toutes</option>
+                        {% for entity in entities %}
+                        <option value="{{ entity }}" {% if current_entity_filter == entity %}selected{% endif %}>{{ entity }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Filtre Fonction -->
+                <div class="col-md-2">
+                    <label class="form-label small text-muted fw-bold">Fonction</label>
+                    <select name="function" class="form-select" onchange="this.form.submit()">
+                        <option value="">Toutes</option>
+                        {% for func in functions %}
+                        <option value="{{ func }}" {% if current_function_filter == func %}selected{% endif %}>{{ func }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Boutons -->
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary w-100" title="Filtrer"><i class="bi bi-funnel-fill"></i></button>
+                    {% if search_query or current_role_filter or current_entity_filter or current_function_filter %}
+                    <a href="{% url 'manage_users' %}" class="btn btn-outline-secondary w-100" title="Réinitialiser"><i class="bi bi-x-lg"></i></a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Liste des utilisateurs -->
+    <div class="card shadow-lg border-0 rounded-3">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light text-secondary">
+                        <tr>
+                            <th scope="col" class="ps-4">Utilisateur</th>
+                            <th scope="col">Rôle</th>
+                            <th scope="col">Structure / Info</th>
+                            <th scope="col">Statut</th>
+                            <th scope="col" class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr class="clickable-row" data-bs-toggle="modal" data-bs-target="#userModal{{ user.id }}">
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    {% if user.photo %}
+                                        <img src="{{ user.photo.url }}" class="user-avatar me-3" alt="Avatar">
+                                    {% else %}
+                                        <div class="user-avatar-placeholder me-3">
+                                            {{ user.first_name|default:''|slice:":1" }}{{ user.last_name|default:''|slice:":1" }}
+                                        </div>
+                                    {% endif %}
+                                    <div>
+                                        <div class="fw-bold">{{ user.first_name }} {{ user.last_name }}</div>
+                                        <div class="text-muted small">{{ user.email }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-info text-dark bg-opacity-10 border border-info px-3 py-2 rounded-pill">
+                                    {{ user.get_role_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if user.entity %}
+                                    <div class="fw-bold">{{ user.entity }}</div>
+                                    <div class="text-muted small">{{ user.function }}</div>
+                                {% elif user.profession %}
+                                    <div>{{ user.profession }}</div>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.is_active %}
+                                    <span class="badge bg-success status-badge"><i class="bi bi-check-circle me-1"></i>Actif</span>
+                                {% else %}
+                                    <span class="badge bg-secondary status-badge"><i class="bi bi-dash-circle me-1"></i>Inactif</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end pe-4">
+                                <button class="btn btn-sm btn-outline-primary rounded-circle action-btn" style="width: 32px; height: 32px;">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+
+                        <!-- Modale Détails Utilisateur -->
+                        <div class="modal fade" id="userModal{{ user.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                                <div class="modal-content border-0 shadow">
+                                    <div class="modal-header bg-light border-bottom-0">
+                                        <h5 class="modal-title">Fiche Utilisateur</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body p-0">
+                                        <div class="row g-0 h-100">
+                                            <!-- Colonne Gauche : Profil -->
+                                            <div class="col-md-4 bg-primary text-white p-4 text-center d-flex flex-column align-items-center justify-content-start">
+                                                {% if user.photo %}
+                                                    <img src="{{ user.photo.url }}" class="user-avatar-lg mb-3" alt="Avatar">
+                                                {% else %}
+                                                    <div class="user-avatar-placeholder-lg mb-3">
+                                                        {{ user.first_name|default:''|slice:":1" }}{{ user.last_name|default:''|slice:":1" }}
+                                                    </div>
+                                                {% endif %}
+                                                <h4 class="mb-1 text-white fw-bold">{{ user.first_name }} {{ user.last_name }}</h4>
+                                                <p class="mb-2 opacity-75">{{ user.get_role_display }}</p>
+                                                {% if user.is_active %}
+                                                    <span class="badge bg-success rounded-pill px-3 mb-3">Compte Actif</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger rounded-pill px-3 mb-3">Compte Inactif</span>
+                                                {% endif %}
+                                                
+                                                <div class="text-start w-100 mt-4 small">
+                                                    <div class="mb-2 opacity-75 text-uppercase fw-bold" style="font-size: 0.75rem;">Contact</div>
+                                                    <div class="mb-1"><i class="bi bi-envelope me-2"></i>{{ user.email }}</div>
+                                                    <div class="mb-1"><i class="bi bi-telephone me-2"></i>{{ user.phone_number|default:"-" }}</div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Colonne Droite : Infos et Actions -->
+                                            <div class="col-md-8 p-4">
+                                                <ul class="nav nav-tabs mb-3" id="myTab{{ user.id }}" role="tablist">
+                                                    <li class="nav-item" role="presentation">
+                                                        <button class="nav-link active" id="infos-tab{{ user.id }}" data-bs-toggle="tab" data-bs-target="#infos{{ user.id }}" type="button" role="tab" aria-selected="true">Informations</button>
+                                                    </li>
+                                                    <li class="nav-item" role="presentation">
+                                                        <button class="nav-link" id="actions-tab{{ user.id }}" data-bs-toggle="tab" data-bs-target="#actions{{ user.id }}" type="button" role="tab" aria-selected="false">Actions & Permissions</button>
+                                                    </li>
+                                                </ul>
+                                                
+                                                <div class="tab-content" id="myTabContent{{ user.id }}">
+                                                    <!-- Onglet Informations (Formulaire d'édition) -->
+                                                    <div class="tab-pane fade show active" id="infos{{ user.id }}" role="tabpanel">
+                                                        <form action="{% url 'update_user_details' user.id %}" method="post">
+                                                            {% csrf_token %}
+                                                            <div class="row g-3">
+                                                                <div class="col-sm-6">
+                                                                    <label class="form-label small text-muted text-uppercase fw-bold">Prénom</label>
+                                                                    <input type="text" name="first_name" class="form-control" value="{{ user.first_name }}">
+                                                                </div>
+                                                                <div class="col-sm-6">
+                                                                    <label class="form-label small text-muted text-uppercase fw-bold">Nom</label>
+                                                                    <input type="text" name="last_name" class="form-control" value="{{ user.last_name }}">
+                                                                </div>
+                                                                <div class="col-sm-6">
+                                                                    <label class="form-label small text-muted text-uppercase fw-bold">Email</label>
+                                                                    <input type="email" name="email" class="form-control" value="{{ user.email }}">
+                                                                </div>
+                                                                <div class="col-sm-6">
+                                                                    <label class="form-label small text-muted text-uppercase fw-bold">Téléphone</label>
+                                                                    <input type="text" name="phone_number" class="form-control" value="{{ user.phone_number|default:'' }}">
+                                                                </div>
+
+                                                                <div class="col-12"><hr class="my-2"></div>
+
+                                                                {% if user.role == 'visiteur' %}
+                                                                <div class="col-sm-6">
+                                                                    <label class="form-label small text-muted text-uppercase fw-bold">Profession</label>
+                                                                    <input type="text" name="profession" class="form-control" value="{{ user.profession|default:'' }}">
+                                                                </div>
+                                                                <div class="col-sm-6">
+                                                                    <label class="form-label small text-muted text-uppercase fw-bold">Intérêt</label>
+                                                                    <input type="text" name="interest" class="form-control" value="{{ user.interest|default:'' }}">
+                                                                </div>
+                                                                {% else %}
+                                                                <div class="col-sm-6">
+                                                                    <label class="form-label small text-muted text-uppercase fw-bold">Entité / Structure</label>
+                                                                    <input type="text" name="entity" class="form-control" value="{{ user.entity|default:'' }}">
+                                                                </div>
+                                                                <div class="col-sm-6">
+                                                                    <label class="form-label small text-muted text-uppercase fw-bold">Fonction</label>
+                                                                    <input type="text" name="function" class="form-control" value="{{ user.function|default:'' }}">
+                                                                </div>
+                                                                <div class="col-12">
+                                                                    <label class="form-label small text-muted text-uppercase fw-bold">Programme</label>
+                                                                    <select name="program" class="form-select">
+                                                                        <option value="">-- Sélectionner --</option>
+                                                                        <option value="Programme 1" {% if user.program == 'Programme 1' %}selected{% endif %}>Programme 1</option>
+                                                                        <option value="Programme 2" {% if user.program == 'Programme 2' %}selected{% endif %}>Programme 2</option>
+                                                                        <option value="Programme 3" {% if user.program == 'Programme 3' %}selected{% endif %}>Programme 3</option>
+                                                                        <option value="Programme 4" {% if user.program == 'Programme 4' %}selected{% endif %}>Programme 4</option>
+                                                                        <option value="Programme 5" {% if user.program == 'Programme 5' %}selected{% endif %}>Programme 5</option>
+                                                                        <option value="Programme 6" {% if user.program == 'Programme 6' %}selected{% endif %}>Programme 6</option>
+                                                                        <option value="Programme 7" {% if user.program == 'Programme 7' %}selected{% endif %}>Programme 7</option>
+                                                                    </select>
+                                                                </div>
+                                                                {% endif %}
+                                                                
+                                                                <div class="col-12 text-end mt-3">
+                                                                    <button type="submit" class="btn btn-primary"><i class="bi bi-save me-2"></i>Enregistrer les modifications</button>
+                                                                </div>
+
+                                                                <div class="col-12"><hr class="my-2"></div>
+                                                                <div class="row small text-muted">
+                                                                    <div class="col-sm-6">
+                                                                        <span class="fw-bold">Inscription :</span> {{ user.date_joined|date:"d M Y H:i" }}
+                                                                    </div>
+                                                                    <div class="col-sm-6 text-end">
+                                                                        <span class="fw-bold">Dernière connexion :</span> {{ user.last_login|date:"d M Y H:i"|default:"Jamais" }}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                    
+                                                    <!-- Onglet Actions -->
+                                                    <div class="tab-pane fade" id="actions{{ user.id }}" role="tabpanel">
+                                                        <div class="mb-4">
+                                                            <h6 class="fw-bold mb-3 border-bottom pb-2">État & Rôle</h6>
+                                                            
+                                                            {% if user != request.user %}
+                                                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                                                <div>
+                                                                    <div class="fw-bold">Accès au site</div>
+                                                                    <div class="text-muted small">
+                                                                        {% if user.is_active %}Autorisé à se connecter{% else %}Bloqué{% endif %}
+                                                                    </div>
+                                                                </div>
+                                                                <a href="{% url 'toggle_user_active' user.id %}" class="btn btn-sm btn-{% if user.is_active %}outline-warning{% else %}outline-success{% endif %}">
+                                                                    {% if user.is_active %}<i class="bi bi-pause-circle me-1"></i>Désactiver{% else %}<i class="bi bi-play-circle me-1"></i>Activer{% endif %}
+                                                                </a>
+                                                            </div>
+
+                                                            <form action="{% url 'update_user_role' user.id %}" method="post" class="row g-2 align-items-end">
+                                                                {% csrf_token %}
+                                                                <div class="col-8">
+                                                                    <label class="form-label small mb-1">Changer le rôle</label>
+                                                                    <select name="role" class="form-select form-select-sm">
+                                                                        {% for role_code, role_name in roles %}
+                                                                        <option value="{{ role_code }}" {% if user.role == role_code %}selected{% endif %}>{{ role_name }}</option>
+                                                                        {% endfor %}
+                                                                    </select>
+                                                                </div>
+                                                                <div class="col-4">
+                                                                    <button type="submit" class="btn btn-outline-primary btn-sm w-100">Appliquer</button>
+                                                                </div>
+                                                            </form>
+                                                            {% else %}
+                                                            <div class="alert alert-warning small py-2">
+                                                                <i class="bi bi-exclamation-triangle me-2"></i>Vous ne pouvez pas modifier votre propre rôle ou désactiver votre compte ici.
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label class="small text-muted fw-bold">Votre rôle actuel :</label>
+                                                                <span class="badge bg-info text-dark">{{ user.get_role_display }}</span>
+                                                            </div>
+                                                            {% endif %}
+                                                        </div>
+
+                                                        <div class="mb-4">
+                                                            <h6 class="fw-bold mb-3 border-bottom pb-2">Permissions</h6>
+                                                            <div class="alert alert-light border small p-2 mb-3">
+                                                                <div class="d-flex align-items-center mb-1">
+                                                                    <i class="bi bi-check-square-fill text-secondary me-2"></i>
+                                                                    <span>Permission incluse dans le rôle (non modifiable)</span>
+                                                                </div>
+                                                                <div class="d-flex align-items-center">
+                                                                    <i class="bi bi-check-square-fill text-primary me-2"></i>
+                                                                    <span>Permission additionnelle (modifiable)</span>
+                                                                </div>
+                                                            </div>
+
+                                                            <form action="{% url 'update_user_permissions' user.id %}" method="post">
+                                                                {% csrf_token %}
+                                                                <div class="card bg-light border-0">
+                                                                    <div class="card-body p-2 permissions-list" style="max-height: 300px; overflow-y: auto;">
+                                                                        {% if grouped_permissions %}
+                                                                            {% for group in grouped_permissions %}
+                                                                                <div class="mb-3">
+                                                                                    <h6 class="fw-bold text-primary small text-uppercase mb-2 ps-1 border-bottom border-primary border-opacity-25 pb-1" style="font-size: 0.75rem;">
+                                                                                        {{ group.label }}
+                                                                                    </h6>
+                                                                                    {% for perm in group.perms %}
+                                                                                        {% if perm.id in user.group_perm_ids %}
+                                                                                            <!-- Permission via Groupe -->
+                                                                                            <div class="form-check ms-2 mb-1">
+                                                                                                <input class="form-check-input" type="checkbox" checked disabled style="background-color: #6c757d; border-color: #6c757d;">
+                                                                                                <label class="form-check-label small text-muted" style="font-size: 0.85rem;">
+                                                                                                    {{ perm.translated_name }} <span class="badge bg-secondary py-0 ms-1" style="font-size: 0.6em;">RÔLE</span>
+                                                                                                </label>
+                                                                                            </div>
+                                                                                        {% else %}
+                                                                                            <!-- Permission Directe -->
+                                                                                            <div class="form-check ms-2 mb-1">
+                                                                                                <input class="form-check-input" type="checkbox" name="permissions" value="{{ perm.id }}" id="perm_{{ user.id }}_{{ perm.id }}" 
+                                                                                                {% if perm.id in user.direct_perm_ids %}checked{% endif %}>
+                                                                                                <label class="form-check-label small text-dark" for="perm_{{ user.id }}_{{ perm.id }}" style="font-size: 0.85rem;">
+                                                                                                    {{ perm.translated_name }}
+                                                                                                </label>
+                                                                                            </div>
+                                                                                        {% endif %}
+                                                                                    {% endfor %}
+                                                                                </div>
+                                                                            {% endfor %}
+                                                                        {% else %}
+                                                                            <p class="text-muted small text-center my-3">Aucune permission configurable disponible.</p>
+                                                                        {% endif %}
+                                                                    </div>
+                                                                    {% if user != request.user %}
+                                                                    <div class="card-footer p-2 bg-transparent border-0 text-end">
+                                                                        <button type="submit" class="btn btn-primary btn-sm">Mettre à jour les permissions</button>
+                                                                    </div>
+                                                                    {% endif %}
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                        
+                                                        {% if user != request.user %}
+                                                        <div class="mt-4 pt-3 border-top">
+                                                            <button type="button" class="btn btn-outline-danger btn-sm w-100 text-start" data-bs-toggle="collapse" data-bs-target="#deleteConfirm{{ user.id }}">
+                                                                <i class="bi bi-trash me-2"></i>Supprimer définitivement le compte
+                                                            </button>
+                                                            <div class="collapse mt-2" id="deleteConfirm{{ user.id }}">
+                                                                <div class="alert alert-danger mb-0 p-2">
+                                                                    <p class="small text-danger mb-2"><strong>Attention :</strong> Cette action est irréversible.</p>
+                                                                    <div class="text-end">
+                                                                        <a href="{% url 'delete_user' user.id %}" class="btn btn-danger btn-sm">Confirmer la suppression</a>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <i class="bi bi-people display-4 d-block mb-3"></i>
+                                Aucun utilisateur trouvé.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
