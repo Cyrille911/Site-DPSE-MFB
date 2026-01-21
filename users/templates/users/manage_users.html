@@ -98,24 +98,54 @@
     <!-- Filtres et Recherche -->
     <div class="card shadow-sm mb-4">
         <div class="card-body">
-            <form method="get" class="row g-3 align-items-center">
-                <div class="col-md-4">
+            <form method="get" class="row g-3 align-items-end">
+                <!-- Recherche textuelle -->
+                <div class="col-md-3">
+                    <label class="form-label small text-muted fw-bold">Recherche</label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="bi bi-search"></i></span>
-                        <input type="text" name="search" class="form-control" placeholder="Rechercher (nom, email...)" value="{{ search_query|default:'' }}">
+                        <input type="text" name="search" class="form-control" placeholder="Nom, email..." value="{{ search_query|default:'' }}">
                     </div>
                 </div>
-                <div class="col-md-3">
+                
+                <!-- Filtre Rôle -->
+                <div class="col-md-2">
+                    <label class="form-label small text-muted fw-bold">Rôle</label>
                     <select name="role" class="form-select" onchange="this.form.submit()">
-                        <option value="">Tous les rôles</option>
+                        <option value="">Tous</option>
                         {% for role_code, role_name in roles %}
                         <option value="{{ role_code }}" {% if current_role_filter == role_code %}selected{% endif %}>{{ role_name }}</option>
                         {% endfor %}
                     </select>
                 </div>
+
+                <!-- Filtre Structure/Entité -->
+                <div class="col-md-3">
+                    <label class="form-label small text-muted fw-bold">Structure / Entité</label>
+                    <select name="entity" class="form-select" onchange="this.form.submit()">
+                        <option value="">Toutes</option>
+                        {% for entity in entities %}
+                        <option value="{{ entity }}" {% if current_entity_filter == entity %}selected{% endif %}>{{ entity }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Filtre Fonction -->
                 <div class="col-md-2">
-                    {% if search_query or current_role_filter %}
-                    <a href="{% url 'manage_users' %}" class="btn btn-outline-secondary w-100">Réinitialiser</a>
+                    <label class="form-label small text-muted fw-bold">Fonction</label>
+                    <select name="function" class="form-select" onchange="this.form.submit()">
+                        <option value="">Toutes</option>
+                        {% for func in functions %}
+                        <option value="{{ func }}" {% if current_function_filter == func %}selected{% endif %}>{{ func }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Boutons -->
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary w-100" title="Filtrer"><i class="bi bi-funnel-fill"></i></button>
+                    {% if search_query or current_role_filter or current_entity_filter or current_function_filter %}
+                    <a href="{% url 'manage_users' %}" class="btn btn-outline-secondary w-100" title="Réinitialiser"><i class="bi bi-x-lg"></i></a>
                     {% endif %}
                 </div>
             </form>

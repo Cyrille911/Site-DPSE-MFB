@@ -32,8 +32,17 @@ def manage_users(request):
     
     # Filtrage simple
     role_filter = request.GET.get('role')
+    entity_filter = request.GET.get('entity')
+    function_filter = request.GET.get('function')
+    
     if role_filter:
         users = users.filter(role=role_filter)
+    
+    if entity_filter:
+        users = users.filter(entity=entity_filter)
+        
+    if function_filter:
+        users = users.filter(function=function_filter)
         
     search_query = request.GET.get('search')
     if search_query:
@@ -41,8 +50,14 @@ def manage_users(request):
             Q(username__icontains=search_query) | 
             Q(email__icontains=search_query) |
             Q(first_name__icontains=search_query) |
-            Q(last_name__icontains=search_query)
+            Q(last_name__icontains=search_query) |
+            Q(entity__icontains=search_query) |
+            Q(function__icontains=search_query)
         )
+
+    # Récupération des valeurs distinctes pour les filtres
+    entities = User.objects.exclude(entity__isnull=True).exclude(entity='').values_list('entity', flat=True).distinct().order_by('entity')
+    functions = User.objects.exclude(function__isnull=True).exclude(function='').values_list('function', flat=True).distinct().order_by('function')
 
     # Récupérer les permissions brutes pour le traitement
     raw_permissions = Permission.objects.exclude(
@@ -67,6 +82,10 @@ def manage_users(request):
         'title': "Gestion des utilisateurs",
         'roles': User.ROLE_CHOICES,
         'current_role_filter': role_filter,
+        'current_entity_filter': entity_filter,
+        'current_function_filter': function_filter,
+        'entities': entities,
+        'functions': functions,
         'search_query': search_query,
         'grouped_permissions': grouped_permissions,
     }
