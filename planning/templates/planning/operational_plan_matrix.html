@@ -39,7 +39,7 @@ Matrice Opérationnelle - {{ plan.titre }} - {{ annee }}
                         <tr id="table-header-top">
                             <th rowspan="2" class="fixed-column">Référence</th>
                             <th rowspan="2" class="fixed-column" style="left: 150px;">Intitulé</th>
-                            <th rowspan="2">Type</th>
+                            <th rowspan="2">Nature d'activité</th>
                             <th colspan="4">Indicateur</th>
                             <th rowspan="2" class="sortable" data-sort="structure">Structure</th>
                             <th rowspan="2">Coût {{ annee }} (M)</th>
@@ -151,17 +151,17 @@ Matrice Opérationnelle - {{ plan.titre }} - {{ annee }}
         </div>
     </div>
 
-    <!-- Tableau croisé Effet vs Type avec totaux -->
+    <!-- Tableau croisé Effet vs Nature avec totaux -->
     <div class="stats-and-download-container mx-0 animate-fade-in">
         <div class="stats-container">
-            <h3>Tableau Croisé Effet vs Type</h3>
+            <h3>Tableau Croisé Effet vs </h3>
             <p>Lignes : <span id="visible-rows">0</span> visibles sur <span id="total-rows">0</span> totales</p>
             <div class="table-responsive">
                 <table id="cross-table" class="stats-table">
                     <thead>
                         <tr>
                             <th>Effet</th>
-                            <!-- Les colonnes "Type" seront ajoutées dynamiquement -->
+                            <!-- Les colonnes "Nature" seront ajoutées dynamiquement -->
                             <th>Total</th>
                         </tr>
                     </thead>
@@ -169,7 +169,7 @@ Matrice Opérationnelle - {{ plan.titre }} - {{ annee }}
                     <tfoot>
                         <tr id="cross-table-footer">
                             <th>Total</th>
-                            <!-- Les totaux par type seront ajoutés dynamiquement -->
+                            <!-- Les totaux par nature seront ajoutés dynamiquement -->
                         </tr>
                     </tfoot>
                 </table>
@@ -272,7 +272,7 @@ document.addEventListener('DOMContentLoaded', function () {
         updateHierarchyPositions();
     }
 
-    // Mettre à jour le tableau croisé Effet vs Type avec totaux
+    // Mettre à jour le tableau croisé Effet vs Nature avec totaux
     function updateCrossTable() {
         const visibleRows = Array.from(tableBody.getElementsByTagName('tr')).filter(row => 
             row.style.display !== 'none' && !row.classList.contains('hierarchy-row')
@@ -284,7 +284,7 @@ document.addEventListener('DOMContentLoaded', function () {
         visibleRowsSpan.textContent = visibleRows.length;
         totalRowsSpan.textContent = totalRows;
 
-        // Collecter les effets et types uniques
+        // Collecter les effets et Natures uniques
         const effets = new Set();
         const types = new Set();
         const crossData = {};
@@ -292,7 +292,7 @@ document.addEventListener('DOMContentLoaded', function () {
         visibleRows.forEach(row => {
             const effetMatch = row.cells[0].textContent.match(/^(\d+)\./); // Extraire le numéro de l'effet
             const effet = effetMatch ? `Effet ${effetMatch[1]}` : 'Non défini';
-            const type = row.cells[2].textContent.trim(); // Colonne "Type"
+            const type = row.cells[2].textContent.trim(); // Colonne "Nature d'activité"
 
             effets.add(effet);
             types.add(type);
@@ -326,7 +326,7 @@ document.addEventListener('DOMContentLoaded', function () {
             crossTableBody.appendChild(tr);
         });
 
-        // Mettre à jour le pied du tableau croisé (totaux par type)
+        // Mettre à jour le pied du tableau croisé (totaux par nature)
         crossTableFooter.innerHTML = '<th>Total</th>';
         let grandTotal = 0;
         typeArray.forEach(type => {
@@ -391,44 +391,135 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
             const wb = XLSX.utils.book_new();
 
-            // Feuille 1 : PAO (grand tableau)
+            // ────────────────────────────────────────────────
+            // Feuille 1 : Matrice de Suivi (avec gestion rowspan/colspan)
+            // ────────────────────────────────────────────────
             const ws_pao_data = [];
-            const headerTop = Array.from(document.querySelectorAll('#table-header-top th')).map(th => th.textContent.trim());
-            ws_pao_data.push(headerTop);
-            const headerBottom = Array.from(document.querySelectorAll('#table-header-bottom th')).map(th => th.textContent.trim());
-            ws_pao_data.push(['', '', '', ...headerBottom]);
+            const merges = []; // Tableau pour stocker les fusions
 
-            const visibleRows = Array.from(tableBody.getElementsByTagName('tr')).filter(row => row.style.display !== 'none');
-            visibleRows.forEach(row => {
-                const cells = Array.from(row.cells).map(cell => cell.textContent.trim());
-                ws_pao_data.push(cells);
+            // On va parser les deux lignes de header
+            const headerTop = document.querySelectorAll('#table-header-top th');
+            const headerBottom = document.querySelectorAll('#table-header-bottom th');
+
+            // On commence par créer une grille virtuelle pour les en-têtes (2 lignes minimum)
+            let col = 0;
+            let row = 0;
+
+            // Ligne 1 (top) ───────────────────────────────
+            Array.from(headerTop).forEach(th => {
+                const content = th.textContent.trim();
+                const rowspan = parseInt(th.getAttribute('rowspan') || '1', 10);
+                const colspan = parseInt(th.getAttribute('colspan') || '1', 10);
+
+                // Placer le texte dans la première cellule de la fusion
+                if (!ws_pao_data[row]) ws_pao_data[row] = [];
+                ws_pao_data[row][col] = content;
+
+                // Ajouter la fusion si besoin
+                if (rowspan > 1 || colspan > 1) {
+                    merges.push({
+                        s: { r: row, c: col },
+                        e: { r: row + rowspan - 1, c: col + colspan - 1 }
+                    });
+                }
+
+                col += colspan;
+            });
+
+            // Ligne 2 (bottom) ─────────────────────────────
+            row = 1;
+            col = 3;
+            Array.from(headerBottom).forEach(th => {
+                const content = th.textContent.trim();
+                const colspan = parseInt(th.getAttribute('colspan') || '1', 10);
+
+                if (!ws_pao_data[row]) ws_pao_data[row] = [];
+                // On saute les colonnes déjà occupées par rowspan de la ligne précédente
+                while (ws_pao_data[row][col] !== undefined) col++;
+
+                ws_pao_data[row][col] = content;
+
+                if (colspan > 1) {
+                    merges.push({
+                        s: { r: row, c: col },
+                        e: { r: row, c: col + colspan - 1 }
+                    });
+                }
+
+                col += colspan;
+            });
+
+            // Corps du tableau (lignes de données)
+            const visibleRows = Array.from(tableBody.querySelectorAll('tr')).filter(
+                row => row.style.display !== 'none'
+            );
+
+            visibleRows.forEach(tr => {
+                row++;
+                col = 0;
+                Array.from(tr.cells).forEach(td => {
+                    const content = td.textContent.trim();
+                    const rowspan = parseInt(td.getAttribute('rowspan') || '1', 10);
+                    const colspan = parseInt(td.getAttribute('colspan') || '1', 10);
+
+                    // Sauter les cellules déjà occupées par rowspan précédent
+                    while (ws_pao_data[row] && ws_pao_data[row][col] !== undefined) col++;
+
+                    if (!ws_pao_data[row]) ws_pao_data[row] = [];
+                    ws_pao_data[row][col] = content;
+
+                    if (rowspan > 1 || colspan > 1) {
+                        merges.push({
+                            s: { r: row, c: col },
+                            e: { r: row + rowspan - 1, c: col + colspan - 1 }
+                        });
+                    }
+
+                    col += colspan;
+                });
             });
 
             const ws_pao = XLSX.utils.aoa_to_sheet(ws_pao_data);
-            XLSX.utils.book_append_sheet(wb, ws_pao, "PAO");
+            // Ajout des fusions !
+            ws_pao['!merges'] = merges;
 
-            // Feuille 2 : Stats (tableau croisé)
+            XLSX.utils.book_append_sheet(wb, ws_pao, "Matrice de Suivi");
+
+            // ────────────────────────────────────────────────
+            // Feuille 2 : Stats (tableau croisé) – version simple
+            // ────────────────────────────────────────────────
             const ws_stats_data = [];
-            const crossHeader = Array.from(crossTable.querySelector('thead tr').children).map(th => th.textContent.trim());
-            ws_stats_data.push(crossHeader);
 
-            const crossRows = Array.from(crossTableBody.getElementsByTagName('tr'));
-            crossRows.forEach(row => {
-                const cells = Array.from(row.cells).map(cell => cell.textContent.trim());
-                ws_stats_data.push(cells);
+            // En-tête
+            const crossHeaderCells = crossTable.querySelector('thead tr').children;
+            ws_stats_data.push(
+                Array.from(crossHeaderCells).map(th => th.textContent.trim())
+            );
+
+            // Lignes
+            Array.from(crossTableBody.querySelectorAll('tr')).forEach(row => {
+                ws_stats_data.push(
+                    Array.from(row.cells).map(td => td.textContent.trim())
+                );
             });
 
-            const crossFooter = Array.from(crossTableFooter.children).map(cell => cell.textContent.trim());
-            ws_stats_data.push(crossFooter);
+            // Footer (si présent)
+            if (crossTableFooter && crossTableFooter.children.length > 0) {
+                ws_stats_data.push(
+                    Array.from(crossTableFooter.children).map(cell => cell.textContent.trim())
+                );
+            }
 
             const ws_stats = XLSX.utils.aoa_to_sheet(ws_stats_data);
             XLSX.utils.book_append_sheet(wb, ws_stats, "Stats");
 
-            // Nom du fichier : "PAO Année"
-            XLSX.writeFile(wb, `PAO_${"{{ annee }}"}.xlsx`);
+            // Téléchargement
+            const annee = "{{ annee }}"; // ou document.getElementById('...').value si dynamique
+            XLSX.writeFile(wb, `PAO_${annee}.xlsx`);
+
         } catch (error) {
-            console.error('Erreur Excel:', error);
-            alert('Erreur lors du téléchargement.');
+            console.error('Erreur lors de la génération Excel :', error);
+            alert('Erreur lors du téléchargement du fichier Excel.');
         }
     });
 

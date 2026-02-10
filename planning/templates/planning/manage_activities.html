@@ -33,9 +33,9 @@ Gestion des Activités - {{ plan.titre }} - {{ annee }}
                             <th rowspan="2">État d'avancement</th>
                             <th rowspan="2">Coût {{ annee }}</th>
                             <th rowspan="2">Commentaire</th>
-                            <th rowspan="2">Commentaire SE</th>
+                            <th rowspan="2">Commentaire DPSE</th>
                             <th rowspan="2">Statut</th>
-                            <th rowspan="2">Matrix Status</th>
+                            <th rowspan="2">Etat de MAJ</th>
                             <th rowspan="2">Actions</th>
                         </tr>
                         <tr class="header-row-2">
@@ -82,8 +82,8 @@ Gestion des Activités - {{ plan.titre }} - {{ annee }}
                                               data-pf="{{ activite.pf_commentaire }}"
                                               data-resp="{{ activite.resp_commentaire }}">{% if is_responsable %}{{ activite.resp_commentaire }}{% else %}{{ activite.pf_commentaire }}{% endif %}</textarea>
                                 </td>
-                                <td>{{ activite.model_commentaire_se }}</td>
-                                <td>{{ activite.model_status }}</td>
+                                <td>{{ activite.pending_commentaire_se }}</td>
+                                <td>{{ activite.pending_status }}</td>
                                 <td>{{ activite.model_matrix_status }}</td>
                                 <td>
                                     <button class="btn btn-success action-btn"

@@ -1,18 +1,16 @@
 # Modules Django
-import json  # Pour traiter les champs JSON
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import PlanAction, Effet, Produit, Action, Activite, ActiviteLog
 from django.http import JsonResponse
 from django.db.models import Q
 from django.contrib import messages
-from .forms import PaoStatusForm  # Import du formulaire
+from .forms import PaoStatusForm
 from django.db import transaction
 import logging
 
-from users.models import User  # Import corrigé
+from users.models import User
 
 logger = logging.getLogger(__name__)
-
 
 def add_plan_action(request):
 
@@ -28,7 +26,7 @@ def add_plan_action(request):
         logger.debug(f"Contenu complet de request.POST : {request.POST}")
         try:
             with transaction.atomic():
-                # 1. Création du PlanAction
+                # Création du PlanAction
                 titre = request.POST.get('titre')
                 impact = request.POST.get('impact')
                 annee_debut = int(request.POST.get('annee_depart', 2025))
@@ -55,7 +53,7 @@ def add_plan_action(request):
                 plan_action.save()
                 logger.debug(f"PlanAction créé avec ID: {plan_action.id}, reference: {plan_action.reference}, couts: {plan_action.couts}")
 
-                # 2. Traitement des Effets
+                # Traitement des Effets
                 effet_count = 0
                 while f'effet_titre_{effet_count + 1}' in request.POST:
                     effet_count += 1
@@ -73,7 +71,7 @@ def add_plan_action(request):
                     effet.save()
                     logger.debug(f"Effet {effet_count} créé avec ID: {effet.id}, reference: {effet.reference}, couts: {effet.couts}")
 
-                    # 3. Traitement des Produits
+                    # Traitement des Produits
                     produit_count = 0
                     while f'produit_titre_{effet_count}_{produit_count + 1}' in request.POST:
                         produit_count += 1
@@ -91,7 +89,7 @@ def add_plan_action(request):
                         produit.save()
                         logger.debug(f"Produit {effet_count}.{produit_count} créé avec ID: {produit.id}, reference: {produit.reference}, couts: {produit.couts}")
 
-                        # 4. Traitement des Actions
+                        # Traitement des Actions
                         action_count = 0
                         while f'action_titre_{effet_count}_{produit_count}_{action_count + 1}' in request.POST:
                             action_count += 1
@@ -109,7 +107,7 @@ def add_plan_action(request):
                             action.save()
                             logger.debug(f"Action {effet_count}.{produit_count}.{action_count} créé avec ID: {action.id}, reference: {action.reference}, couts: {action.couts}")
 
-                            # 5. Traitement des Activités avec logs détaillés
+                            # Traitement des Activités avec logs détaillés
                             activite_count = 0
                             logger.debug(f"Début du traitement des activités pour Action {action.reference}")
                             while f'activite_titre_{effet_count}_{produit_count}_{action_count}_{activite_count + 1}' in request.POST:
@@ -134,7 +132,7 @@ def add_plan_action(request):
                                     cout = request.POST.get(f'cout_{effet_count}_{produit_count}_{action_count}_{activite_count}_{i}', '0')
                                     activite_couts.append(float(cout) if cout else 0.0)
                                     cible = request.POST.get(f'cible_{effet_count}_{produit_count}_{action_count}_{activite_count}_{i}', '')
-                                    activite_cibles.append(cible if cible else "Non définie")  # Gestion des cibles vides
+                                    activite_cibles.append(cible if cible else "Non définie")
                                     periodes = []
                                     for t in range(1, 5):
                                         periode_key = f'periode_{effet_count}_{produit_count}_{action_count}_{activite_count}_{i}_T{t}'
@@ -155,7 +153,7 @@ def add_plan_action(request):
                                     indicateur_label=indicateur_label,
                                     indicateur_reference=indicateur_reference,
                                     point_focal=request.user,
-                                    responsable=None,  # À ajuster selon votre logique
+                                    responsable=None,
                                     couts=activite_couts,
                                     cibles=activite_cibles,
                                     periodes_execution=activite_periodes,
@@ -198,7 +196,7 @@ def edit_plan_action(request, id):
         logger.debug(f"Contenu complet de request.POST : {request.POST}")
         try:
             with transaction.atomic():
-                # 1. Mise à jour du PlanAction
+                # Mise à jour du PlanAction
                 titre = request.POST.get('titre')
                 impact = request.POST.get('impact')
                 annee_debut = int(request.POST.get('annee_depart', plan_action.annee_debut))
@@ -217,7 +215,7 @@ def edit_plan_action(request, id):
                 plan_action.save()
                 logger.debug(f"PlanAction mis à jour avec ID: {plan_action.id}, reference: {plan_action.reference}, couts: {plan_action.couts}")
 
-                # 2. Traitement des Effets existants et nouveaux
+                # Traitement des Effets existants et nouveaux
                 effet_count = 0
                 effets_existants = {effet.id: effet for effet in plan_action.plan_effet.all()}
                 effets_a_supprimer = set(effets_existants.keys())
@@ -246,7 +244,7 @@ def edit_plan_action(request, id):
                         effet.save()
                         logger.debug(f"Effet {effet_count} créé avec ID: {effet.id}, reference: {effet.reference}")
 
-                    # 3. Traitement des Produits
+                    # Traitement des Produits
                     produit_count = 0
                     produits_existants = {produit.id: produit for produit in effet.effet_produit.all()}
                     produits_a_supprimer = set(produits_existants.keys())
@@ -275,7 +273,7 @@ def edit_plan_action(request, id):
                             produit.save()
                             logger.debug(f"Produit {effet_count}.{produit_count} créé avec ID: {produit.id}")
 
-                        # 4. Traitement des Actions
+                        # Traitement des Actions
                         action_count = 0
                         actions_existantes = {action.id: action for action in produit.produit_action.all()}
                         actions_a_supprimer = set(actions_existantes.keys())
@@ -304,7 +302,7 @@ def edit_plan_action(request, id):
                                 action.save()
                                 logger.debug(f"Action {effet_count}.{produit_count}.{action_count} créé avec ID: {action.id}")
 
-                            # 5. Traitement des Activités
+                            # Traitement des Activités
                             activite_count = 0
                             activites_existantes = {activite.id: activite for activite in action.action_activite.all()}
                             activites_a_supprimer = set(activites_existantes.keys())
@@ -412,7 +410,7 @@ def plan_action_list(request):
     if not (is_pf_or_resp_or_se_or_cab):
         return render(request, 'planning/access_denied.html')
 
-    plans = PlanAction.objects.all()  # Ou filtre selon tes besoins
+    plans = PlanAction.objects.all()
     context = {
         'plans': plans,
     }
@@ -757,6 +755,9 @@ def manage_activities(request, plan_id, entity):
             'cible': a.cibles[index],
             'pending_changes': a.pending_changes[index],
             'proposed_changes': a.proposed_changes[index],
+            'pending_status' : a.pending_changes[index].get('status', '') if a.pending_changes and len(a.pending_changes) > index else '',  
+            'pending_commentaire_se' : a.pending_changes[index].get('commentaire_se', '') if a.pending_changes and len(a.pending_changes) > index else '',
+            'pending_matrix_status' : a.pending_changes[index].get('matrix_status', '') if a.pending_changes and len(a.pending_changes) > index else '',
             'is_submitted': bool(a.pending_changes[index]),
             'trimestres_suivi': trimestres_suivi,
             'last_modified_by': last_modified_by,
@@ -824,7 +825,7 @@ def track_execution_detail(request, plan_id):
     modified_activite_ids = []
     for activite in activites:
         if len(activite.pending_changes) <= index or not activite.pending_changes[index]:
-            continue  # Pas de pending changes à cet index
+            continue
 
         pending = activite.pending_changes[index]
         last_modified_by = pending.get('last_modified_by', '')
@@ -907,7 +908,7 @@ def track_execution_detail(request, plan_id):
                     commentaire_se=current_commentaire_se
                 )
                 response_data.update({
-                    'message': 'Propositions renvoyées au point focal ou responsable',
+                    'message': 'Propositions renvoyées au point focal et son responsable',
                     'action': 'pending',
                     'pending_status': current_status,
                     'pending_commentaire_se': current_commentaire_se,
@@ -985,7 +986,7 @@ def operational_plan_matrix(request, plan_id, annee):
     plan = get_object_or_404(PlanAction, id=plan_id)
     annees = [plan.annee_debut + i for i in range(plan.horizon)]
     if annee not in annees:
-        annee = annees[0]  # Par défaut à la première année si invalide
+        annee = annees[0]
     annee_index = annees.index(annee)
 
     # Pré-chargement optimisé des relations avec prefetch_related

@@ -52,10 +52,10 @@
             </div>
 
             <div class="col-12 col-sm-6 col-md-4">
-                <label class="mb-2">Filtrer par type d'activité :</label>
+                <label class="mb-2">Filtrer par nature d'activité :</label>
                 <div class="dropdown">
                     <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-group="type" data-bs-toggle="dropdown">
-                        Sélectionner les types
+                        Sélectionner les natures
                     </button>
                     <ul class="dropdown-menu w-100 overflow-auto" id="filter-type">
                         <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="type" id="select-all-type"> Tout sélectionner</label></li>
@@ -105,7 +105,7 @@
                             <tr id="table-header-top">
                                 <th rowspan="2" class="fixed-column">Référence</th>
                                 <th rowspan="2" class="fixed-column" style="left: 150px;">Intitulé</th>
-                                <th rowspan="2">Type</th>
+                                <th rowspan="2">Nature d'activité</th>
                                 <th colspan="{{ annees|length|add:2 }}">Indicateur</th>
                                 <th rowspan="2">Structure Responsable</th>
                                 <th rowspan="2">Programme</th>
@@ -131,9 +131,9 @@
             </div>
         </div>
 
-        <!-- Tableau croisé : Nombre d'activités par effet et par type -->
+        <!-- Tableau croisé : Nombre d'activités par effet et par nature -->
         <div class="crosstab-container mx-0 animate-section" style="animation-delay: 0.6s;">
-            <h3>Nombre d'activités par effet et par type</h3>
+            <h3>Nombre d'activités par effet et par nature</h3>
             <div class="crosstab-wrapper">
                 <table id="crosstab-table" class="crosstab-table">
                     <thead id="crosstab-header"></thead>
@@ -618,7 +618,7 @@
 
                 // Deuxième feuille : Tableau des stats (Stats)
                 const statsData = [];
-                statsData.push(["Nombre d'activités par effet et par type"]);
+                statsData.push(["Nombre d'activités par effet et par nature"]);
                 const crosstabHeaderRow = Array.from(crosstabHeader.getElementsByTagName('tr')[0].cells).map(cell => cell.textContent.trim());
                 statsData.push(crosstabHeaderRow);
                 const crosstabRows = Array.from(crosstabBody.getElementsByTagName('tr'));
@@ -908,7 +908,7 @@
 
         .table-scroll-container {
             max-height: 500px; /* Hauteur maximale avant défilement vertical */
-            max-width: 1200px; /* Largeur maximale avant défilement horizontal */
+            max-width: 1250px; /* Largeur maximale avant défilement horizontal */
             overflow: auto; /* Défilement horizontal et vertical */
             position: relative;
             border: 1px solid #007A3D;
