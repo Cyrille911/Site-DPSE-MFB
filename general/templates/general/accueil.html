@@ -4,635 +4,11 @@
 
 {% block title %}Accueil - DPSE{% endblock %}
 
-{% block style %}
-<style>
-  /* Styles pour le popup */
-  .popup {
-    display: none;
-    /* Caché par défaut */
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    /* Fond semi-transparent */
-    z-index: 1000;
-    justify-content: center;
-    align-items: center;
-    opacity: 0;
-    /* Commence invisible */
-    transition: opacity 0.4s ease-in-out;
-    /* Transition fluide pour l’opacité */
-  }
 
-  .popup.active {
-    display: flex;
-    /* Affiche le popup */
-    opacity: 1;
-    /* Devient visible */
-  }
-
-  .popup-content {
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    text-align: center;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    transform: scale(0.8);
-    /* Commence plus petit */
-    opacity: 0;
-    /* Commence invisible */
-    transition: transform 0.4s ease-in-out, opacity 0.4s ease-in-out;
-    /* Transitions fluides */
-  }
-
-  .popup.active .popup-content {
-    transform: scale(1);
-    /* Taille normale */
-    opacity: 1;
-    /* Devient opaque */
-  }
-
-  .close-btn {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    font-size: 24px;
-    cursor: pointer;
-  }
-</style>
-
-<style>
-  /* Styles de base */
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    background-color: #f5f5f5;
-  }
-
-  button {
-    cursor: pointer;
-  }
-
-  /* Styles du modal */
-  .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
-  }
-
-  .modal-overlay.active {
-    opacity: 1;
-    visibility: visible;
-  }
-
-  .modal-container-success {
-    background-color: white;
-    border-radius: 24px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    max-width: 400px;
-    width: 100%;
-    margin: 0 16px;
-    overflow: hidden;
-    transform: scale(0.95);
-    opacity: 0;
-    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275),
-      opacity 0.3s ease;
-  }
-
-  .modal-overlay.active .modal-container-success {
-    transform: scale(1);
-    opacity: 1;
-  }
-
-  .modal-content-success {
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
-
-  /* Container pour l'animation du logo */
-  .success-icon-container {
-    width: 100px;
-    height: 100px;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 24px;
-  }
-
-  /* SVG pour le cercle qui se dessine */
-  .success-circle-svg {
-    width: 100px;
-    height: 100px;
-    position: absolute;
-    top: 0;
-    left: 0;
-  }
-
-  /* Animation du cercle - se dessine progressivement */
-  .success-circle {
-    stroke: #22c55e;
-    stroke-width: 4;
-    fill: none;
-    stroke-dasharray: 283;
-    /* Circonférence approximative du cercle (2*PI*r) */
-    stroke-dashoffset: 283;
-    animation: drawCircle 0.4s ease-out forwards;
-    transform-origin: center;
-    transform: rotate(-90deg);
-    stroke-linecap: round;
-  }
-
-  @keyframes drawCircle {
-    0% {
-      stroke-dashoffset: 283;
-      opacity: 0.3;
-    }
-
-    50% {
-      opacity: 1;
-    }
-
-    100% {
-      stroke-dashoffset: 0;
-      opacity: 1;
-    }
-  }
-
-  /* SVG pour la coche qui se dessine */
-  .success-check-svg {
-    width: 50px;
-    height: 50px;
-    position: relative;
-    z-index: 2;
-    /* Délai pour commencer après que le cercle soit dessiné */
-    opacity: 0;
-    animation: fadeIn 0.01s ease forwards 1s;
-  }
-
-  @keyframes fadeIn {
-    to {
-      opacity: 1;
-    }
-  }
-
-  /* Animation de la coche - se dessine progressivement */
-  .success-check {
-    stroke: #22c55e;
-    stroke-width: 6;
-    fill: none;
-    stroke-dasharray: 50;
-    stroke-dashoffset: 50;
-    animation: drawCheck 0.8s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
-
-  @keyframes drawCheck {
-    0% {
-      stroke-dashoffset: 50;
-    }
-
-    100% {
-      stroke-dashoffset: 0;
-    }
-  }
-
-  /* Effet de "crayon" qui dessine */
-  .drawing-effect {
-    position: absolute;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background-color: #22c55e;
-    filter: blur(2px);
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  .circle-pen {
-    top: 0;
-    left: 50%;
-    animation: movePenCircle 1.2s linear forwards;
-  }
-
-  @keyframes movePenCircle {
-    0% {
-      opacity: 0.7;
-      transform: rotate(0deg) translateX(45px);
-    }
-
-    100% {
-      opacity: 0.7;
-      transform: rotate(360deg) translateX(45px);
-    }
-  }
-
-  .check-pen {
-    top: 50%;
-    left: 30%;
-    animation: movePenCheck 0.8s linear 1.2s forwards;
-  }
-
-  @keyframes movePenCheck {
-    0% {
-      opacity: 0.7;
-      transform: translate(0, 0);
-    }
-
-    40% {
-      transform: translate(7px, 7px);
-    }
-
-    100% {
-      opacity: 0.7;
-      transform: translate(16px, -8px);
-    }
-  }
-
-  .modal-title-success {
-    font-size: 24px;
-    font-weight: bold;
-    color: #22c55e;
-    margin-bottom: 16px;
-    opacity: 0;
-    transform: translateY(10px);
-    animation: slideUp 0.5s ease forwards 2s;
-  }
-
-  .modal-message-success {
-    color: #4b5563;
-    margin-bottom: 32px;
-    font-size: 18px;
-    opacity: 0;
-    transform: translateY(10px);
-    animation: slideUp 0.5s ease forwards 2.2s;
-  }
-
-  @keyframes slideUp {
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .modal-button-success {
-    background-color: #22c55e;
-    color: white;
-    border: none;
-    padding: 8px 32px;
-    border-radius: 6px;
-    font-size: 16px;
-    font-weight: 500;
-    min-width: 100px;
-    transition: background-color 0.2s ease, transform 0.2s ease;
-    opacity: 0;
-    transform: translateY(10px);
-    animation: slideUp 0.5s ease forwards 2.4s;
-  }
-
-  .modal-button-success:hover {
-    background-color: #16a34a;
-    transform: translateY(-2px);
-  }
-</style>
-<style>
-  /* Carousel styles */
-  .carousel {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    transition: transform 0.5s ease-in-out;
-    /* Animation fluide pour le défilement */
-  }
-
-  .carousel-slide {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    transition: transform 700ms ease-in-out;
-    z-index: 0;
-  }
-
-  .carousel-slide.active {
-    transform: translateX(0);
-    z-index: 20;
-  }
-
-  .carousel-slide.prev {
-    transform: translateX(-100%);
-    z-index: 10;
-  }
-
-  .carousel-slide.next {
-    transform: translateX(100%);
-    z-index: 10;
-  }
-
-  .carousel-slide.hidden {
-    transform: translateX(100%);
-    z-index: 0;
-  }
-
-  .carousel-overlay {
-    position: absolute;
-    inset: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 10;
-  }
-
-  .carousel-image {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  /* Content styles */
-  .container-carousel {
-    position: relative;
-    z-index: 30;
-    height: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 1rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    color: white;
-    transition: background-color 0.3s ease, opacity 0.3s ease;
-    /* Animation fluide */
-  }
-
-  .content-carousel {
-    max-width: 800px;
-    bottom: 1;
-  }
-
-  /* Navigation buttons */
-  .carousel-button {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 40;
-    background-color: rgba(0, 0, 0, 0.3);
-    color: white;
-    border: none;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.3s ease, opacity 0.3s ease;
-    /* Animation fluide */
-
-  }
-
-  .carousel-button:hover {
-    background-color: rgba(0, 0, 0, 0.5);
-    opacity: 1;
-    /* Opacité maximale */
-  }
-
-  .carousel-button-prev {
-    left: 1rem;
-  }
-
-  .carousel-button-next {
-    right: 1rem;
-  }
-
-  /* Indicators */
-  .carousel-indicators {
-    position: absolute;
-    bottom: 2rem;
-    z-index: 40;
-    display: flex;
-    gap: 0.5rem;
-  }
-
-  .carousel-indicator {
-    width: 0.75rem;
-    height: 0.75rem;
-    border-radius: 9999px;
-    background-color: rgba(255, 255, 255, 0.5);
-    border: none;
-    cursor: pointer;
-    transition: all 0.3s;
-  }
-
-  .carousel-indicator:hover {
-    background-color: rgba(255, 255, 255, 0.8);
-  }
-
-  .carousel-indicator.active {
-    background-color: white;
-    width: 1.5rem;
-  }
-
-  /* Icon boxes */
-  .icon-boxes {
-    position: absolute;
-    bottom: 5rem;
-    left: 0;
-    right: 0;
-    z-index: 25;
-    padding: 1.5rem 0;
-  }
-
-  .hero-dark {
-    background-color: rgba(0, 0, 0, 0.137);
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 25;
-    padding: 1.5rem 0;
-    height: 100%;
-  }
-
-  .hero {
-    transition: background-color 0.5s ease;
-  }
-
-  .hero:hover {
-    background-color: rgba(0, 0, 0, 0.7);
-    /* Assombrir légèrement au survol */
-  }
-
-  @media (max-width: 768px) {
-    .hero {
-      display: block;
-    }
-
-    .icon-boxes {
-      position: relative;
-      top: 5rem;
-      left: 0;
-      right: 0;
-      z-index: 25;
-      padding: 1px 0;
-    }
-
-
-  }
-
-  .icon-boxes-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 1rem;
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-    text-align: center;
-  }
-
-  @media (min-width: 768px) {
-    .icon-boxes-container {
-      grid-template-columns: repeat(3, 1fr);
-    }
-  }
-
-  @media (min-width: 1024px) {
-    .icon-boxes-container {
-      grid-template-columns: repeat(5, 1fr);
-    }
-  }
-
-  .icon-box {
-    background-color: rgba(255, 255, 255, 0.1);
-    padding: 1rem;
-    border-radius: 0.5rem;
-    transition: background-color 0.3s;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    /* Animation fluide */
-  }
-
-  .icon-box:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-    transform: translateY(-10px);
-    /* Légère élévation au survol */
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-    /* Ombre portée */
-  }
-
-  .icon {
-    color: white;
-    font-size: 1.5rem;
-    margin-bottom: 0.5rem;
-    display: block;
-  }
-
-  .icon-title {
-    color: white;
-    font-size: 0.875rem;
-  }
-
-  @media (min-width: 768px) {
-    .icon-title {
-      font-size: 1rem;
-    }
-  }
-
-  a {
-    text-decoration: none;
-    color: inherit;
-  }
-
-  html {
-    scroll-behavior: smooth;
-  }
-
-
-  /* État initial des éléments (cachés) */
-  .hero .carousel,
-  .hero .container-carousel,
-  .hero .carousel-button,
-  .hero .carousel-indicators,
-  .hero .icon-boxes {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-
-  /* Classe pour déclencher l'animation */
-  .fade-in {
-    animation: fadeInUp 0.6s ease-out forwards;
-  }
-
-  /* Définir différentes délais pour chaque élément */
-  .hero .carousel.fade-in {
-    animation-delay: 0.2s;
-  }
-
-  .hero .container-carousel.fade-in {
-    animation-delay: 0.4s;
-  }
-
-  .hero .carousel-button-prev.fade-in {
-    animation-delay: 0.6s;
-  }
-
-  .hero .carousel-button-next.fade-in {
-    animation-delay: 0.6s;
-  }
-
-  .hero .carousel-indicators.fade-in {
-    animation-delay: 0.8s;
-  }
-
-  .hero .icon-boxes.fade-in {
-    animation-delay: 1s;
-  }
-
-  /* Animation keyframes */
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-</style>
-
-{% endblock%}
 {% block content %}
 
 <main class="main">
 
-  <!-- Accueil -->
-  <!-- Accueil -->
   <section id="hero" class="hero section dark-background">
     <div class="hero-dark"></div>
 
@@ -1734,3 +1110,627 @@
   });
 </script>
 {% endblock %}
+
+
+{% block style %}
+<style>
+  /* Styles pour le popup */
+  .popup {
+    display: none;
+    /* Caché par défaut */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    /* Fond semi-transparent */
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    /* Commence invisible */
+    transition: opacity 0.4s ease-in-out;
+    /* Transition fluide pour l’opacité */
+  }
+
+  .popup.active {
+    display: flex;
+    /* Affiche le popup */
+    opacity: 1;
+    /* Devient visible */
+  }
+
+  .popup-content {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transform: scale(0.8);
+    /* Commence plus petit */
+    opacity: 0;
+    /* Commence invisible */
+    transition: transform 0.4s ease-in-out, opacity 0.4s ease-in-out;
+    /* Transitions fluides */
+  }
+
+  .popup.active .popup-content {
+    transform: scale(1);
+    /* Taille normale */
+    opacity: 1;
+    /* Devient opaque */
+  }
+
+  .close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+    cursor: pointer;
+  }
+</style>
+
+<style>
+  /* Styles de base */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    background-color: #f5f5f5;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  /* Styles du modal */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+  }
+
+  .modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .modal-container-success {
+    background-color: white;
+    border-radius: 24px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    width: 100%;
+    margin: 0 16px;
+    overflow: hidden;
+    transform: scale(0.95);
+    opacity: 0;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+      opacity 0.3s ease;
+  }
+
+  .modal-overlay.active .modal-container-success {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  .modal-content-success {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  /* Container pour l'animation du logo */
+  .success-icon-container {
+    width: 100px;
+    height: 100px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+  }
+
+  /* SVG pour le cercle qui se dessine */
+  .success-circle-svg {
+    width: 100px;
+    height: 100px;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  /* Animation du cercle - se dessine progressivement */
+  .success-circle {
+    stroke: #22c55e;
+    stroke-width: 4;
+    fill: none;
+    stroke-dasharray: 283;
+    /* Circonférence approximative du cercle (2*PI*r) */
+    stroke-dashoffset: 283;
+    animation: drawCircle 0.4s ease-out forwards;
+    transform-origin: center;
+    transform: rotate(-90deg);
+    stroke-linecap: round;
+  }
+
+  @keyframes drawCircle {
+    0% {
+      stroke-dashoffset: 283;
+      opacity: 0.3;
+    }
+
+    50% {
+      opacity: 1;
+    }
+
+    100% {
+      stroke-dashoffset: 0;
+      opacity: 1;
+    }
+  }
+
+  /* SVG pour la coche qui se dessine */
+  .success-check-svg {
+    width: 50px;
+    height: 50px;
+    position: relative;
+    z-index: 2;
+    /* Délai pour commencer après que le cercle soit dessiné */
+    opacity: 0;
+    animation: fadeIn 0.01s ease forwards 1s;
+  }
+
+  @keyframes fadeIn {
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* Animation de la coche - se dessine progressivement */
+  .success-check {
+    stroke: #22c55e;
+    stroke-width: 6;
+    fill: none;
+    stroke-dasharray: 50;
+    stroke-dashoffset: 50;
+    animation: drawCheck 0.8s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  @keyframes drawCheck {
+    0% {
+      stroke-dashoffset: 50;
+    }
+
+    100% {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  /* Effet de "crayon" qui dessine */
+  .drawing-effect {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #22c55e;
+    filter: blur(2px);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .circle-pen {
+    top: 0;
+    left: 50%;
+    animation: movePenCircle 1.2s linear forwards;
+  }
+
+  @keyframes movePenCircle {
+    0% {
+      opacity: 0.7;
+      transform: rotate(0deg) translateX(45px);
+    }
+
+    100% {
+      opacity: 0.7;
+      transform: rotate(360deg) translateX(45px);
+    }
+  }
+
+  .check-pen {
+    top: 50%;
+    left: 30%;
+    animation: movePenCheck 0.8s linear 1.2s forwards;
+  }
+
+  @keyframes movePenCheck {
+    0% {
+      opacity: 0.7;
+      transform: translate(0, 0);
+    }
+
+    40% {
+      transform: translate(7px, 7px);
+    }
+
+    100% {
+      opacity: 0.7;
+      transform: translate(16px, -8px);
+    }
+  }
+
+  .modal-title-success {
+    font-size: 24px;
+    font-weight: bold;
+    color: #22c55e;
+    margin-bottom: 16px;
+    opacity: 0;
+    transform: translateY(10px);
+    animation: slideUp 0.5s ease forwards 2s;
+  }
+
+  .modal-message-success {
+    color: #4b5563;
+    margin-bottom: 32px;
+    font-size: 18px;
+    opacity: 0;
+    transform: translateY(10px);
+    animation: slideUp 0.5s ease forwards 2.2s;
+  }
+
+  @keyframes slideUp {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .modal-button-success {
+    background-color: #22c55e;
+    color: white;
+    border: none;
+    padding: 8px 32px;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 500;
+    min-width: 100px;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    opacity: 0;
+    transform: translateY(10px);
+    animation: slideUp 0.5s ease forwards 2.4s;
+  }
+
+  .modal-button-success:hover {
+    background-color: #16a34a;
+    transform: translateY(-2px);
+  }
+</style>
+<style>
+  /* Carousel styles */
+  .carousel {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    transition: transform 0.5s ease-in-out;
+    /* Animation fluide pour le défilement */
+  }
+
+  .carousel-slide {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    transition: transform 700ms ease-in-out;
+    z-index: 0;
+  }
+
+  .carousel-slide.active {
+    transform: translateX(0);
+    z-index: 20;
+  }
+
+  .carousel-slide.prev {
+    transform: translateX(-100%);
+    z-index: 10;
+  }
+
+  .carousel-slide.next {
+    transform: translateX(100%);
+    z-index: 10;
+  }
+
+  .carousel-slide.hidden {
+    transform: translateX(100%);
+    z-index: 0;
+  }
+
+  .carousel-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+  }
+
+  .carousel-image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Content styles */
+  .container-carousel {
+    position: relative;
+    z-index: 30;
+    height: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: white;
+    transition: background-color 0.3s ease, opacity 0.3s ease;
+    /* Animation fluide */
+  }
+
+  .content-carousel {
+    max-width: 800px;
+    bottom: 1;
+  }
+
+  /* Navigation buttons */
+  .carousel-button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 40;
+    background-color: rgba(0, 0, 0, 0.3);
+    color: white;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease, opacity 0.3s ease;
+    /* Animation fluide */
+
+  }
+
+  .carousel-button:hover {
+    background-color: rgba(0, 0, 0, 0.5);
+    opacity: 1;
+    /* Opacité maximale */
+  }
+
+  .carousel-button-prev {
+    left: 1rem;
+  }
+
+  .carousel-button-next {
+    right: 1rem;
+  }
+
+  /* Indicators */
+  .carousel-indicators {
+    position: absolute;
+    bottom: 2rem;
+    z-index: 40;
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .carousel-indicator {
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 9999px;
+    background-color: rgba(255, 255, 255, 0.5);
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .carousel-indicator:hover {
+    background-color: rgba(255, 255, 255, 0.8);
+  }
+
+  .carousel-indicator.active {
+    background-color: white;
+    width: 1.5rem;
+  }
+
+  /* Icon boxes */
+  .icon-boxes {
+    position: absolute;
+    bottom: 5rem;
+    left: 0;
+    right: 0;
+    z-index: 25;
+    padding: 1.5rem 0;
+  }
+
+  .hero-dark {
+    background-color: rgba(0, 0, 0, 0.137);
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 25;
+    padding: 1.5rem 0;
+    height: 100%;
+  }
+
+  .hero {
+    transition: background-color 0.5s ease;
+  }
+
+  .hero:hover {
+    background-color: rgba(0, 0, 0, 0.7);
+    /* Assombrir légèrement au survol */
+  }
+
+  @media (max-width: 768px) {
+    .hero {
+      display: block;
+    }
+
+    .icon-boxes {
+      position: relative;
+      top: 5rem;
+      left: 0;
+      right: 0;
+      z-index: 25;
+      padding: 1px 0;
+    }
+
+
+  }
+
+  .icon-boxes-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    text-align: center;
+  }
+
+  @media (min-width: 768px) {
+    .icon-boxes-container {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .icon-boxes-container {
+      grid-template-columns: repeat(5, 1fr);
+    }
+  }
+
+  .icon-box {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    transition: background-color 0.3s;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    /* Animation fluide */
+  }
+
+  .icon-box:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-10px);
+    /* Légère élévation au survol */
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    /* Ombre portée */
+  }
+
+  .icon {
+    color: white;
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+
+  .icon-title {
+    color: white;
+    font-size: 0.875rem;
+  }
+
+  @media (min-width: 768px) {
+    .icon-title {
+      font-size: 1rem;
+    }
+  }
+
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+
+  /* État initial des éléments (cachés) */
+  .hero .carousel,
+  .hero .container-carousel,
+  .hero .carousel-button,
+  .hero .carousel-indicators,
+  .hero .icon-boxes {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  /* Classe pour déclencher l'animation */
+  .fade-in {
+    animation: fadeInUp 0.6s ease-out forwards;
+  }
+
+  /* Définir différentes délais pour chaque élément */
+  .hero .carousel.fade-in {
+    animation-delay: 0.2s;
+  }
+
+  .hero .container-carousel.fade-in {
+    animation-delay: 0.4s;
+  }
+
+  .hero .carousel-button-prev.fade-in {
+    animation-delay: 0.6s;
+  }
+
+  .hero .carousel-button-next.fade-in {
+    animation-delay: 0.6s;
+  }
+
+  .hero .carousel-indicators.fade-in {
+    animation-delay: 0.8s;
+  }
+
+  .hero .icon-boxes.fade-in {
+    animation-delay: 1s;
+  }
+
+  /* Animation keyframes */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>
+
+{% endblock%}
