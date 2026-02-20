@@ -47,5 +47,4 @@ staticfiles/
 media/
 
 # Docker et virtualisation (optionnel)
-.dockerignore
 docker-compose.override.yml
