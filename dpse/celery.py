@@ -2,10 +2,10 @@ import os
 from celery import Celery
 
 # Définir le module de settings Django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'votre_projet.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'dpse.settings')
 
 # Créer une instance Celery
-app = Celery('votre_projet')
+app = Celery('dpse')
 
 # Charger la configuration depuis les settings Django
 app.config_from_object('django.conf:settings', namespace='CELERY')

@@ -14,9 +14,12 @@ import os
 from pathlib import Path
 # SECURITY WARNING: don't run with debug turned on in production !
 
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.pythonanywhere.com']
+if os.environ.get('DOMAIN'):
+    ALLOWED_HOSTS.append(os.environ.get('DOMAIN'))
+    ALLOWED_HOSTS.append(f'.{os.environ.get("DOMAIN")}')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,7 +29,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-44aoj+2b@(1t*vkv#l4i&5q1-sm54=5_e*ahegz!v1tnr7s5-!'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-44aoj+2b@(1t*vkv#l4i&5q1-sm54=5_e*ahegz!v1tnr7s5-!')
 
 
 AUTH_USER_MODEL = 'users.User'
@@ -53,10 +56,12 @@ INSTALLED_APPS = [
     'stats.apps.StatsConfig',
     'quality.apps.QualityConfig',
     'django_celery_beat',
+    'whitenoise',  # Ajoutez cette ligne
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Ajoutez cette ligne
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -194,8 +199,8 @@ LOGGING = {
 
 from celery.schedules import crontab  # Ajoute cette ligne pour importer crontab
 # Celery Configuration
-CELERY_BROKER_URL = 'redis://localhost:6379/0'  # Utilise Redis comme broker
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
