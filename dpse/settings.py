@@ -20,6 +20,14 @@ ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.pythonanywhere.com']
 if os.environ.get('DOMAIN'):
     ALLOWED_HOSTS.append(os.environ.get('DOMAIN'))
     ALLOWED_HOSTS.append(f'.{os.environ.get("DOMAIN")}')
+    CSRF_TRUSTED_ORIGINS = [
+        f"https://{os.environ.get('DOMAIN')}",
+        f"https://*.{os.environ.get('DOMAIN')}",
+    ]
+else:
+    CSRF_TRUSTED_ORIGINS = []
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
