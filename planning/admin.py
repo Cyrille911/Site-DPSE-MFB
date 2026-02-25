@@ -7,7 +7,12 @@ admin.site.register(PlanAction)
 admin.site.register(Effet)
 admin.site.register(Produit)
 admin.site.register(Action)
-admin.site.register(Activite)
+@admin.register(Activite)
+class ActiviteAdmin(admin.ModelAdmin):
+    list_display = ('reference', 'titre', 'type', 'structure', 'point_focal', 'responsable', 'created_at')
+    list_filter = ('type', 'structure', 'created_at', 'point_focal', 'responsable')
+    search_fields = ('titre', 'reference', 'structure')
+    readonly_fields = ('reference',)
 
 @admin.register(ActiviteLog)
 class ActiviteLogAdmin(admin.ModelAdmin):

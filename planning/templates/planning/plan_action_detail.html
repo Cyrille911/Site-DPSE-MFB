@@ -55,7 +55,7 @@
                 <label class="mb-2">Filtrer par nature d'activité :</label>
                 <div class="dropdown">
                     <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-group="type" data-bs-toggle="dropdown">
-                        Sélectionner les natures
+                        Sélectionner les natures d'activité
                     </button>
                     <ul class="dropdown-menu w-100 overflow-auto" id="filter-type">
                         <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="type" id="select-all-type"> Tout sélectionner</label></li>
@@ -239,7 +239,7 @@
                 crosstabHeader.innerHTML = `
                     <tr>
                         <th>Effet</th>
-                        ${types.map(type => `<th>${type}</th>`).join('')}
+                        <th>Nature d'activité</th>
                         <th>Total</th>
                     </tr>
                 `;
@@ -907,7 +907,7 @@
         }
 
         .table-scroll-container {
-            max-height: 500px; /* Hauteur maximale avant défilement vertical */
+            max-height: 700px; /* Hauteur maximale avant défilement vertical */
             max-width: 1250px; /* Largeur maximale avant défilement horizontal */
             overflow: auto; /* Défilement horizontal et vertical */
             position: relative;

@@ -390,9 +390,9 @@ class Activite(models.Model):
     action = models.ForeignKey('Action', related_name="action_activite", on_delete=models.CASCADE)
     point_focal = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        null=False,
-        blank=False,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name='point_focal_activites'
     )
     responsable = models.ForeignKey(
@@ -405,6 +405,7 @@ class Activite(models.Model):
     
     indicateur_label = models.CharField(max_length=255)
     indicateur_reference = models.CharField(max_length=255)
+    structure = models.CharField(max_length=255, null=False, blank=False, help_text="Structure responsable de l'activité")
     
     cibles = models.JSONField(default=list)
     realisation = models.JSONField(default=list)
@@ -509,19 +510,36 @@ class Activite(models.Model):
         else:
             logger.debug("Aucun destinataire valide trouvé pour la notification de changement.")
 
-    def update_responsable(self):
-        """Met à jour dynamiquement le responsable en fonction de l'entité du point focal."""
-        if self.point_focal and hasattr(self.point_focal, 'entity') and self.point_focal.entity:
-            # Recherche d'un responsable avec la même entité
+    def update_responsables(self):
+        """Met à jour dynamiquement le responsable en fonction de la structure de l'activité."""
+        if self.structure:
+            # Recherche du point focal pour cette structure (un seul par structure)
+            point_focal = User.objects.filter(
+                entity=self.structure,
+                role='point_focal'
+            ).first()
+            
+            # Recherche du responsable pour cette structure (différent du point focal)
             responsable = User.objects.filter(
-                entity=self.point_focal.entity,
-                groups__name='Responsable'  # Suppose un groupe "Responsable", ajuste si nécessaire
-            ).exclude(id=self.point_focal.id).first()  # Exclut le point focal lui-même
-
+                entity=self.structure,
+                role='responsable'
+            ).first()
+            
+            # Toujours assigner le point focal s'il existe
+            if point_focal:
+                self.point_focal = point_focal
+            else:
+                self.point_focal = None
+            
+            # Toujours assigner le responsable s'il existe
             if responsable:
                 self.responsable = responsable
             else:
-                self.responsable = None  # Aucun responsable trouvé pour cette entité
+                self.responsable = None
+        else:
+            # Si pas de structure définie, mettre les champs à None
+            self.point_focal = None
+            self.responsable = None
 
     def save(self, *args, **kwargs):
         user = kwargs.pop('user', None)
@@ -532,9 +550,6 @@ class Activite(models.Model):
             old_instance = Activite.objects.get(pk=self.pk)
             if old_instance.indicateur_reference != self.indicateur_reference:
                 self.indicateur_reference = old_instance.indicateur_reference
-
-        # Mise à jour dynamique du responsable
-        self.update_responsable()
 
         horizon = self.action.produit.effet.plan.horizon
         if not self.couts or len(self.couts) != horizon:
@@ -589,10 +604,19 @@ class Activite(models.Model):
         if apply_changes and user:
             self._log_changes(user)
 
+        # Mettre à jour les responsables avant de sauvegarder les changements
+        old_point_focal = self.point_focal_id
+        old_responsable = self.responsable_id
+        self.update_responsables()
+        
+        # Sauvegarder si les responsables ont changé
+        if (self.point_focal_id != old_point_focal or 
+            self.responsable_id != old_responsable):
+            super().save(update_fields=['point_focal', 'responsable'])
+
         self.action.calculer_nombres()
         self.action.calculer_couts()
 
-    def update_reference(self):
         if not self.reference or self.pk is None:
             if not self.pk:
                 position = self.action.action_activite.count() + 1
@@ -600,6 +624,14 @@ class Activite(models.Model):
                 position = list(self.action.action_activite.order_by('id')).index(self) + 1
             self.reference = f"{self.action.reference}.{position}"
             
+    def update_reference(self):
+        if not self.reference or self.pk is None:
+            if not self.pk:
+                position = self.action.action_activite.count() + 1
+            else:
+                position = list(self.action.action_activite.order_by('id')).index(self) + 1
+            self.reference = f"{self.action.reference}.{position}"
+
     def propose_changes(self, user, index, etat_avancement=None, realisation=None, commentaire=None, commentaire_se=None, status=None):
         horizon = self.action.produit.effet.plan.horizon
         if index >= horizon:
@@ -715,13 +747,27 @@ class Activite(models.Model):
         self.action.calculer_nombres()
         self.action.calculer_couts()
 
+    @staticmethod
+    def update_all_activities_responsables():
+        """
+        Met à jour le point focal et responsable de toutes les activités
+        pour garantir la cohérence après des modifications massives.
+        """
+        from django.db import transaction
+        
+        with transaction.atomic():
+            activities = Activite.objects.all()
+            for activite in activities:
+                activite.update_responsables()
+                activite.save(update_fields=['point_focal', 'responsable'])
+
     def delete(self, *args, **kwargs):
         action = self.action
         super().delete(*args, **kwargs)
         action.calculer_nombres()
         action.calculer_couts()
 
-    def update_matrix_status(self, annee_index, matrix_version):
+# ... (rest of the code remains the same)
         current_version = {
             'etat_avancement': self.etat_avancement[annee_index],
             'realisation': self.realisation[annee_index],

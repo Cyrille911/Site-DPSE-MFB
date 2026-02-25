@@ -119,9 +119,9 @@
                     </select>
                 </div>
 
-                <!-- Filtre Structure/Entité -->
+                <!-- Filtre Structure -->
                 <div class="col-md-3">
-                    <label class="form-label small text-muted fw-bold">Structure / Entité</label>
+                    <label class="form-label small text-muted fw-bold">Structure</label>
                     <select name="entity" class="form-select" onchange="this.form.submit()">
                         <option value="">Toutes</option>
                         {% for entity in entities %}
@@ -294,7 +294,7 @@
                                                                 </div>
                                                                 {% else %}
                                                                 <div class="col-sm-6">
-                                                                    <label class="form-label small text-muted text-uppercase fw-bold">Entité / Structure</label>
+                                                                    <label class="form-label small text-muted text-uppercase fw-bold">Structure</label>
                                                                     <input type="text" name="entity" class="form-control" value="{{ user.entity|default:'' }}">
                                                                 </div>
                                                                 <div class="col-sm-6">

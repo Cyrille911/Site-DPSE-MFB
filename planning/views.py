@@ -117,9 +117,10 @@ def add_plan_action(request):
                                 # Récupération des champs de base
                                 activite_titre = request.POST.get(f'activite_titre_{effet_count}_{produit_count}_{action_count}_{activite_count}')
                                 activite_type = request.POST.get(f'activite_type_{effet_count}_{produit_count}_{action_count}_{activite_count}')
+                                activite_structure = request.POST.get(f'activite_structure_{effet_count}_{produit_count}_{action_count}_{activite_count}', '')
                                 indicateur_label = request.POST.get(f'indicateur_label_{effet_count}_{produit_count}_{action_count}_{activite_count}')
                                 indicateur_reference = request.POST.get(f'indicateur_reference_{effet_count}_{produit_count}_{action_count}_{activite_count}')
-                                logger.debug(f"Activité {effet_count}.{produit_count}.{action_count}.{activite_count} - titre: {activite_titre}, type: {activite_type}, indicateur_label: {indicateur_label}, indicateur_reference: {indicateur_reference}")
+                                logger.debug(f"Activité {effet_count}.{produit_count}.{action_count}.{activite_count} - titre: {activite_titre}, type: {activite_type}, structure: {activite_structure}, indicateur_label: {indicateur_label}, indicateur_reference: {indicateur_reference}")
 
                                 if not all([activite_titre, activite_type, indicateur_label, indicateur_reference]):
                                     raise ValueError(f"Les champs de l'activité {effet_count}.{produit_count}.{action_count}.{activite_count} doivent être remplis.")
@@ -150,9 +151,10 @@ def add_plan_action(request):
                                     action=action,
                                     titre=activite_titre,
                                     type=activite_type,
+                                    structure=activite_structure,
                                     indicateur_label=indicateur_label,
                                     indicateur_reference=indicateur_reference,
-                                    point_focal=request.user,
+                                    point_focal=None,
                                     responsable=None,
                                     couts=activite_couts,
                                     cibles=activite_cibles,
@@ -311,10 +313,11 @@ def edit_plan_action(request, id):
                                 activite_count += 1
                                 activite_titre = request.POST.get(f'activite_titre_{effet_count}_{produit_count}_{action_count}_{activite_count}')
                                 activite_type = request.POST.get(f'activite_type_{effet_count}_{produit_count}_{action_count}_{activite_count}')
+                                activite_structure = request.POST.get(f'activite_structure_{effet_count}_{produit_count}_{action_count}_{activite_count}', '')
                                 indicateur_label = request.POST.get(f'indicateur_label_{effet_count}_{produit_count}_{action_count}_{activite_count}')
                                 indicateur_reference = request.POST.get(f'indicateur_reference_{effet_count}_{produit_count}_{action_count}_{activite_count}')
                                 activite_id = request.POST.get(f'activite_id_{effet_count}_{produit_count}_{action_count}_{activite_count}', None)
-                                logger.debug(f"Activité {effet_count}.{produit_count}.{action_count}.{activite_count} - titre: {activite_titre}, type: {activite_type}, id: {activite_id}")
+                                logger.debug(f"Activité {effet_count}.{produit_count}.{action_count}.{activite_count} - titre: {activite_titre}, type: {activite_type}, structure: {activite_structure}, id: {activite_id}")
 
                                 if not all([activite_titre, activite_type, indicateur_label, indicateur_reference]):
                                     raise ValueError(f"Les champs de l'activité {effet_count}.{produit_count}.{action_count}.{activite_count} doivent être remplis.")
@@ -322,22 +325,12 @@ def edit_plan_action(request, id):
                                 activite_couts = []
                                 activite_cibles = []
                                 activite_periodes = []
-                                for i in range(horizon):
-                                    cout = request.POST.get(f'cout_{effet_count}_{produit_count}_{action_count}_{activite_count}_{i}', '0')
-                                    activite_couts.append(float(cout) if cout else 0.0)
-                                    cible = request.POST.get(f'cible_{effet_count}_{produit_count}_{action_count}_{activite_count}_{i}', '')
-                                    activite_cibles.append(cible if cible else "Non définie")
-                                    periodes = []
-                                    for t in range(1, 5):
-                                        periode_key = f'periode_{effet_count}_{produit_count}_{action_count}_{activite_count}_{i}_T{t}'
-                                        if request.POST.get(periode_key):
-                                            periodes.append(f'T{t}')
-                                    activite_periodes.append(periodes)
 
                                 if activite_id and int(activite_id) in activites_existantes:
                                     activite = activites_existantes[int(activite_id)]
                                     activite.titre = activite_titre
                                     activite.type = activite_type
+                                    activite.structure = activite_structure
                                     activite.indicateur_label = indicateur_label
                                     activite.indicateur_reference = indicateur_reference
                                     activite.couts = activite_couts
@@ -352,9 +345,10 @@ def edit_plan_action(request, id):
                                         action=action,
                                         titre=activite_titre,
                                         type=activite_type,
+                                        structure=activite_structure,
                                         indicateur_label=indicateur_label,
                                         indicateur_reference=indicateur_reference,
-                                        point_focal=request.user,
+                                        point_focal=None,
                                         responsable=None,
                                         couts=activite_couts,
                                         cibles=activite_cibles,
@@ -425,7 +419,7 @@ def plan_action_detail(request, id):
     actions = Action.objects.filter(produit__effet__plan=plan).select_related('produit__effet')
     activites = Activite.objects.filter(action__produit__effet__plan=plan).select_related('action__produit__effet', 'point_focal')
     types = list(set(activite.type or "N/A" for activite in activites))
-    structures = list(set(activite.point_focal.entity if activite.point_focal and hasattr(activite.point_focal, 'entity') else "N/A" for activite in activites))
+    structures = list(set(activite.structure or "N/A" for activite in activites))
     annees = [str(plan.annee_debut + i) for i in range(plan.horizon)] if plan.annee_debut and plan.horizon else []
 
     def calculate_total_cost(couts):
@@ -467,7 +461,7 @@ def plan_action_detail(request, id):
             if types_selectionnes:
                 activites = activites.filter(type__in=types_selectionnes)
             if structures_selectionnees:
-                activites = activites.filter(point_focal__entity__in=structures_selectionnees)
+                activites = activites.filter(structure__in=structures_selectionnees)
 
             # Filtrer les années
             filtered_annees = annees
@@ -503,7 +497,7 @@ def plan_action_detail(request, id):
                                     'status': activite.status,
                                     'indicateur_label': activite.indicateur_label,
                                     'indicateur_reference': activite.indicateur_reference,
-                                    'structure': activite.point_focal.entity if activite.point_focal and hasattr(activite.point_focal, 'entity') else 'N/A',
+                                    'structure': activite.structure or 'N/A',
                                     'programme': activite.point_focal.program if activite.point_focal and hasattr(activite.point_focal, 'program') else 'N/A'
                                 } for activite in action_activites
                             ]
@@ -540,7 +534,7 @@ def plan_action_detail(request, id):
 
             # Mettre à jour les filtres dépendants
             types = list(set(activite.type or 'N/A' for activite in activites))
-            structures = list(set(activite.point_focal.entity if activite.point_focal and hasattr(activite.point_focal, 'entity') else 'N/A' for activite in activites))
+            structures = list(set(activite.structure or 'N/A' for activite in activites))
 
             data = {
                 'effets': effets_data,
@@ -940,8 +934,9 @@ def track_execution_detail(request, plan_id):
         except (TypeError, IndexError):
             trimestres_suivi = [False, False, False, False]
 
-        entity = (a.point_focal.entity if a.point_focal and hasattr(a.point_focal, 'entity') else 
-                  a.responsable.entity if a.responsable and hasattr(a.responsable, 'entity') else 'Sans entité')
+        entity = (a.structure if a.structure else 
+                  a.point_focal.entity if a.point_focal and hasattr(a.point_focal, 'entity') else 
+                  a.responsable.entity if a.responsable and hasattr(a.responsable, 'entity') else 'Sans structure')
         if entity not in activites_by_entity:
             activites_by_entity[entity] = []
         
@@ -1027,7 +1022,7 @@ def operational_plan_matrix(request, plan_id, annee):
                         'indicateur_label': activite.indicateur_label or 'N/A',
                         'indicateur_reference': activite.indicateur_reference or 'N/A',
                         'cible': activite.cibles[annee_index],
-                        'structure': (
+                        'structure': activite.structure or (
                             activite.point_focal.entity if activite.point_focal and hasattr(activite.point_focal, 'entity') else 
                             activite.responsable.entity if activite.responsable and hasattr(activite.responsable, 'entity') else 'Sans entité'
                         ),
@@ -1064,8 +1059,8 @@ def operational_plan_matrix(request, plan_id, annee):
     actions = Action.objects.filter(produit__effet__plan=plan).distinct()
     types = Activite.objects.filter(action__produit__effet__plan=plan).values_list('type', flat=True).distinct()
     structures = Activite.objects.filter(action__produit__effet__plan=plan).values_list(
-        'point_focal__entity', 'responsable__entity'
-    ).distinct().exclude(point_focal__entity__isnull=True, responsable__entity__isnull=True)
+        'structure', flat=True
+    ).distinct().exclude(structure__isnull=True).exclude(structure='')
 
     # Réponse AJAX
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -1086,7 +1081,7 @@ def operational_plan_matrix(request, plan_id, annee):
         'produit_list': [{'id': p.id, 'titre': p.titre} for p in produits],
         'action_list': [{'id': a.id, 'titre': a.titre} for a in actions],
         'types': list(types.exclude(type__isnull=True)),
-        'structures': list(set(s[0] or s[1] for s in structures if s[0] or s[1])),
+        'structures': list(set(s for s in structures if s)),
         'annees': annees,
         'annee': annee,
     }

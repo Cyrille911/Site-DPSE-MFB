@@ -53,12 +53,18 @@ def filter_by_action(queryset, action):
     """Filtre un queryset par action."""
     return queryset.filter(action=action)
 
+@register.filter
+def filter_by_structure(queryset, structure):
+    """Filtre un queryset par structure."""
+    return queryset.filter(structure=structure)
+
 # Filtre DjangoFilterSet pour le modèle Activite
 class ActiviteFilter(FilterSet):
     status = ChoiceFilter(choices=Activite._meta.get_field('status').choices)
     type = ChoiceFilter(choices=Activite._meta.get_field('type').choices)
+    structure = CharFilter(field_name='structure', lookup_expr='icontains')
     responsable = CharFilter(field_name='responsable__username', lookup_expr='icontains')
 
     class Meta:
         model = Activite
-        fields = ['status', 'type', 'responsable']
+        fields = ['status', 'type', 'structure', 'responsable']
