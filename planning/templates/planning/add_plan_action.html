@@ -459,9 +459,7 @@ Création d'un Plan d'Action
             activiteContainer.id = `activite_${effetNum}_${produitNum}_${actionNum}_${activiteNum}`;
 
             activiteContainer.innerHTML = `
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="text-primary mb-0" id="activite_id_${effetNum}_${produitNum}_${actionNum}_${activiteNum}">Activité ${effetNum}.${produitNum}.${actionNum}.${activiteNum}</h6>
-                </div>
+                <h6 class="text-primary" id="activite_id_${effetNum}_${produitNum}_${actionNum}_${activiteNum}">Activité ${effetNum}.${produitNum}.${actionNum}.${activiteNum}</h6>
 
                 <div class="mb-3">
                     <label for="activite_titre_${effetNum}_${produitNum}_${actionNum}_${activiteNum}" class="form-label" id="activite_label_${effetNum}_${produitNum}_${actionNum}_${activiteNum}">
@@ -475,35 +473,17 @@ Création d'un Plan d'Action
 
                 <div class="mb-3">
                     <label for="activite_type_${effetNum}_${produitNum}_${actionNum}_${activiteNum}" class="form-label" id="activite_type_label_${effetNum}_${produitNum}_${actionNum}_${activiteNum}">
-                        Nature d'activité
+                        Type d'activité
                     </label>
                     <select class="form-control shadow-sm border-primary" 
                         id="activite_type_${effetNum}_${produitNum}_${actionNum}_${activiteNum}" 
                         name="activite_type_${effetNum}_${produitNum}_${actionNum}_${activiteNum}" 
                         required>
-                        <option value="">Sélectionner une nature</option>
                         <option value="Réforme">Réforme</option>
                         <option value="Investissement">Investissement</option>
                         <option value="Etude">Étude</option>
                         <option value="Texte">Texte</option>
                         <option value="Activité ordinaire">Activité ordinaire</option>
-                    </select>
-                </div>
-
-                <div class="mb-3">
-                    <label for="activite_structure_${effetNum}_${produitNum}_${actionNum}_${activiteNum}" class="form-label">Structure</label>
-                    <select class="form-control shadow-sm border-primary" 
-                        id="activite_structure_${effetNum}_${produitNum}_${actionNum}_${activiteNum}" 
-                        name="activite_structure_${effetNum}_${produitNum}_${actionNum}_${activiteNum}" 
-                        style="width: 200px;">
-                        <option value="">Sélectionner une structure</option>
-                        <option value="DGI">DGI</option>
-                        <option value="DGD">DGD</option>
-                        <option value="DGTCP">DGTCP</option>
-                        <option value="DGMP">DGMP</option>
-                        <option value="DGF">DGF</option>
-                        <option value="DGBF">DGBF</option>
-                        <option value="DGE">DGE</option>
                     </select>
                 </div>
 

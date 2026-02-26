@@ -29,7 +29,7 @@
                 
                 {% if utilisateur.role == 'membre' %}
                     <p class="card-text mb-3"><strong>Programme :</strong> {{ utilisateur.program }}</p>
-                    <p class="card-text mb-3"><strong>Structure :</strong> {{ utilisateur.entity }}</p>
+                    <p class="card-text mb-3"><strong>Entité :</strong> {{ utilisateur.entity }}</p>
                     <p class="card-text mb-3"><strong>Fonction :</strong> {{ utilisateur.function }}</p>
                 {% elif utilisateur.role == 'visiteur' %}
                     <p class="card-text mb-3"><strong>Profession :</strong> {{ utilisateur.profession }}</p>
