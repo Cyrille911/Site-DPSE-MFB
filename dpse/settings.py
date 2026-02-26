@@ -16,7 +16,12 @@ from pathlib import Path
 
 DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.pythonanywhere.com']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.pythonanywhere.com', 'dpse.aidn.ci']
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://dpse.aidn.ci',
+    'https://www.dpse.aidn.ci',
+]
 if os.environ.get('DOMAIN'):
     ALLOWED_HOSTS.append(os.environ.get('DOMAIN'))
     ALLOWED_HOSTS.append(f'.{os.environ.get("DOMAIN")}')

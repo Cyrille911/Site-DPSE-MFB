@@ -1,0 +1,13 @@
+Thinking: The problem is that the domain dpse.aidn.ci is pointing to IP 213.156.133.177 which is a different server, not the Docker container. The Let's Encrypt challenge is going to that other server, not to our Docker nginx.
+
+The user has two options:1. Change the DNS A record to point to the Docker server's IP2. Use DNS challenge instead of explain this to the user.
+
+Le domaine dpse.aidn.ci pointe vers un autre serveur (213.156.133.177), pas vers ton container Docker.
+
+Deux solutions:
+
+1. Change le DNS - Pointe dpse.aidn.ci vers l'IP de ce serveur 2. DNS challenge - Utilise la validation DNS au lieu de HTTP
+
+Quelle option prefères-tu ?
+
+Build big-pickle 1m 47s
