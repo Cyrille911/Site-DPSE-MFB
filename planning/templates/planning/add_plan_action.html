@@ -1,21 +1,21 @@
 {% extends 'index.html' %}
 
 {% block title %}
-Création d'un Plan d'Action
+Création d'un Plan d'Actions
 {% endblock %}
 
 {% block content %}
     <div class="container mt-5">
-        <h1 class="text-center mb-4 text-primary fw-bold">Création d'un Plan d'Action</h1>
+        <h1 class="text-center mb-4 text-primary fw-bold">Création d'un Plan d'Actions</h1>
 
         <form action="{% url 'add_plan_action' %}" method="POST" id="add-plan-action">
             {% csrf_token %}
-            <!-- 1. Informations sur le Plan d'Action -->
+            <!-- 1. Informations sur le Plan d'Actions -->
             <div class="card shadow-lg p-5 mb-5 bg-gradient rounded-4 border border-primary">
-                <h3 class="text-primary mb-4">Informations sur le Plan d'Action</h3>
+                <h3 class="text-primary mb-4">Informations sur le Plan d'Actions</h3>
                 <div class="row">
                     <div class="col-md-4 mb-3">
-                        <label for="titre" class="form-label">Titre du Plan d'Action</label>
+                        <label for="titre" class="form-label">Titre du Plan d'Actions</label>
                         <input type="text" class="form-control shadow-sm border-primary" id="titre" name="titre" placeholder="Entrez le titre du plan" required>
                     </div>
                     <div class="col-md-4 mb-3">
@@ -34,7 +34,7 @@ Création d'un Plan d'Action
 
                 <div class="d-flex justify-content-center">
                     <button type="button" class="btn btn-outline-warning me-3 shadow-sm" onclick="ajouterEffet()">Ajouter un effet</button>
-                    <button type="submit" class="btn btn-success shadow-sm">Créer le plan d'action</button>
+                    <button type="submit" class="btn btn-success shadow-sm">Créer le plan d'actions</button>
                 </div>
             </div>
 
@@ -477,13 +477,32 @@ Création d'un Plan d'Action
                     </label>
                     <select class="form-control shadow-sm border-primary" 
                         id="activite_type_${effetNum}_${produitNum}_${actionNum}_${activiteNum}" 
-                        name="activite_type_${effetNum}_${produitNum}_${actionNum}_${activiteNum}" 
+                        name="activite_type_${effetNum}_${produitNum}_${actionNum}_${activiteNum}"
                         required>
                         <option value="Réforme">Réforme</option>
                         <option value="Investissement">Investissement</option>
                         <option value="Etude">Étude</option>
                         <option value="Texte">Texte</option>
                         <option value="Activité ordinaire">Activité ordinaire</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="activite_structure_${effetNum}_${produitNum}_${actionNum}_${activiteNum}" class="form-label" id="activite_structure_label_${effetNum}_${produitNum}_${actionNum}_${activiteNum}">
+                        Structure
+                    </label>
+                    <select class="form-control shadow-sm border-primary" 
+                        id="activite_structure_${effetNum}_${produitNum}_${actionNum}_${activiteNum}" 
+                        name="activite_structure_${effetNum}_${produitNum}_${actionNum}_${activiteNum}"
+                        required>
+                        <option value="">Sélectionner une structure</option>
+                        <option value="DGI">DGI</option>
+                        <option value="DGD">DGD</option>
+                        <option value="DGTCP">DGTCP</option>
+                        <option value="DGMP">DGMP</option>
+                        <option value="DGF">DGF</option>
+                        <option value="DGBF">DGBF</option>
+                        <option value="DGE">DGE</option>
                     </select>
                 </div>
 

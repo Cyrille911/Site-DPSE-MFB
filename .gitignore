@@ -2,6 +2,7 @@
 .venv/
 myvenv/
 venv/
+.env*
 
 # Dépendances Python
 __pycache__/

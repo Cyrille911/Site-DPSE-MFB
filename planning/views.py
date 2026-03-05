@@ -117,11 +117,12 @@ def add_plan_action(request):
                                 # Récupération des champs de base
                                 activite_titre = request.POST.get(f'activite_titre_{effet_count}_{produit_count}_{action_count}_{activite_count}')
                                 activite_type = request.POST.get(f'activite_type_{effet_count}_{produit_count}_{action_count}_{activite_count}')
+                                activite_structure = request.POST.get(f'activite_structure_{effet_count}_{produit_count}_{action_count}_{activite_count}')
                                 indicateur_label = request.POST.get(f'indicateur_label_{effet_count}_{produit_count}_{action_count}_{activite_count}')
                                 indicateur_reference = request.POST.get(f'indicateur_reference_{effet_count}_{produit_count}_{action_count}_{activite_count}')
-                                logger.debug(f"Activité {effet_count}.{produit_count}.{action_count}.{activite_count} - titre: {activite_titre}, type: {activite_type}, indicateur_label: {indicateur_label}, indicateur_reference: {indicateur_reference}")
+                                logger.debug(f"Activité {effet_count}.{produit_count}.{action_count}.{activite_count} - titre: {activite_titre}, type: {activite_type}, structure: {activite_structure}, indicateur_label: {indicateur_label}, indicateur_reference: {indicateur_reference}")
 
-                                if not all([activite_titre, activite_type, indicateur_label, indicateur_reference]):
+                                if not all([activite_titre, activite_type, activite_structure, indicateur_label, indicateur_reference]):
                                     raise ValueError(f"Les champs de l'activité {effet_count}.{produit_count}.{action_count}.{activite_count} doivent être remplis.")
 
                                 # Récupération des cibles, coûts et périodes
@@ -311,12 +312,13 @@ def edit_plan_action(request, id):
                                 activite_count += 1
                                 activite_titre = request.POST.get(f'activite_titre_{effet_count}_{produit_count}_{action_count}_{activite_count}')
                                 activite_type = request.POST.get(f'activite_type_{effet_count}_{produit_count}_{action_count}_{activite_count}')
+                                activite_structure = request.POST.get(f'activite_structure_{effet_count}_{produit_count}_{action_count}_{activite_count}')
                                 indicateur_label = request.POST.get(f'indicateur_label_{effet_count}_{produit_count}_{action_count}_{activite_count}')
                                 indicateur_reference = request.POST.get(f'indicateur_reference_{effet_count}_{produit_count}_{action_count}_{activite_count}')
                                 activite_id = request.POST.get(f'activite_id_{effet_count}_{produit_count}_{action_count}_{activite_count}', None)
-                                logger.debug(f"Activité {effet_count}.{produit_count}.{action_count}.{activite_count} - titre: {activite_titre}, type: {activite_type}, id: {activite_id}")
+                                logger.debug(f"Activité {effet_count}.{produit_count}.{action_count}.{activite_count} - titre: {activite_titre}, type: {activite_type}, structure: {activite_structure}, id: {activite_id}")
 
-                                if not all([activite_titre, activite_type, indicateur_label, indicateur_reference]):
+                                if not all([activite_titre, activite_type, activite_structure, indicateur_label, indicateur_reference]):
                                     raise ValueError(f"Les champs de l'activité {effet_count}.{produit_count}.{action_count}.{activite_count} doivent être remplis.")
 
                                 activite_couts = []

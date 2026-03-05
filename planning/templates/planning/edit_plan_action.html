@@ -2,21 +2,21 @@
 {% load planning_filters %}
 
 {% block title %}
-Modification du Plan d'Action
+Modification du Plan d'Actions
 {% endblock %}
 
 {% block content %}
     <div class="container mt-5">
-        <h1 class="text-center mb-4 text-primary fw-bold">Modification du Plan d'Action</h1>
+        <h1 class="text-center mb-4 text-primary fw-bold">Modification du Plan d'Actions</h1>
 
         <form action="{% url 'edit_plan_action' plan_action.id %}" method="POST" id="edit-plan-action">
             {% csrf_token %}
-            <!-- 1. Informations sur le Plan d'Action -->
+            <!-- 1. Informations sur le Plan d'Actions -->
             <div class="card shadow-lg p-5 mb-5 bg-gradient rounded-4 border border-primary">
-                <h3 class="text-primary mb-4">Informations sur le Plan d'Action</h3>
+                <h3 class="text-primary mb-4">Informations sur le Plan d'Actions</h3>
                 <div class="row">
                     <div class="col-md-4 mb-3">
-                        <label for="titre" class="form-label">Titre du Plan d'Action</label>
+                        <label for="titre" class="form-label">Titre du Plan d'Actions</label>
                         <input type="text" class="form-control shadow-sm border-primary" id="titre" name="titre" value="{{ plan_action.titre }}" required>
                     </div>
                     <div class="col-md-4 mb-3">
@@ -84,6 +84,24 @@ Modification du Plan d'Action
                                                                     <option value="Etude" {% if activite.type == "Etude" %}selected{% endif %}>Étude</option>
                                                                     <option value="Texte" {% if activite.type == "Texte" %}selected{% endif %}>Texte</option>
                                                                     <option value="Activité ordinaire" {% if activite.type == "Activité ordinaire" %}selected{% endif %}>Activité ordinaire</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label for="activite_structure_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}" class="form-label" id="activite_structure_label_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}">
+                                                                    Structure
+                                                                </label>
+                                                                <select class="form-control shadow-sm border-primary" 
+                                                                    id="activite_structure_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}" 
+                                                                    name="activite_structure_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}" 
+                                                                    required>
+                                                                    <option value="">Sélectionner une structure</option>
+                                                                    <option value="DGI" {% if activite.structure == "DGI" %}selected{% endif %}>DGI</option>
+                                                                    <option value="DGD" {% if activite.structure == "DGD" %}selected{% endif %}>DGD</option>
+                                                                    <option value="DGTCP" {% if activite.structure == "DGTCP" %}selected{% endif %}>DGTCP</option>
+                                                                    <option value="DGMP" {% if activite.structure == "DGMP" %}selected{% endif %}>DGMP</option>
+                                                                    <option value="DGF" {% if activite.structure == "DGF" %}selected{% endif %}>DGF</option>
+                                                                    <option value="DGBF" {% if activite.structure == "DGBF" %}selected{% endif %}>DGBF</option>
+                                                                    <option value="DGE" {% if activite.structure == "DGE" %}selected{% endif %}>DGE</option>
                                                                 </select>
                                                             </div>
                                                             <div class="mb-3">
