@@ -390,9 +390,9 @@ class Activite(models.Model):
     action = models.ForeignKey('Action', related_name="action_activite", on_delete=models.CASCADE)
     point_focal = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        null=False,
-        blank=False,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name='point_focal_activites'
     )
     responsable = models.ForeignKey(
