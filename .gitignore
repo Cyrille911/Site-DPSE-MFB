@@ -49,3 +49,6 @@ media/
 
 # Docker et virtualisation (optionnel)
 docker-compose.override.yml
+docker-compose.yml
+docker-compose.prod.yml
+Dockerfile
