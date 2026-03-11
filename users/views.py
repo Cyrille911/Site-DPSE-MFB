@@ -11,6 +11,9 @@ from django.contrib import messages
 from django.core.mail import send_mail
 from django.conf import settings
 from django.db.models import Q
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Imports spécifiques au projet
 from .forms import (
@@ -134,7 +137,10 @@ Email : {user.email}
 
 Si vous n'êtes pas à l'origine de ces changements ou si vous constatez une erreur, veuillez contacter l'administrateur.
 """
-                send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email])
+                try:
+                    send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email])
+                except Exception as mail_error:
+                    logger.error(f"Erreur envoi email mise à jour profil: {mail_error}")
             
             messages.success(request, f"Les informations de {user.email} ont été mises à jour.")
         except Exception as e:
@@ -248,7 +254,10 @@ def inscription_membre(request):
             'activation_link': activation_link,
         })
         plain_message = strip_tags(message)
-        send_mail(subject, plain_message, settings.DEFAULT_FROM_EMAIL, [user.email], html_message=message)
+        try:
+            send_mail(subject, plain_message, settings.DEFAULT_FROM_EMAIL, [user.email], html_message=message)
+        except Exception as mail_error:
+            logger.error(f"Erreur envoi email confirmation membre: {mail_error}")
 
         messages.success(request, 'Un email de confirmation vous a été envoyé.')
         return redirect('connexion_membre')
@@ -291,7 +300,10 @@ def inscription_visiteur(request):
             'activation_link': activation_link,
         })
         plain_message = strip_tags(message)
-        send_mail(subject, plain_message, settings.DEFAULT_FROM_EMAIL, [user.email], html_message=message)
+        try:
+            send_mail(subject, plain_message, settings.DEFAULT_FROM_EMAIL, [user.email], html_message=message)
+        except Exception as mail_error:
+            logger.error(f"Erreur envoi email confirmation visiteur: {mail_error}")
 
         messages.success(request, 'Un email de confirmation vous a été envoyé.')
         return redirect('connexion_visiteur')
@@ -321,7 +333,10 @@ def activer_compte_membre(request, uidb64, token):
                 'activation_link': f"http://{current_site.domain}/User/nouveau/membre/{uid}/{token}/",
             })
             plain_message = strip_tags(message)
-            send_mail(subject, plain_message, settings.DEFAULT_FROM_EMAIL, ['cyrille.taha@ensea.edu.ci'], html_message=message)
+            try:
+                send_mail(subject, plain_message, settings.DEFAULT_FROM_EMAIL, ['cyrille.taha@ensea.edu.ci'], html_message=message)
+            except Exception as mail_error:
+                logger.error(f"Erreur envoi email demande activation: {mail_error}")
 
             messages.success(request, 'Une demande d\'activation a été envoyée pour vérification.')
             return redirect('connexion_membre')
@@ -354,7 +369,10 @@ def activer_nouveau_membre(request, uidb64, token):
                 'domain': current_site.domain,
             })
             plain_message = strip_tags(message)
-            send_mail(subject, plain_message, settings.DEFAULT_FROM_EMAIL, [user.email], html_message=message)
+            try:
+                send_mail(subject, plain_message, settings.DEFAULT_FROM_EMAIL, [user.email], html_message=message)
+            except Exception as mail_error:
+                logger.error(f"Erreur envoi email activation membre: {mail_error}")
 
             messages.success(request, 'Le compte a été activé avec succès et un e-mail a été envoyé à l\'utilisateur.')
             return redirect('accueil')
@@ -390,7 +408,7 @@ def activer_compte_visiteur(request, uidb64, token):
         return redirect('inscription_visiteur')
 
 def connexion_membre(request):
-    context = {'message': "Bienvenue sur la page de connexion pour les membres !"}
+    context = {'message': "Bienvenue sur la page de connexion pour les membres !", 'title': 'Connexion'}
     
     if request.method == 'POST':
         form = ConnexionForm(request.POST)
@@ -440,7 +458,7 @@ def connexion_membre(request):
     return render(request, 'users/formulaire.html', context)
 
 def connexion_visiteur(request):
-    context = {'message': "Bienvenue sur la page de connexion pour les visiteurs !"}
+    context = {'message': "Bienvenue sur la page de connexion pour les visiteurs !", 'title': 'Connexion'}
     
     if request.method == 'POST':
         form = ConnexionForm(request.POST)

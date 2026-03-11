@@ -9,6 +9,15 @@ Modification du Plan d'Actions
     <div class="container mt-5">
         <h1 class="text-center mb-4 text-primary fw-bold">Modification du Plan d'Actions</h1>
 
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
         <form action="{% url 'edit_plan_action' plan_action.id %}" method="POST" id="edit-plan-action">
             {% csrf_token %}
             <!-- 1. Informations sur le Plan d'Actions -->
@@ -17,7 +26,8 @@ Modification du Plan d'Actions
                 <div class="row">
                     <div class="col-md-4 mb-3">
                         <label for="titre" class="form-label">Titre du Plan d'Actions</label>
-                        <input type="text" class="form-control shadow-sm border-primary" id="titre" name="titre" value="{{ plan_action.titre }}" required>
+                        <input type="text" class="form-control shadow-sm border-primary" id="titre" name="titre" value="{{ plan_action.titre }}" required maxlength="500" oninput="updateCharCount(this)">
+                        <small class="text-muted char-count" data-target="titre">{{ plan_action.titre|length }} / 500</small>
                     </div>
                     <div class="col-md-4 mb-3">
                         <label for="annee_depart" class="form-label">Année de Départ</label>
@@ -30,7 +40,8 @@ Modification du Plan d'Actions
                 </div>
                 <div class="mb-3">
                     <label for="impact" class="form-label">Impact</label>
-                    <textarea class="form-control shadow-sm border-primary" id="impact" name="impact" rows="3" required>{{ plan_action.impact }}</textarea>
+                    <textarea class="form-control shadow-sm border-primary" id="impact" name="impact" rows="3" required maxlength="500">{{ plan_action.impact }}</textarea>
+                    <small class="text-muted char-count" data-target="impact">{{ plan_action.impact|length }} / 500</small>
                 </div>  
 
                 <div class="d-flex justify-content-center">
@@ -47,38 +58,41 @@ Modification du Plan d'Actions
                         <input type="hidden" name="effet_id_{{ effet.reference }}" value="{{ effet.id }}">
                         <div class="mb-3">
                             <label for="effet_titre_{{ effet.reference }}" class="form-label" id="effet_label_{{ effet.reference }}">Intitulé de l'effet {{ effet.reference }}</label>
-                            <input type="text" class="form-control shadow-sm border-success" id="effet_titre_{{ effet.reference }}" name="effet_titre_{{ effet.reference }}" value="{{ effet.titre }}" required>
+                            <input type="text" class="form-control shadow-sm border-success" id="effet_titre_{{ effet.reference }}" name="effet_titre_{{ effet.reference }}" value="{{ effet.titre }}" required maxlength="500" oninput="updateCharCount(this)">
+                            <small class="text-muted char-counter">{{ effet.titre|length }} / 500</small>
                         </div>
                         <div id="produits_effet_{{ effet.reference }}" class="ps-4">
                             {% for produit in effet.effet_produit.all %}
                                 <div class="card shadow-lg p-4 mb-4 border border-warning rounded-3 bg-light" id="produit_{{ effet.reference }}_{{ produit.id }}">
                                     <h5 class="text-warning" id="produit_id_{{ effet.reference }}_{{ produit.id }}">Produit {{ produit.reference }}</h5>
-                                    <input type="hidden" name="produit_id_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}" value="{{ produit.id }}">
+                                    <input type="hidden" name="produit_id_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}" value="{{ produit.id }}">
                                     <div class="mb-3">
-                                        <label for="produit_titre_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}" class="form-label" id="produit_label_{{ effet.reference }}_{{ produit.id }}">Intitulé du produit {{ produit.reference }}</label>
-                                        <input type="text" class="form-control shadow-sm border-warning" id="produit_titre_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}" name="produit_titre_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}" value="{{ produit.titre }}" required>
+                                        <label for="produit_titre_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}" class="form-label" id="produit_label_{{ effet.reference }}_{{ produit.id }}">Intitulé du produit {{ produit.reference }}</label>
+                                        <input type="text" class="form-control shadow-sm border-warning" id="produit_titre_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}" name="produit_titre_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}" value="{{ produit.titre }}" required maxlength="500" oninput="updateCharCount(this)">
+                                        <small class="text-muted char-counter">{{ produit.titre|length }} / 500</small>
                                     </div>
-                                    <div id="actions_produit_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}" class="ps-4">
+                                    <div id="actions_produit_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}" class="ps-4">
                                         {% for action in produit.produit_action.all %}
-                                            <div class="card shadow-lg p-4 mb-4 border border-info rounded-3 bg-light" id="action_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.id }}">
-                                                <h6 class="text-info" id="action_id_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.id }}">Action {{ action.reference }}</h6>
-                                                <input type="hidden" name="action_id_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}" value="{{ action.id }}">
+                                            <div class="card shadow-lg p-4 mb-4 border border-info rounded-3 bg-light" id="action_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.id }}">
+                                                <h6 class="text-info" id="action_id_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.id }}">Action {{ action.reference }}</h6>
+                                                <input type="hidden" name="action_id_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.reference|remove_prefix:produit.reference }}" value="{{ action.id }}">
                                                 <div class="mb-3">
-                                                    <label for="action_titre_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}" class="form-label" id="action_label_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.id }}">Intitulé de l'action {{ action.reference }}</label>
-                                                    <input type="text" class="form-control shadow-sm border-info" id="action_titre_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}" name="action_titre_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}" value="{{ action.titre }}" required>
+                                                    <label for="action_titre_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.reference|remove_prefix:produit.reference }}" class="form-label" id="action_label_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.id }}">Intitulé de l'action {{ action.reference }}</label>
+                                                    <input type="text" class="form-control shadow-sm border-info" id="action_titre_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.reference|remove_prefix:produit.reference }}" name="action_titre_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.reference|remove_prefix:produit.reference }}" value="{{ action.titre }}" required maxlength="500" oninput="updateCharCount(this)">
+                                                    <small class="text-muted char-counter">{{ action.titre|length }} / 500</small>
                                                 </div>
-                                                <div id="activites_action_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}" class="ps-4">
+                                                <div id="activites_action_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.reference|remove_prefix:produit.reference }}" class="ps-4">
                                                     {% for activite in action.action_activite.all %}
-                                                        <div class="card shadow-lg p-3 mb-2 border border-primary rounded-3 bg-light activite-container" id="activite_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.id }}">
-                                                            <h6 class="text-primary" id="activite_id_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.id }}">Activité {{ activite.reference }}</h6>
-                                                            <input type="hidden" name="activite_id_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}" value="{{ activite.id }}">
+                                                        <div class="card shadow-lg p-3 mb-2 border border-primary rounded-3 bg-light activite-container" id="activite_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.reference|remove_prefix:produit.reference }}_{{ activite.id }}">
+                                                            <h6 class="text-primary" id="activite_id_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.reference|remove_prefix:produit.reference }}_{{ activite.id }}">Activité {{ activite.reference }}</h6>
+                                                            <input type="hidden" name="activite_id_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.reference|remove_prefix:produit.reference }}_{{ activite.reference|remove_prefix:action.reference }}" value="{{ activite.id }}">
                                                             <div class="mb-3">
-                                                                <label for="activite_titre_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}" class="form-label" id="activite_label_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.id }}">Intitulé de l'activité</label>
-                                                                <input type="text" class="form-control shadow-sm border-primary" id="activite_titre_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}" name="activite_titre_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}" value="{{ activite.titre }}" required>
+                                                                <label for="activite_titre_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.reference|remove_prefix:produit.reference }}_{{ activite.reference|remove_prefix:action.reference }}" class="form-label" id="activite_label_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.reference|remove_prefix:produit.reference }}_{{ activite.id }}">Intitulé de l'activité</label>
+                                                                <input type="text" class="form-control shadow-sm border-primary" id="activite_titre_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.reference|remove_prefix:produit.reference }}_{{ activite.reference|remove_prefix:action.reference }}" name="activite_titre_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.reference|remove_prefix:produit.reference }}_{{ activite.reference|remove_prefix:action.reference }}" value="{{ activite.titre }}" required>
                                                             </div>
                                                             <div class="mb-3">
-                                                                <label for="activite_type_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}" class="form-label" id="activite_type_label_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.id }}">Type d'activité</label>
-                                                                <select class="form-control shadow-sm border-primary" id="activite_type_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}" name="activite_type_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}" required>
+                                                                <label for="activite_type_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.reference|remove_prefix:produit.reference }}_{{ activite.reference|remove_prefix:action.reference }}" class="form-label" id="activite_type_label_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.reference|remove_prefix:produit.reference }}_{{ activite.id }}">Type d'activité</label>
+                                                                <select class="form-control shadow-sm border-primary" id="activite_type_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.reference|remove_prefix:produit.reference }}_{{ activite.reference|remove_prefix:action.reference }}" name="activite_type_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.reference|remove_prefix:produit.reference }}_{{ activite.reference|remove_prefix:action.reference }}" required>
                                                                     <option value="">Sélectionner une nature</option>
                                                                     <option value="Réforme" {% if activite.type == "Réforme" %}selected{% endif %}>Réforme</option>
                                                                     <option value="Investissement" {% if activite.type == "Investissement" %}selected{% endif %}>Investissement</option>
@@ -88,12 +102,12 @@ Modification du Plan d'Actions
                                                                 </select>
                                                             </div>
                                                             <div class="mb-3">
-                                                                <label for="activite_structure_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}" class="form-label" id="activite_structure_label_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}">
+                                                                <label for="activite_structure_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.reference|remove_prefix:produit.reference }}_{{ activite.reference|remove_prefix:action.reference }}" class="form-label" id="activite_structure_label_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.reference|remove_prefix:produit.reference }}_{{ activite.reference|remove_prefix:action.reference }}">
                                                                     Structure
                                                                 </label>
                                                                 <select class="form-control shadow-sm border-primary" 
-                                                                    id="activite_structure_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}" 
-                                                                    name="activite_structure_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}" 
+                                                                    id="activite_structure_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.reference|remove_prefix:produit.reference }}_{{ activite.reference|remove_prefix:action.reference }}" 
+                                                                    name="activite_structure_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.reference|remove_prefix:produit.reference }}_{{ activite.reference|remove_prefix:action.reference }}" 
                                                                     required>
                                                                     <option value="">Sélectionner une structure</option>
                                                                     <option value="DGI" {% if activite.structure == "DGI" %}selected{% endif %}>DGI</option>
@@ -106,33 +120,33 @@ Modification du Plan d'Actions
                                                                 </select>
                                                             </div>
                                                             <div class="mb-3">
-                                                                <label for="indicateur_label_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}" class="form-label" id="activite_indicateur_label_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.id }}">Libellé de l'indicateur</label>
-                                                                <input type="text" class="form-control shadow-sm border-primary" id="indicateur_label_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}" name="indicateur_label_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}" value="{{ activite.indicateur_label }}" required>
+                                                                <label for="indicateur_label_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.reference|remove_prefix:produit.reference }}_{{ activite.reference|remove_prefix:action.reference }}" class="form-label" id="activite_indicateur_label_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.reference|remove_prefix:produit.reference }}_{{ activite.id }}">Libellé de l'indicateur</label>
+                                                                <input type="text" class="form-control shadow-sm border-primary" id="indicateur_label_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.reference|remove_prefix:produit.reference }}_{{ activite.reference|remove_prefix:action.reference }}" name="indicateur_label_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.reference|remove_prefix:produit.reference }}_{{ activite.reference|remove_prefix:action.reference }}" value="{{ activite.indicateur_label }}" required>
                                                             </div>
                                                             <div class="mb-3">
-                                                                <label for="indicateur_reference_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}" class="form-label" id="activite_indicateur_reference_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.id }}">Référence de l'indicateur</label>
-                                                                <input type="text" class="form-control shadow-sm border-primary" id="indicateur_reference_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}" name="indicateur_reference_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}" value="{{ activite.indicateur_reference }}" required>
+                                                                <label for="indicateur_reference_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.reference|remove_prefix:produit.reference }}_{{ activite.reference|remove_prefix:action.reference }}" class="form-label" id="activite_indicateur_reference_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.reference|remove_prefix:produit.reference }}_{{ activite.id }}">Référence de l'indicateur</label>
+                                                                <input type="text" class="form-control shadow-sm border-primary" id="indicateur_reference_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.reference|remove_prefix:produit.reference }}_{{ activite.reference|remove_prefix:action.reference }}" name="indicateur_reference_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.reference|remove_prefix:produit.reference }}_{{ activite.reference|remove_prefix:action.reference }}" value="{{ activite.indicateur_reference }}" required>
                                                             </div>
                                                             <div class="mb-3">
                                                                 <label class="form-label fw-bold text-primary">Cibles, Périodes d'exécution et Coûts</label>
-                                                                <div id="cibles_periodes_couts_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}" class="bg-light p-2 rounded">
+                                                                <div id="cibles_periodes_couts_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.reference|remove_prefix:produit.reference }}_{{ activite.reference|remove_prefix:action.reference }}" class="bg-light p-2 rounded">
                                                                     {% for i in plan_action.horizon|times %}
                                                                         <div class="row mb-3 p-3 border rounded bg-white shadow-sm">
                                                                             <div class="col-md-4">
                                                                                 <label class="form-label fw-bold text-primary">Cible {{ plan_action.annee_debut|add:i }}</label>
-                                                                                <textarea class="form-control border-primary shadow-sm cible-textarea" name="cible_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}_{{ i }}" placeholder="Cible {{ plan_action.annee_debut|add:i }}">{{ activite.cibles|index:i }}</textarea>
+                                                                                <textarea class="form-control border-primary shadow-sm cible-textarea" name="cible_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.reference|remove_prefix:produit.reference }}_{{ activite.reference|remove_prefix:action.reference }}_{{ i }}" placeholder="Cible {{ plan_action.annee_debut|add:i }}">{{ activite.cibles|index:i }}</textarea>
                                                                             </div>
                                                                             <div class="col-md-3">
                                                                                 <label class="form-label fw-bold text-primary">Coût {{ plan_action.annee_debut|add:i }}</label>
-                                                                                <input type="number" class="form-control border-primary shadow-sm" name="cout_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}_{{ i }}" value="{{ activite.couts|index:i }}" step="0.01" min="0">
+                                                                                <input type="number" class="form-control border-primary shadow-sm" name="cout_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.reference|remove_prefix:produit.reference }}_{{ activite.reference|remove_prefix:action.reference }}_{{ i }}" value="{{ activite.couts|index:i }}" step="0.01" min="0">
                                                                             </div>
                                                                             <div class="col-md-5">
                                                                                 <label class="form-label fw-bold text-primary">Trimestres {{ plan_action.annee_debut|add:i }}</label>
                                                                                 <div class="d-flex justify-content-between">
                                                                                     {% for trimestre in "1234"|make_list %}
                                                                                         <div class="form-check">
-                                                                                            <input type="checkbox" class="form-check-input" id="periode_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}_{{ i }}_{{ trimestre }}" name="periode_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}_{{ i }}_T{{ trimestre }}" value="T{{ trimestre }}" {% if "T"|add:trimestre in activite.periodes_execution|index:i %}checked{% endif %}>
-                                                                                            <label class="form-check-label" for="periode_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}_{{ i }}_{{ trimestre }}">T{{ trimestre }}</label>
+                                                                                            <input type="checkbox" class="form-check-input" id="periode_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.reference|remove_prefix:produit.reference }}_{{ activite.reference|remove_prefix:action.reference }}_{{ i }}_{{ trimestre }}" name="periode_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.reference|remove_prefix:produit.reference }}_{{ activite.reference|remove_prefix:action.reference }}_{{ i }}_T{{ trimestre }}" value="T{{ trimestre }}" {% if "T"|add:trimestre in activite.periodes_execution|index:i %}checked{% endif %}>
+                                                                                            <label class="form-check-label" for="periode_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.reference|remove_prefix:produit.reference }}_{{ activite.reference|remove_prefix:action.reference }}_{{ i }}_{{ trimestre }}">T{{ trimestre }}</label>
                                                                                         </div>
                                                                                     {% endfor %}
                                                                                 </div>
@@ -142,21 +156,21 @@ Modification du Plan d'Actions
                                                                 </div>
                                                             </div>
                                                             <div class="d-flex justify-content-end">
-                                                                <button type="button" class="btn btn-outline-danger mt-2 shadow-sm" id="supprimer_activite_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}_{{ activite.reference|cut:action.reference|cut:'.' }}" onclick="supprimerActivite('{{ effet.reference }}', '{{ produit.reference|cut:effet.reference|cut:'.' }}', '{{ action.reference|cut:produit.reference|cut:'.' }}', '{{ activite.reference|cut:action.reference|cut:'.' }}')">Supprimer l'activité</button>
+                                                                <button type="button" class="btn btn-outline-danger mt-2 shadow-sm" id="supprimer_activite_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.reference|remove_prefix:produit.reference }}_{{ activite.reference|remove_prefix:action.reference }}" onclick="supprimerActivite('{{ effet.reference }}', '{{ produit.reference|remove_prefix:effet.reference }}', '{{ action.reference|remove_prefix:produit.reference }}', '{{ activite.reference|remove_prefix:action.reference }}')">Supprimer l'activité</button>
                                                             </div>
                                                         </div>
                                                     {% endfor %}
                                                 </div>
                                                 <div class="d-flex justify-content-end">
-                                                    <button type="button" class="btn btn-outline-info me-2 shadow-sm" id="ajouter_activite_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}" onclick="ajouterActivite('{{ effet.reference }}', '{{ produit.reference|cut:effet.reference|cut:'.' }}', '{{ action.reference|cut:produit.reference|cut:'.' }}')">Ajouter une activité</button>
-                                                    <button type="button" class="btn btn-outline-danger shadow-sm" id="supprimer_action_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}" onclick="supprimerAction('{{ effet.reference }}', '{{ produit.reference|cut:effet.reference|cut:'.' }}', '{{ action.reference|cut:produit.reference|cut:'.' }}')">Supprimer l'action</button>
+                                                    <button type="button" class="btn btn-outline-info me-2 shadow-sm" id="ajouter_activite_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.reference|remove_prefix:produit.reference }}" onclick="ajouterActivite('{{ effet.reference }}', '{{ produit.reference|remove_prefix:effet.reference }}', '{{ action.reference|remove_prefix:produit.reference }}')">Ajouter une activité</button>
+                                                    <button type="button" class="btn btn-outline-danger shadow-sm" id="supprimer_action_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.reference|remove_prefix:produit.reference }}" onclick="supprimerAction('{{ effet.reference }}', '{{ produit.reference|remove_prefix:effet.reference }}', '{{ action.reference|remove_prefix:produit.reference }}')">Supprimer l'action</button>
                                                 </div>
                                             </div>
                                         {% endfor %}
                                     </div>
                                     <div class="d-flex justify-content-end">
-                                        <button type="button" class="btn btn-outline-info me-2 shadow-sm" id="ajouter_action_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}" onclick="ajouterAction('{{ effet.reference }}', '{{ produit.reference|cut:effet.reference|cut:'.' }}')">Ajouter une action</button>
-                                        <button type="button" class="btn btn-outline-danger shadow-sm" id="supprimer_produit_{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}" onclick="supprimerProduit('{{ effet.reference }}', '{{ produit.reference|cut:effet.reference|cut:'.' }}')">Supprimer le produit</button>
+                                        <button type="button" class="btn btn-outline-info me-2 shadow-sm" id="ajouter_action_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}" onclick="ajouterAction('{{ effet.reference }}', '{{ produit.reference|remove_prefix:effet.reference }}')">Ajouter une action</button>
+                                        <button type="button" class="btn btn-outline-danger shadow-sm" id="supprimer_produit_{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}" onclick="supprimerProduit('{{ effet.reference }}', '{{ produit.reference|remove_prefix:effet.reference }}')">Supprimer le produit</button>
                                     </div>
                                 </div>
                             {% endfor %}
@@ -184,9 +198,82 @@ Modification du Plan d'Actions
             height: auto;
             padding: 10px 12px;
         }
+        .char-counter.text-danger, .char-count.text-danger {
+            font-weight: bold;
+        }
+        .input-error {
+            border-color: #dc3545 !important;
+            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+        }
     </style>
 
     <script>
+        const MAX_CHARS = 500;
+
+        function updateCharCount(input) {
+            const counter = input.nextElementSibling;
+            if (counter && (counter.classList.contains('char-counter') || counter.classList.contains('char-count'))) {
+                const len = input.value.length;
+                counter.textContent = `${len} / ${MAX_CHARS}`;
+                if (len >= MAX_CHARS) {
+                    counter.classList.remove('text-muted');
+                    counter.classList.add('text-danger');
+                    input.classList.add('input-error');
+                } else if (len >= MAX_CHARS * 0.9) {
+                    counter.classList.remove('text-muted', 'text-danger');
+                    counter.classList.add('text-warning');
+                    input.classList.remove('input-error');
+                } else {
+                    counter.classList.remove('text-danger', 'text-warning');
+                    counter.classList.add('text-muted');
+                    input.classList.remove('input-error');
+                }
+            }
+        }
+
+        function validateForm(e) {
+            const form = document.getElementById('edit-plan-action');
+            const inputs = form.querySelectorAll('input[maxlength], textarea[maxlength]');
+            let errors = [];
+            inputs.forEach(input => {
+                if (input.value.length > MAX_CHARS) {
+                    const label = input.closest('.mb-3')?.querySelector('label');
+                    const fieldName = label ? label.textContent.trim() : input.name;
+                    errors.push(`"${fieldName}" dépasse ${MAX_CHARS} caractères (${input.value.length} actuellement)`);
+                    input.classList.add('input-error');
+                }
+            });
+            if (errors.length > 0) {
+                e.preventDefault();
+                let alertDiv = document.getElementById('validation-errors');
+                if (!alertDiv) {
+                    alertDiv = document.createElement('div');
+                    alertDiv.id = 'validation-errors';
+                    alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+                    alertDiv.setAttribute('role', 'alert');
+                    form.parentNode.insertBefore(alertDiv, form);
+                }
+                alertDiv.innerHTML = '<strong>Erreur de validation :</strong><ul>' +
+                    errors.map(err => `<li>${err}</li>`).join('') +
+                    '</ul><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
+                alertDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                return false;
+            }
+            return true;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('edit-plan-action');
+            form.addEventListener('submit', validateForm);
+
+            ['titre', 'impact'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('input', function() { updateCharCount(this); });
+                }
+            });
+        });
+
         // Gestion des compteurs
         let effetCount = {{ plan_action.plan_effet.count }};
         let produitCounts = {};
@@ -196,9 +283,9 @@ Modification du Plan d'Actions
         {% for effet in plan_action.plan_effet.all %}
             produitCounts['{{ effet.reference }}'] = {{ effet.effet_produit.count }};
             {% for produit in effet.effet_produit.all %}
-                actionCounts['{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}'] = {{ produit.produit_action.count }};
+                actionCounts['{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}'] = {{ produit.produit_action.count }};
                 {% for action in produit.produit_action.all %}
-                    activiteCounts['{{ effet.reference }}_{{ produit.reference|cut:effet.reference|cut:'.' }}_{{ action.reference|cut:produit.reference|cut:'.' }}'] = {{ action.action_activite.count }};
+                    activiteCounts['{{ effet.reference }}_{{ produit.reference|remove_prefix:effet.reference }}_{{ action.reference|remove_prefix:produit.reference }}'] = {{ action.action_activite.count }};
                 {% endfor %}
             {% endfor %}
         {% endfor %}
@@ -600,11 +687,25 @@ Modification du Plan d'Actions
                 <div class="mb-3">
                     <label for="activite_type_${effetNum}_${produitNum}_${actionNum}_${activiteNum}" class="form-label" id="activite_type_label_${effetNum}_${produitNum}_${actionNum}_${activiteNum}">Type d'activité</label>
                     <select class="form-control shadow-sm border-primary" id="activite_type_${effetNum}_${produitNum}_${actionNum}_${activiteNum}" name="activite_type_${effetNum}_${produitNum}_${actionNum}_${activiteNum}" required>
+                        <option value="">Sélectionner une nature</option>
                         <option value="Réforme">Réforme</option>
                         <option value="Investissement">Investissement</option>
                         <option value="Etude">Étude</option>
                         <option value="Texte">Texte</option>
                         <option value="Activité ordinaire">Activité ordinaire</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="activite_structure_${effetNum}_${produitNum}_${actionNum}_${activiteNum}" class="form-label" id="activite_structure_label_${effetNum}_${produitNum}_${actionNum}_${activiteNum}">Structure</label>
+                    <select class="form-control shadow-sm border-primary" id="activite_structure_${effetNum}_${produitNum}_${actionNum}_${activiteNum}" name="activite_structure_${effetNum}_${produitNum}_${actionNum}_${activiteNum}" required>
+                        <option value="">Sélectionner une structure</option>
+                        <option value="DGI">DGI</option>
+                        <option value="DGD">DGD</option>
+                        <option value="DGTCP">DGTCP</option>
+                        <option value="DGMP">DGMP</option>
+                        <option value="DGF">DGF</option>
+                        <option value="DGBF">DGBF</option>
+                        <option value="DGE">DGE</option>
                     </select>
                 </div>
                 <div class="mb-3">

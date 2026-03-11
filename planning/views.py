@@ -151,6 +151,7 @@ def add_plan_action(request):
                                     action=action,
                                     titre=activite_titre,
                                     type=activite_type,
+                                    structure=activite_structure,
                                     indicateur_label=indicateur_label,
                                     indicateur_reference=indicateur_reference,
                                     point_focal=request.user,
@@ -340,6 +341,7 @@ def edit_plan_action(request, id):
                                     activite = activites_existantes[int(activite_id)]
                                     activite.titre = activite_titre
                                     activite.type = activite_type
+                                    activite.structure = activite_structure
                                     activite.indicateur_label = indicateur_label
                                     activite.indicateur_reference = indicateur_reference
                                     activite.couts = activite_couts
@@ -354,6 +356,7 @@ def edit_plan_action(request, id):
                                         action=action,
                                         titre=activite_titre,
                                         type=activite_type,
+                                        structure=activite_structure,
                                         indicateur_label=indicateur_label,
                                         indicateur_reference=indicateur_reference,
                                         point_focal=request.user,

@@ -38,16 +38,16 @@ Matrice Opérationnelle - {{ plan.titre }} - {{ annee }}
                     <thead class="thead-dark">
                         <tr id="table-header-top">
                             <th rowspan="2" class="fixed-column">Référence</th>
-                            <th rowspan="2" class="fixed-column" style="left: 150px;">Intitulé</th>
+                            <th rowspan="2">Intitulé</th>
                             <th rowspan="2">Nature d'activité</th>
                             <th colspan="4">Indicateur</th>
                             <th rowspan="2" class="sortable" data-sort="structure">Structure</th>
-                            <th rowspan="2">Coût {{ annee }} (M)</th>
                             <th rowspan="2" class="sortable" data-sort="etat_avancement">État d’avancement</th>
                             <th rowspan="2">Commentaire</th>
                             <th rowspan="2">Commentaire DPSE</th>
                             <th rowspan="2" class="sortable" data-sort="status">Statut</th>
                             <th rowspan="2">Programme</th>
+                            <th rowspan="2">Coût {{ annee }} (en millions)</th>
                         </tr>
                         <tr id="table-header-bottom">
                             <th>Libellé</th>
@@ -58,71 +58,25 @@ Matrice Opérationnelle - {{ plan.titre }} - {{ annee }}
                     </thead>
                     <tbody id="matrix-table-body">
                         <tr class="hierarchy-row impact-row">
-                            <td class="impact-bg">Impact</td>
-                            <td class="impact-bg">{{ impact }}</td>
-                            <td class="impact-bg"></td>
-                            <td class="impact-bg"></td>
-                            <td class="impact-bg"></td>
-                            <td class="impact-bg"></td>
-                            <td class="impact-bg"></td>
-                            <td class="impact-bg"></td>
-                            <td class="impact-bg"></td>
-                            <td class="impact-bg"></td>
-                            <td class="impact-bg"></td>
-                            <td class="impact-bg"></td>
-                            <td class="impact-bg"></td>
-                            <td class="impact-bg"></td>
+                            <td class="impact-bg" colspan="14">Impact : {{ impact }}</td>
                         </tr>
                         {% for effet in effets %}
                             <tr class="hierarchy-row effet-row">
                                 <td class="effet-bg">Effet {{ forloop.counter }}</td>
-                                <td class="effet-bg">{{ effet.titre }}</td>
-                                <td class="effet-bg"></td>
-                                <td class="effet-bg"></td>
-                                <td class="effet-bg"></td>
-                                <td class="effet-bg"></td>
-                                <td class="effet-bg"></td>
-                                <td class="effet-bg"></td>
+                                <td class="effet-bg" colspan="12">{{ effet.titre }}</td>
                                 <td class="effet-bg">{{ effet.cout }}</td>
-                                <td class="effet-bg"></td>
-                                <td class="effet-bg"></td>
-                                <td class="effet-bg"></td>
-                                <td class="effet-bg"></td>
-                                <td class="effet-bg"></td>
                             </tr>
                             {% for produit in effet.produits %}
                                 <tr class="hierarchy-row produit-row">
                                     <td class="produit-bg">Produit {{ forloop.parentloop.counter }}.{{ forloop.counter }}</td>
-                                    <td class="produit-bg">{{ produit.titre }}</td>
-                                    <td class="produit-bg"></td>
-                                    <td class="produit-bg"></td>
-                                    <td class="produit-bg"></td>
-                                    <td class="produit-bg"></td>
-                                    <td class="produit-bg"></td>
-                                    <td class="produit-bg"></td>
+                                    <td class="produit-bg" colspan="12">{{ produit.titre }}</td>
                                     <td class="produit-bg">{{ produit.cout }}</td>
-                                    <td class="produit-bg"></td>
-                                    <td class="produit-bg"></td>
-                                    <td class="produit-bg"></td>
-                                    <td class="produit-bg"></td>
-                                    <td class="produit-bg"></td>
                                 </tr>
                                 {% for action in produit.actions %}
                                     <tr class="hierarchy-row action-row">
                                         <td class="action-bg">Action {{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}</td>
-                                        <td class="action-bg">{{ action.titre }}</td>
-                                        <td class="action-bg"></td>
-                                        <td class="action-bg"></td>
-                                        <td class="action-bg"></td>
-                                        <td class="action-bg"></td>
-                                        <td class="action-bg"></td>
-                                        <td class="action-bg"></td>
+                                        <td class="action-bg" colspan="12">{{ action.titre }}</td>
                                         <td class="action-bg">{{ action.cout }}</td>
-                                        <td class="action-bg"></td>
-                                        <td class="action-bg"></td>
-                                        <td class="action-bg"></td>
-                                        <td class="action-bg"></td>
-                                        <td class="action-bg"></td>
                                     </tr>
                                     {% for activite in action.activites %}
                                         <tr class="activity-row">
@@ -134,12 +88,12 @@ Matrice Opérationnelle - {{ plan.titre }} - {{ annee }}
                                             <td class="activite-bg">{{ activite.cible }}</td>
                                             <td class="activite-bg">{{ activite.realisation }}</td>
                                             <td class="activite-bg">{{ activite.structure }}</td>
-                                            <td class="activite-bg">{{ activite.cout }}</td>
                                             <td class="activite-bg">{{ activite.etat_avancement }}</td>
                                             <td class="activite-bg">{{ activite.commentaire }}</td>
                                             <td class="activite-bg">{{ activite.commentaire_se }}</td>
                                             <td class="activite-bg">{{ activite.status }}</td>
                                             <td class="activite-bg">{{ activite.programme }}</td>
+                                            <td class="activite-bg">{{ activite.cout }}</td>
                                         </tr>
                                     {% endfor %}
                                 {% endfor %}
@@ -360,8 +314,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     function getColumnIndex(column) {
-        const headers = ['titre', 'structure', 'etat_avancement', 'status'];
-        return headers.indexOf(column) + (column === 'titre' ? 2 : column === 'structure' ? 8 : column === 'etat_avancement' ? 10 : 11);
+        const columnMap = { 'titre': 2, 'structure': 8, 'etat_avancement': 9, 'status': 12 };
+        return columnMap[column] || 1;
     }
 
     // Gestion barre de recherche
@@ -543,20 +497,7 @@ document.addEventListener('DOMContentLoaded', function () {
         .then(data => {
             tableBody.innerHTML = `
                 <tr class="hierarchy-row impact-row">
-                    <td class="impact-bg">Impact</td>
-                    <td class="impact-bg">Impact : ${data.impact}</td>
-                    <td class="impact-bg"></td>
-                    <td class="impact-bg"></td>
-                    <td class="impact-bg"></td>
-                    <td class="impact-bg"></td>
-                    <td class="impact-bg"></td>
-                    <td class="impact-bg"></td>
-                    <td class="impact-bg"></td>
-                    <td class="impact-bg"></td>
-                    <td class="impact-bg"></td>
-                    <td class="impact-bg"></td>
-                    <td class="impact-bg"></td>
-                    <td class="impact-bg"></td>
+                    <td class="impact-bg" colspan="14">Impact : ${data.impact}</td>
                 </tr>
             `;
 
@@ -565,19 +506,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 tableBody.innerHTML += `
                     <tr class="hierarchy-row effet-row">
                         <td class="effet-bg">Effet ${effetCounter}</td>
-                        <td class="effet-bg">Effet : ${effet.titre}</td>
-                        <td class="effet-bg"></td>
-                        <td class="effet-bg"></td>
-                        <td class="effet-bg"></td>
-                        <td class="effet-bg"></td>
-                        <td class="effet-bg"></td>
-                        <td class="effet-bg"></td>
+                        <td class="effet-bg" colspan="12">${effet.titre}</td>
                         <td class="effet-bg">${effet.cout}</td>
-                        <td class="effet-bg"></td>
-                        <td class="effet-bg"></td>
-                        <td class="effet-bg"></td>
-                        <td class="effet-bg"></td>
-                        <td class="effet-bg"></td>
                     </tr>
                 `;
                 effetCounter++;
@@ -587,19 +517,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     tableBody.innerHTML += `
                         <tr class="hierarchy-row produit-row">
                             <td class="produit-bg">Produit ${effetCounter - 1}.${produitCounter}</td>
-                            <td class="produit-bg">Produit : ${produit.titre}</td>
-                            <td class="produit-bg"></td>
-                            <td class="produit-bg"></td>
-                            <td class="produit-bg"></td>
-                            <td class="produit-bg"></td>
-                            <td class="produit-bg"></td>
-                            <td class="produit-bg"></td>
+                            <td class="produit-bg" colspan="12">${produit.titre}</td>
                             <td class="produit-bg">${produit.cout}</td>
-                            <td class="produit-bg"></td>
-                            <td class="produit-bg"></td>
-                            <td class="produit-bg"></td>
-                            <td class="produit-bg"></td>
-                            <td class="produit-bg"></td>
                         </tr>
                     `;
                     produitCounter++;
@@ -609,19 +528,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         tableBody.innerHTML += `
                             <tr class="hierarchy-row action-row">
                                 <td class="action-bg">Action ${effetCounter - 1}.${produitCounter - 1}.${actionCounter}</td>
-                                <td class="action-bg">Action : ${action.titre}</td>
-                                <td class="action-bg"></td>
-                                <td class="action-bg"></td>
-                                <td class="action-bg"></td>
-                                <td class="action-bg"></td>
-                                <td class="action-bg"></td>
-                                <td class="action-bg"></td>
+                                <td class="action-bg" colspan="12">${action.titre}</td>
                                 <td class="action-bg">${action.cout}</td>
-                                <td class="action-bg"></td>
-                                <td class="action-bg"></td>
-                                <td class="action-bg"></td>
-                                <td class="action-bg"></td>
-                                <td class="action-bg"></td>
                             </tr>
                         `;
                         actionCounter++;
@@ -638,12 +546,12 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <td class="activite-bg">${activite.cible}</td>
                                     <td class="activite-bg">${activite.realisation}</td>
                                     <td class="activite-bg">${activite.structure}</td>
-                                    <td class="activite-bg">${activite.cout}</td>
                                     <td class="activite-bg">${activite.etat_avancement}</td>
                                     <td class="activite-bg">${activite.commentaire}</td>
                                     <td class="activite-bg">${activite.commentaire_se}</td>
                                     <td class="activite-bg">${activite.status}</td>
                                     <td class="activite-bg">${activite.programme}</td>
+                                    <td class="activite-bg">${activite.cout}</td>
                                 </tr>
                             `;
                             activiteCounter++;
@@ -772,17 +680,17 @@ document.addEventListener('DOMContentLoaded', function () {
     .table-horizontal-container { 
         max-height: 760px; 
         overflow: auto; 
-        border: 1px solid #ff6200; 
+        border: 0.5px solid #000; 
         border-radius: 5px; 
         z-index: 10; /* z-index inférieur aux dropdowns */
     }
     .unfixed-table { 
         width: 100%; 
         border-collapse: collapse; 
-        border: 1px solid #ff6200; 
+        border: 0.5px solid #000 !important; 
     }
     th, td { 
-        border: 1px solid #ff6200; 
+        border: 0.5px solid #000 !important; 
         padding: 10px; 
         min-width: 150px; 
         text-align: left; 
@@ -810,22 +718,9 @@ document.addEventListener('DOMContentLoaded', function () {
         background: #ff6200 !important; 
         color: white !important; 
     }
-    .fixed-column:nth-child(2) { 
-        position: sticky; 
-        left: 150px; 
-        z-index: 35; /* z-index inférieur aux dropdowns */
-        background: #ff6200 !important; 
-        color: white !important; 
-    }
     tr > td:first-child { 
         position: sticky; 
         left: 0; 
-        z-index: 15; 
-        box-shadow: 2px 0 5px rgba(0,0,0,0.1); 
-    }
-    tr > td:nth-child(2) { 
-        position: sticky; 
-        left: 150px; 
         z-index: 15; 
         box-shadow: 2px 0 5px rgba(0,0,0,0.1); 
     }

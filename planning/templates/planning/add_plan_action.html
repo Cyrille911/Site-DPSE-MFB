@@ -8,6 +8,15 @@ Création d'un Plan d'Actions
     <div class="container mt-5">
         <h1 class="text-center mb-4 text-primary fw-bold">Création d'un Plan d'Actions</h1>
 
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
         <form action="{% url 'add_plan_action' %}" method="POST" id="add-plan-action">
             {% csrf_token %}
             <!-- 1. Informations sur le Plan d'Actions -->
@@ -16,7 +25,8 @@ Création d'un Plan d'Actions
                 <div class="row">
                     <div class="col-md-4 mb-3">
                         <label for="titre" class="form-label">Titre du Plan d'Actions</label>
-                        <input type="text" class="form-control shadow-sm border-primary" id="titre" name="titre" placeholder="Entrez le titre du plan" required>
+                        <input type="text" class="form-control shadow-sm border-primary" id="titre" name="titre" placeholder="Entrez le titre du plan" required maxlength="500">
+                        <small class="text-muted char-count" data-target="titre">0 / 500</small>
                     </div>
                     <div class="col-md-4 mb-3">
                         <label for="annee_depart" class="form-label">Année de Départ</label>
@@ -29,7 +39,8 @@ Création d'un Plan d'Actions
                 </div>
                 <div class="mb-3">
                     <label for="impact" class="form-label">Impact</label>
-                    <textarea class="form-control shadow-sm border-primary" id="impact" name="impact" rows="3" placeholder="Impact du plan" required></textarea>
+                    <textarea class="form-control shadow-sm border-primary" id="impact" name="impact" rows="3" placeholder="Impact du plan" required maxlength="500"></textarea>
+                    <small class="text-muted char-count" data-target="impact">0 / 500</small>
                 </div>  
 
                 <div class="d-flex justify-content-center">
@@ -57,9 +68,83 @@ Création d'un Plan d'Actions
             height: auto;
             padding: 10px 12px;
         }
+        .char-counter.text-danger, .char-count.text-danger {
+            font-weight: bold;
+        }
+        .input-error {
+            border-color: #dc3545 !important;
+            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+        }
     </style>
 
     <script>
+        const MAX_CHARS = 500;
+
+        function updateCharCount(input) {
+            const counter = input.nextElementSibling;
+            if (counter && (counter.classList.contains('char-counter') || counter.classList.contains('char-count'))) {
+                const len = input.value.length;
+                counter.textContent = `${len} / ${MAX_CHARS}`;
+                if (len >= MAX_CHARS) {
+                    counter.classList.remove('text-muted');
+                    counter.classList.add('text-danger');
+                    input.classList.add('input-error');
+                } else if (len >= MAX_CHARS * 0.9) {
+                    counter.classList.remove('text-muted', 'text-danger');
+                    counter.classList.add('text-warning');
+                    input.classList.remove('input-error');
+                } else {
+                    counter.classList.remove('text-danger', 'text-warning');
+                    counter.classList.add('text-muted');
+                    input.classList.remove('input-error');
+                }
+            }
+        }
+
+        function validateForm(e) {
+            const form = document.getElementById('add-plan-action');
+            const inputs = form.querySelectorAll('input[maxlength], textarea[maxlength]');
+            let errors = [];
+            inputs.forEach(input => {
+                if (input.value.length > MAX_CHARS) {
+                    const label = input.closest('.mb-3')?.querySelector('label');
+                    const fieldName = label ? label.textContent.trim() : input.name;
+                    errors.push(`"${fieldName}" dépasse ${MAX_CHARS} caractères (${input.value.length} actuellement)`);
+                    input.classList.add('input-error');
+                }
+            });
+            if (errors.length > 0) {
+                e.preventDefault();
+                let alertDiv = document.getElementById('validation-errors');
+                if (!alertDiv) {
+                    alertDiv = document.createElement('div');
+                    alertDiv.id = 'validation-errors';
+                    alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+                    alertDiv.setAttribute('role', 'alert');
+                    form.parentNode.insertBefore(alertDiv, form);
+                }
+                alertDiv.innerHTML = '<strong>Erreur de validation :</strong><ul>' +
+                    errors.map(err => `<li>${err}</li>`).join('') +
+                    '</ul><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
+                alertDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                return false;
+            }
+            return true;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('add-plan-action');
+            form.addEventListener('submit', validateForm);
+
+            // Compteurs pour les champs statiques (titre, impact)
+            ['titre', 'impact'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('input', function() { updateCharCount(this); });
+                }
+            });
+        });
+
         // Gestion des compteurs
         let effetCount = 0;
         let produitCounts = {};
@@ -89,7 +174,8 @@ Création d'un Plan d'Actions
                 <h4 class="text-success" id="effet_id_${effetNum}">Effet ${effetNum}</h4>
                 <div class="mb-3">
                     <label for="effet_titre_${effetNum}" class="form-label" id="effet_label_${effetNum}">Intitulé de l'effet ${effetNum}</label>
-                    <input type="text" class="form-control shadow-sm border-success" id="effet_titre_${effetNum}" name="effet_titre_${effetNum}" required>
+                    <input type="text" class="form-control shadow-sm border-success" id="effet_titre_${effetNum}" name="effet_titre_${effetNum}" required maxlength="500" oninput="updateCharCount(this)">
+                    <small class="text-muted char-counter">0 / 500</small>
                 </div>
                 <div id="produits_effet_${effetNum}" class="ps-4"></div>
                 <div class="d-flex justify-content-end">
@@ -200,7 +286,8 @@ Création d'un Plan d'Actions
                 <h5 class="text-warning" id="produit_id_${effetNum}_${produitNum}">Produit ${effetNum}.${produitNum}</h5>
                 <div class="mb-3">
                     <label for="produit_titre_${effetNum}_${produitNum}" class="form-label" id="produit_label_${effetNum}_${produitNum}">Intitulé du produit ${effetNum}.${produitNum}</label>
-                    <input type="text" class="form-control shadow-sm border-warning" id="produit_titre_${effetNum}_${produitNum}" name="produit_titre_${effetNum}_${produitNum}" required>
+                    <input type="text" class="form-control shadow-sm border-warning" id="produit_titre_${effetNum}_${produitNum}" name="produit_titre_${effetNum}_${produitNum}" required maxlength="500" oninput="updateCharCount(this)">
+                    <small class="text-muted char-counter">0 / 500</small>
                 </div>
                 <div id="actions_produit_${effetNum}_${produitNum}" class="ps-4"></div>
                 <div class="d-flex justify-content-end">
@@ -292,7 +379,8 @@ Création d'un Plan d'Actions
                 <h6 class="text-info" id="action_id_${effetNum}_${produitNum}_${actionNum}">Action ${effetNum}.${produitNum}.${actionNum}</h6>
                 <div class="mb-3">
                     <label for="action_titre_${effetNum}_${produitNum}_${actionNum}" class="form-label" id="action_label_${effetNum}_${produitNum}_${actionNum}">Intitulé de l'action ${effetNum}.${produitNum}.${actionNum}</label>
-                    <input type="text" class="form-control shadow-sm border-info" id="action_titre_${effetNum}_${produitNum}_${actionNum}" name="action_titre_${effetNum}_${produitNum}_${actionNum}" required>
+                    <input type="text" class="form-control shadow-sm border-info" id="action_titre_${effetNum}_${produitNum}_${actionNum}" name="action_titre_${effetNum}_${produitNum}_${actionNum}" required maxlength="500" oninput="updateCharCount(this)">
+                    <small class="text-muted char-counter">0 / 500</small>
                 </div>
                 <div id="activites_action_${effetNum}_${produitNum}_${actionNum}" class="ps-4"></div>
                 <div class="d-flex justify-content-end">
@@ -468,7 +556,8 @@ Création d'un Plan d'Actions
                     <input type="text" class="form-control shadow-sm border-primary" 
                         id="activite_titre_${effetNum}_${produitNum}_${actionNum}_${activiteNum}" 
                         name="activite_titre_${effetNum}_${produitNum}_${actionNum}_${activiteNum}" 
-                        required>
+                        required maxlength="500" oninput="updateCharCount(this)">
+                    <small class="text-muted char-counter">0 / 500</small>
                 </div>
 
                 <div class="mb-3">
@@ -514,7 +603,8 @@ Création d'un Plan d'Actions
                     <input type="text" class="form-control shadow-sm border-primary" 
                         id="indicateur_label_${effetNum}_${produitNum}_${actionNum}_${activiteNum}" 
                         name="indicateur_label_${effetNum}_${produitNum}_${actionNum}_${activiteNum}" 
-                        required>
+                        required maxlength="500" oninput="updateCharCount(this)">
+                    <small class="text-muted char-counter">0 / 500</small>
                 </div>
 
                 <div class="mb-3">
@@ -524,7 +614,8 @@ Création d'un Plan d'Actions
                     <input type="text" class="form-control shadow-sm border-primary" 
                         id="indicateur_reference_${effetNum}_${produitNum}_${actionNum}_${activiteNum}" 
                         name="indicateur_reference_${effetNum}_${produitNum}_${actionNum}_${activiteNum}" 
-                        required>
+                        required maxlength="500" oninput="updateCharCount(this)">
+                    <small class="text-muted char-counter">0 / 500</small>
                 </div>
 
                 <div class="mb-3">

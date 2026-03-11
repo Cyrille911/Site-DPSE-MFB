@@ -104,13 +104,13 @@
                         <thead class="thead-dark">
                             <tr id="table-header-top">
                                 <th rowspan="2" class="fixed-column">Référence</th>
-                                <th rowspan="2" class="fixed-column" style="left: 150px;">Intitulé</th>
+                                <th rowspan="2">Intitulé</th>
                                 <th rowspan="2">Nature d'activité</th>
                                 <th colspan="{{ annees|length|add:2 }}">Indicateur</th>
                                 <th rowspan="2">Structure Responsable</th>
                                 <th rowspan="2">Programme</th>
-                                <th colspan="{{ annees|length }}">Coûts (en millions)</th>
-                                <th rowspan="2">Coût Total</th>
+                                <th colspan="{{ annees|length }}">Coûts par année (en millions)</th>
+                                <th rowspan="2">Coût Total (en millions)</th>
                             </tr>
                             <tr id="table-header-bottom">
                                 <th>Libellé</th>
@@ -347,54 +347,29 @@
                         });
 
                         // Ajouter la ligne "Impact"
+                        const totalColonnes = 8 + 2 * annees.length;
                         let impactRow = `
                             <tr class="hierarchy-row impact-row">
-                                <td class="impact-bg">Impact : ${planImpact || 'Impact non défini'}</td>
-                                <td class="impact-bg"></td>
-                                <td class="impact-bg"></td>
-                                <td class="impact-bg"></td>
-                                <td class="impact-bg"></td>
-                        `;
-                        annees.forEach(() => impactRow += `<td class="impact-bg"></td>`);
-                        impactRow += `
-                                <td class="impact-bg"></td>
-                                <td class="impact-bg"></td>
-                        `;
-                        annees.forEach(() => impactRow += `<td class="impact-bg"></td>`);
-                        impactRow += `<td class="impact-bg"></td></tr>`;
+                                <td class="impact-bg" colspan="${totalColonnes}">Impact : ${planImpact || 'Impact non défini'}</td>
+                            </tr>`;
                         tableBody.innerHTML += impactRow;
 
                         // Ajouter la ligne "Coût Total"
+                        const colsJusquaProgramme = 7 + annees.length;
                         let totalRow = `
                             <tr class="hierarchy-row total-row">
-                                <td class="total-bg">Coût Total</td>
-                                <td class="total-bg"></td>
-                                <td class="total-bg"></td>
-                                <td class="total-bg"></td>
-                                <td class="total-bg"></td>
-                        `;
-                        annees.forEach(() => totalRow += `<td class="total-bg"></td>`);
-                        totalRow += `
-                                <td class="total-bg"></td>
-                                <td class="total-bg"></td>
+                                <td class="total-bg" colspan="${colsJusquaProgramme}">Coût Total</td>
                         `;
                         annees.forEach((annee, index) => totalRow += `<td class="total-bg">${totalCoutsParAnnee[index].toFixed(2)}</td>`);
                         totalRow += `<td class="total-bg">${totalCostGlobal.toFixed(2)}</td></tr>`;
                         tableBody.innerHTML += totalRow;
 
+                        const colsIntituleAProgramme = 6 + annees.length;
                         effets.forEach((effet, i) => {
                             let effetRow = `
                                 <tr class="hierarchy-row effet-row">
                                     <td class="effet-bg">Effet ${i + 1}</td>
-                                    <td class="effet-bg">${effet.titre}</td>
-                                    <td class="effet-bg"></td>
-                                    <td class="effet-bg"></td>
-                                    <td class="effet-bg"></td>
-                            `;
-                            annees.forEach(() => effetRow += `<td class="effet-bg"></td>`);
-                            effetRow += `
-                                    <td class="effet-bg"></td>
-                                    <td class="effet-bg"></td>
+                                    <td class="effet-bg" colspan="${colsIntituleAProgramme}">${effet.titre}</td>
                             `;
                             annees.forEach((annee, index) => effetRow += `<td class="effet-bg">${effet.coutsParAnnee[index].toFixed(2)}</td>`);
                             effetRow += `<td class="effet-bg">${effet.totalCost.toFixed(2)}</td></tr>`;
@@ -404,15 +379,7 @@
                                 let produitRow = `
                                     <tr class="hierarchy-row produit-row">
                                         <td class="produit-bg">Produit ${i + 1}.${j + 1}</td>
-                                        <td class="produit-bg">${produit.titre}</td>
-                                        <td class="produit-bg"></td>
-                                        <td class="produit-bg"></td>
-                                        <td class="produit-bg"></td>
-                                `;
-                                annees.forEach(() => produitRow += `<td class="produit-bg"></td>`);
-                                produitRow += `
-                                        <td class="produit-bg"></td>
-                                        <td class="produit-bg"></td>
+                                        <td class="produit-bg" colspan="${colsIntituleAProgramme}">${produit.titre}</td>
                                 `;
                                 annees.forEach((annee, index) => produitRow += `<td class="produit-bg">${produit.coutsParAnnee[index].toFixed(2)}</td>`);
                                 produitRow += `<td class="produit-bg">${produit.totalCost.toFixed(2)}</td></tr>`;
@@ -422,15 +389,7 @@
                                     let actionRow = `
                                         <tr class="hierarchy-row action-row">
                                             <td class="action-bg">Action ${i + 1}.${j + 1}.${k + 1}</td>
-                                            <td class="action-bg">${action.titre}</td>
-                                            <td class="action-bg"></td>
-                                            <td class="action-bg"></td>
-                                            <td class="action-bg"></td>
-                                    `;
-                                    annees.forEach(() => actionRow += `<td class="action-bg"></td>`);
-                                    actionRow += `
-                                            <td class="action-bg"></td>
-                                            <td class="action-bg"></td>
+                                            <td class="action-bg" colspan="${colsIntituleAProgramme}">${action.titre}</td>
                                     `;
                                     annees.forEach((annee, index) => actionRow += `<td class="action-bg">${action.coutsParAnnee[index].toFixed(2)}</td>`);
                                     actionRow += `<td class="action-bg">${action.totalCost.toFixed(2)}</td></tr>`;
@@ -474,14 +433,11 @@
                         let totalColonnes = table.rows[0]?.cells.length || 1;
                         tableBody.innerHTML = `
                             <tr class="hierarchy-row impact-row">
-                                <td class="impact-bg">Impact : ${planImpact || 'Impact non défini'}</td>
-                                <td class="impact-bg"></td>
-                                <td class="impact-bg" colspan="${totalColonnes - 2}">Erreur de chargement des données</td>
+                                <td class="impact-bg" colspan="${totalColonnes}">Impact : ${planImpact || 'Impact non défini'}</td>
                             </tr>
+                            <tr><td colspan="${totalColonnes}" class="text-center text-danger">Erreur de chargement des données</td></tr>
                             <tr class="hierarchy-row total-row">
-                                <td class="total-bg">Coût Total</td>
-                                <td class="total-bg"></td>
-                                <td class="total-bg" colspan="${totalColonnes - 2}"></td>
+                                <td class="total-bg" colspan="${totalColonnes}">Coût Total</td>
                             </tr>
                         `;
                         updateHierarchyPositions();
@@ -549,23 +505,60 @@
 
                 // Première feuille : Grand tableau (Plan)
                 const planData = [];
-                
-                // Ajouter les en-têtes du grand tableau
-                const headersTop = Array.from(tableHeaderTop.cells).map(cell => cell.textContent.trim());
-                planData.push(headersTop);
-                const headersBottom = Array.from(tableHeaderBottom.cells).map(cell => cell.textContent.trim());
-                planData.push(['', '', '', ...headersBottom.slice(3)]); // Ajuster pour aligner avec les colonnes
+                const planMerges = [];
 
-                // Ajouter les lignes du corps du grand tableau
+                // En-têtes - Ligne 1 (top)
+                let col = 0;
+                let row = 0;
+                planData[row] = [];
+                Array.from(tableHeaderTop.cells).forEach(th => {
+                    const content = th.textContent.trim();
+                    const rowspan = parseInt(th.getAttribute('rowspan') || '1', 10);
+                    const colspan = parseInt(th.getAttribute('colspan') || '1', 10);
+                    planData[row][col] = content;
+                    if (rowspan > 1 || colspan > 1) {
+                        planMerges.push({ s: { r: row, c: col }, e: { r: row + rowspan - 1, c: col + colspan - 1 } });
+                    }
+                    col += colspan;
+                });
+
+                // En-têtes - Ligne 2 (bottom)
+                row = 1;
+                col = 3;
+                planData[row] = [];
+                Array.from(tableHeaderBottom.cells).forEach(th => {
+                    const content = th.textContent.trim();
+                    const colspan = parseInt(th.getAttribute('colspan') || '1', 10);
+                    while (planData[row][col] !== undefined) col++;
+                    planData[row][col] = content;
+                    if (colspan > 1) {
+                        planMerges.push({ s: { r: row, c: col }, e: { r: row, c: col + colspan - 1 } });
+                    }
+                    col += colspan;
+                });
+
+                // Corps du tableau
                 const rows = Array.from(tableBody.getElementsByTagName('tr'))
-                    .filter(row => row.style.display !== 'none'); // Respecter le filtre de recherche
+                    .filter(row => row.style.display !== 'none');
 
-                rows.forEach(row => {
-                    const cells = Array.from(row.cells).map(cell => cell.textContent.trim());
-                    planData.push(cells);
+                rows.forEach(tr => {
+                    row++;
+                    col = 0;
+                    if (!planData[row]) planData[row] = [];
+                    Array.from(tr.cells).forEach(td => {
+                        const content = td.textContent.trim();
+                        const colspan = parseInt(td.getAttribute('colspan') || '1', 10);
+                        while (planData[row][col] !== undefined) col++;
+                        planData[row][col] = content;
+                        if (colspan > 1) {
+                            planMerges.push({ s: { r: row, c: col }, e: { r: row, c: col + colspan - 1 } });
+                        }
+                        col += colspan;
+                    });
                 });
 
                 const planSheet = XLSX.utils.aoa_to_sheet(planData);
+                planSheet['!merges'] = planMerges;
 
                 // Définir les styles pour le tableau "Plan"
                 const range = XLSX.utils.decode_range(planSheet['!ref']);
@@ -574,7 +567,6 @@
                         const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
                         if (!planSheet[cellAddress]) planSheet[cellAddress] = { t: 's', v: '' };
 
-                        // Style par défaut : bordures et alignement
                         planSheet[cellAddress].s = {
                             border: {
                                 top: { style: 'thin', color: { rgb: '007A3D' } },
@@ -585,33 +577,29 @@
                             alignment: { horizontal: 'left', vertical: 'center' }
                         };
 
-                        // En-têtes (lignes 0 et 1)
                         if (R === 0 || R === 1) {
-                            planSheet[cellAddress].s.fill = { fgColor: { rgb: 'FFA500' } }; // Orange
-                            planSheet[cellAddress].s.font = { color: { rgb: 'FFFFFF' } }; // Texte blanc
+                            planSheet[cellAddress].s.fill = { fgColor: { rgb: 'FFA500' } };
+                            planSheet[cellAddress].s.font = { color: { rgb: 'FFFFFF' } };
                             planSheet[cellAddress].s.alignment.horizontal = 'center';
-                        }
-                        // Corps du tableau
-                        else {
-                            const row = rows[R - 2]; // Ajuster pour les 2 lignes d'en-tête
-                            if (row.classList.contains('impact-row')) {
-                                planSheet[cellAddress].s.fill = { fgColor: { rgb: 'D1E7DD' } }; // Vert clair
-                            } else if (row.classList.contains('total-row')) {
-                                planSheet[cellAddress].s.fill = { fgColor: { rgb: 'B8D8C9' } }; // Vert moyen
-                            } else if (row.classList.contains('effet-row')) {
-                                planSheet[cellAddress].s.fill = { fgColor: { rgb: 'F8D7DA' } }; // Rouge clair
-                            } else if (row.classList.contains('produit-row')) {
-                                planSheet[cellAddress].s.fill = { fgColor: { rgb: 'FFF3CD' } }; // Jaune clair
-                            } else if (row.classList.contains('action-row')) {
-                                planSheet[cellAddress].s.fill = { fgColor: { rgb: 'CCE5FF' } }; // Bleu clair
-                            } else if (row.classList.contains('activite-row')) {
-                                planSheet[cellAddress].s.fill = { fgColor: { rgb: 'FFFFFF' } }; // Blanc
+                        } else {
+                            const tr = rows[R - 2];
+                            if (tr.classList.contains('impact-row')) {
+                                planSheet[cellAddress].s.fill = { fgColor: { rgb: 'D1E7DD' } };
+                            } else if (tr.classList.contains('total-row')) {
+                                planSheet[cellAddress].s.fill = { fgColor: { rgb: 'B8D8C9' } };
+                            } else if (tr.classList.contains('effet-row')) {
+                                planSheet[cellAddress].s.fill = { fgColor: { rgb: 'F8D7DA' } };
+                            } else if (tr.classList.contains('produit-row')) {
+                                planSheet[cellAddress].s.fill = { fgColor: { rgb: 'FFF3CD' } };
+                            } else if (tr.classList.contains('action-row')) {
+                                planSheet[cellAddress].s.fill = { fgColor: { rgb: 'CCE5FF' } };
+                            } else if (tr.classList.contains('activite-row')) {
+                                planSheet[cellAddress].s.fill = { fgColor: { rgb: 'FFFFFF' } };
                             }
                         }
                     }
                 }
 
-                // Ajuster la largeur des colonnes
                 planSheet['!cols'] = Array(range.e.c + 1).fill({ wch: 20 });
 
                 XLSX.utils.book_append_sheet(wb, planSheet, "Plan");
@@ -853,11 +841,11 @@
             border-collapse: collapse;
             font-family: helvetica;
             width: 100%;
-            border: 1px solid #007A3D;
+            border: 0.5px solid #000 !important;
         }
 
         td, th {
-            border: 1px solid #007A3D;
+            border: 0.5px solid #000 !important;
             padding: 10px;
             min-width: 150px;
             box-sizing: border-box;
@@ -907,11 +895,11 @@
         }
 
         .table-scroll-container {
-            max-height: 500px; /* Hauteur maximale avant défilement vertical */
-            max-width: 1250px; /* Largeur maximale avant défilement horizontal */
+            max-height: 1000px; /* Hauteur maximale avant défilement vertical */
+            max-width: 1400px; /* Largeur maximale avant défilement horizontal */
             overflow: auto; /* Défilement horizontal et vertical */
             position: relative;
-            border: 1px solid #007A3D;
+            border: 0.5px solid #000;
             border-radius: 5px;
         }
 
@@ -952,14 +940,6 @@
             color: white !important;
         }
 
-        .fixed-column:nth-child(2) {
-            position: sticky;
-            left: 150px; /* Ajusté pour suivre la première colonne */
-            z-index: 35;
-            background: orange !important;
-            color: white !important;
-        }
-
         tr > td:first-child {
             position: sticky;
             left: 0;
@@ -968,12 +948,11 @@
             opacity: 1;
         }
 
-        tr > td:nth-child(2) {
-            position: sticky;
-            left: 150px; /* Ajusté pour suivre la première colonne */
-            z-index: 15;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-            opacity: 1;
+        /* Impact et Total : défilement horizontal libre (pas de sticky left) */
+        .impact-row > td:first-child,
+        .total-row > td:first-child {
+            position: relative !important;
+            box-shadow: none;
         }
 
         /* Assurer que les cellules du tbody héritent de leur couleur de fond */

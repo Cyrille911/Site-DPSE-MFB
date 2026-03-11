@@ -3,16 +3,58 @@ from .models import User
 
 # Formulaire d'inscription pour les membres
 class InscriptionMembreForm(forms.ModelForm):
+    last_name = forms.CharField(
+        label="Nom",
+        max_length=150,
+        widget=forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Nom'})
+    )
+    first_name = forms.CharField(
+        label="Prénom",
+        max_length=150,
+        widget=forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Prénom'})
+    )
+    email = forms.EmailField(
+        label="Email",
+        widget=forms.EmailInput(attrs={'class': 'input100', 'placeholder': 'Email'})
+    )
+    phone_number = forms.CharField(
+        label="Numéro de téléphone",
+        max_length=50,
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Numéro de téléphone'})
+    )
+    program = forms.ChoiceField(
+        label="Programme",
+        choices=User.PROGRAM_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={'class': 'input100'})
+    )
+    entity = forms.CharField(
+        label="Entité",
+        max_length=50,
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Entité'})
+    )
+    function = forms.CharField(
+        label="Fonction",
+        max_length=100,
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Fonction'})
+    )
+    photo = forms.ImageField(
+        label="Photo de profil",
+        required=False,
+        widget=forms.FileInput(attrs={'class': 'input100'})
+    )
     password = forms.CharField(
-        widget=forms.PasswordInput(attrs={'class': 'input100', 'placeholder': 'Mot de passe'}), 
-        label="Mot de passe"
+        label="Mot de passe",
+        widget=forms.PasswordInput(attrs={'class': 'input100', 'placeholder': 'Mot de passe'})
     )
     confirm_password = forms.CharField(
-        widget=forms.PasswordInput(attrs={'class': 'input100', 'placeholder': 'Confirmez le mot de passe'}), 
-        label="Confirmez le mot de passe"
+        label="Confirmez le mot de passe",
+        widget=forms.PasswordInput(attrs={'class': 'input100', 'placeholder': 'Confirmez le mot de passe'})
     )
     
-    # Ajout du champ 'role' avec les choix
     ROLE_CHOICES = (
         ('responsable', 'Responsable'),
         ('point_focal', 'Point Focal'),
@@ -20,8 +62,8 @@ class InscriptionMembreForm(forms.ModelForm):
         ('cabinet', 'Cabinet MFB'),
     )
     role = forms.ChoiceField(
+        label="Rôle",
         choices=ROLE_CHOICES, 
-        label="Rôle", 
         initial='point_focal',
         widget=forms.Select(attrs={'class': 'input100'})
     )
@@ -29,16 +71,6 @@ class InscriptionMembreForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ['last_name', 'first_name', 'email', 'phone_number', 'program', 'entity', 'function', 'role', 'password', 'confirm_password', 'photo']
-        widgets = {
-            'last_name': forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Nom'}),
-            'first_name': forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Prénom'}),
-            'email': forms.EmailInput(attrs={'class': 'input100', 'placeholder': 'Email'}),
-            'phone_number': forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Numéro de téléphone'}),
-            'program': forms.Select(attrs={'class': 'input100'}),
-            'entity': forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Entité'}),
-            'function': forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Fonction'}),
-            'photo': forms.FileInput(attrs={'class': 'input100'}),
-        }
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
@@ -67,27 +99,55 @@ class InscriptionMembreForm(forms.ModelForm):
 
 # Formulaire d'inscription pour les visiteurs
 class InscriptionVisiteurForm(forms.ModelForm):
+    last_name = forms.CharField(
+        label="Nom",
+        max_length=150,
+        widget=forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Nom'})
+    )
+    first_name = forms.CharField(
+        label="Prénom",
+        max_length=150,
+        widget=forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Prénom'})
+    )
+    email = forms.EmailField(
+        label="Email",
+        widget=forms.EmailInput(attrs={'class': 'input100', 'placeholder': 'Email'})
+    )
+    phone_number = forms.CharField(
+        label="Numéro de téléphone",
+        max_length=50,
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Numéro de téléphone'})
+    )
+    profession = forms.CharField(
+        label="Profession",
+        max_length=100,
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Profession'})
+    )
+    interest = forms.CharField(
+        label="Intérêt",
+        max_length=100,
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Intérêt'})
+    )
+    photo = forms.ImageField(
+        label="Photo de profil",
+        required=False,
+        widget=forms.FileInput(attrs={'class': 'input100'})
+    )
     password = forms.CharField(
-        widget=forms.PasswordInput(attrs={'class': 'input100', 'placeholder': 'Mot de passe'}), 
-        label="Mot de passe"
+        label="Mot de passe",
+        widget=forms.PasswordInput(attrs={'class': 'input100', 'placeholder': 'Mot de passe'})
     )
     confirm_password = forms.CharField(
-        widget=forms.PasswordInput(attrs={'class': 'input100', 'placeholder': 'Confirmez le mot de passe'}), 
-        label="Confirmez le mot de passe"
+        label="Confirmez le mot de passe",
+        widget=forms.PasswordInput(attrs={'class': 'input100', 'placeholder': 'Confirmez le mot de passe'})
     )
 
     class Meta:
         model = User
         fields = ['last_name', 'first_name', 'email', 'phone_number', 'profession', 'interest', 'password', 'confirm_password', 'photo']
-        widgets = {
-            'last_name': forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Nom'}),
-            'first_name': forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Prénom'}),
-            'email': forms.EmailInput(attrs={'class': 'input100', 'placeholder': 'Email'}),
-            'phone_number': forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Numéro de téléphone'}),
-            'profession': forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Profession'}),
-            'interest': forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Intérêt'}),
-            'photo': forms.FileInput(attrs={'class': 'input100'}),
-        }
 
     def clean_email(self):
         email = self.cleaned_data.get('email')

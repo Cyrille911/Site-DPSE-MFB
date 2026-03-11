@@ -17,7 +17,7 @@ User = get_user_model()
 # Modèle PlanAction (inchangé)
 class PlanAction(models.Model):
     id = models.AutoField(primary_key=True)
-    titre = models.CharField(max_length=255)
+    titre = models.CharField(max_length=500)
     impact = models.TextField()
     annee_debut = models.PositiveIntegerField(default=2025)
     horizon = models.PositiveIntegerField()
@@ -75,11 +75,15 @@ class PlanAction(models.Model):
     def __str__(self):
         return f"Plan d'actions {self.reference} : {self.titre}"
 
+    class Meta:
+        verbose_name = "Plan d'actions"
+        verbose_name_plural = "Plans d'actions"
+
 # Modèle Effet (inchangé)
 class Effet(models.Model):
     id = models.AutoField(primary_key=True)
     plan = models.ForeignKey(PlanAction, related_name="plan_effet", on_delete=models.CASCADE)
-    titre = models.CharField(max_length=255)
+    titre = models.CharField(max_length=500)
     couts = models.JSONField(default=list)
     nombre_produits = models.PositiveIntegerField(default=0)
     nombre_actions = models.PositiveIntegerField(default=0)
@@ -140,11 +144,15 @@ class Effet(models.Model):
     def __str__(self):
         return f"Effet {self.reference} : {self.titre}"
 
+    class Meta:
+        verbose_name = "Effet"
+        verbose_name_plural = "Effets"
+
 # Modèle Produit (inchangé)
 class Produit(models.Model):
     id = models.AutoField(primary_key=True)
     effet = models.ForeignKey(Effet, related_name="effet_produit", on_delete=models.CASCADE)
-    titre = models.CharField(max_length=255)
+    titre = models.CharField(max_length=500)
     couts = models.JSONField(default=list)
     nombre_actions = models.PositiveIntegerField(default=0)
     nombre_activites = models.PositiveIntegerField(default=0)
@@ -203,11 +211,15 @@ class Produit(models.Model):
     def __str__(self):
         return f"Produit {self.reference} : {self.titre}"
 
+    class Meta:
+        verbose_name = "Produit"
+        verbose_name_plural = "Produits"
+
 # Modèle Action (inchangé)
 class Action(models.Model):
     id = models.AutoField(primary_key=True)
     produit = models.ForeignKey(Produit, related_name="produit_action", on_delete=models.CASCADE)
-    titre = models.CharField(max_length=255)
+    titre = models.CharField(max_length=500)
     couts = models.JSONField(default=list)
     nombre_activites = models.PositiveIntegerField(default=0)
     reference = models.CharField(max_length=50, blank=True)
@@ -262,6 +274,10 @@ class Action(models.Model):
 
     def __str__(self):
         return f"Action {self.reference} : {self.titre}"
+
+    class Meta:
+        verbose_name = "Action"
+        verbose_name_plural = "Actions"
 
 # Modèle Activite
 # File d'attente temporaire pour regrouper les notifications
@@ -375,7 +391,7 @@ class NotificationQueue:
 class Activite(models.Model):
     id = models.AutoField(primary_key=True)
     reference = models.CharField(max_length=50, blank=True)
-    titre = models.CharField(max_length=255)
+    titre = models.CharField(max_length=500)
     type = models.CharField(
         max_length=50,
         choices=[
@@ -385,6 +401,20 @@ class Activite(models.Model):
             ('Texte', 'Texte'),
             ('Activité ordinaire', 'Activité ordinaire')
         ]
+    )
+    structure = models.CharField(
+        max_length=50,
+        choices=[
+            ('DGI', 'DGI'),
+            ('DGD', 'DGD'),
+            ('DGTCP', 'DGTCP'),
+            ('DGMP', 'DGMP'),
+            ('DGF', 'DGF'),
+            ('DGBF', 'DGBF'),
+            ('DGE', 'DGE'),
+        ],
+        default='',
+        blank=True,
     )
     
     action = models.ForeignKey('Action', related_name="action_activite", on_delete=models.CASCADE)
@@ -403,8 +433,8 @@ class Activite(models.Model):
         related_name='responsable_activites'
     )
     
-    indicateur_label = models.CharField(max_length=255)
-    indicateur_reference = models.CharField(max_length=255)
+    indicateur_label = models.CharField(max_length=500)
+    indicateur_reference = models.CharField(max_length=500)
     
     cibles = models.JSONField(default=list)
     realisation = models.JSONField(default=list)
@@ -846,4 +876,6 @@ class ActiviteLog(models.Model):
         return f"Log pour {self.activite.titre} par {self.user.username if self.user else 'Inconnu'} - {self.timestamp}"
 
     class Meta:
+        verbose_name = "Journal d'activité"
+        verbose_name_plural = "Journaux d'activités"
         ordering = ['-timestamp']

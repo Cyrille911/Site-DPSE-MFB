@@ -1481,10 +1481,11 @@
 
   /* Content styles */
   .container-carousel {
-    position: relative;
-    z-index: 1000000;
+    position: absolute;
+    inset: 0;
+    z-index: 50;
     width: 100%;
-    height: 50vh; /* Hauteur pleine page */
+    height: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1492,14 +1493,13 @@
     text-align: center;
     color: white;
     transition: background-color 0.3s ease, opacity 0.3s ease;
-    /* Animation fluide */
-
+    pointer-events: none;
   }
   .content-carousel-text{
-    /* Supprimé position absolute car le parent utilise flexbox */
     transform: none;
-    max-width: 800px; /* Largeur maximale pour meilleure lisibilité */
-    padding: 0 20px; /* Padding pour les mobiles */
+    max-width: 800px;
+    padding: 0 20px;
+    pointer-events: auto;
   }
 
   .content-carousel {
@@ -1593,6 +1593,22 @@
 
   .hero {
     transition: background-color 0.5s ease;
+  }
+
+  #hero.hero {
+    padding: 0 !important;
+  }
+
+  #hero.section {
+    padding: 0 !important;
+  }
+
+  #hero.hero.section {
+    padding: 0 !important;
+  }
+
+  section#hero {
+    padding: 0 !important;
   }
 
   .hero:hover {
