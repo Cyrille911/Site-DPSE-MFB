@@ -109,10 +109,15 @@ WSGI_APPLICATION = 'dpse.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+# Toujours utiliser MySQL
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.environ.get('DB_NAME', 'dpse'),
+        'USER': os.environ.get('DB_USER', 'dpse_user'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'dpse_password_strong_2024'),
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
+        'PORT': os.environ.get('DB_PORT', '3306'),
     }
 }
 

@@ -18,7 +18,7 @@
     </div>
 
     <div class="container-carousel">
-      <div class="content-carousel">
+      <div class="content-carousel-text">
         <h2 class="title">Direction de la Planification et du Suivi Evaluation</h2>
         <p class="description">Planifier, suivre, évaluer : agir mieux !</p>
       </div>
@@ -1482,11 +1482,9 @@
   /* Content styles */
   .container-carousel {
     position: relative;
-    z-index: 30;
-    height: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 1rem;
+    z-index: 1000000;
+    width: 100%;
+    height: 50vh; /* Hauteur pleine page */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1495,6 +1493,13 @@
     color: white;
     transition: background-color 0.3s ease, opacity 0.3s ease;
     /* Animation fluide */
+
+  }
+  .content-carousel-text{
+    /* Supprimé position absolute car le parent utilise flexbox */
+    transform: none;
+    max-width: 800px; /* Largeur maximale pour meilleure lisibilité */
+    padding: 0 20px; /* Padding pour les mobiles */
   }
 
   .content-carousel {
