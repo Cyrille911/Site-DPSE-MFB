@@ -41,7 +41,7 @@ def mfb_structures(request):
 
 ## Accueil
 def accueil(request):
-    return render(request, 'general/accueil.html', {})
+    return redirect('connexion_membre')
 
 ## Glossaire
 def glossaire(request):
