@@ -30,7 +30,7 @@ class InscriptionMembreForm(forms.ModelForm):
         widget=forms.Select(attrs={'class': 'input100'})
     )
     entity = forms.CharField(
-        label="Entité",
+        label="Structure",
         max_length=50,
         required=False,
         widget=forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Entité'})
@@ -225,7 +225,7 @@ class ProfileUpdateForm(forms.ModelForm):
         widget=forms.Select(attrs={'class': 'input100'})
     )
     entity = forms.CharField(
-        label="Entité",
+        label="Structure",
         max_length=100,
         required=False,
         widget=forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Entité'})
