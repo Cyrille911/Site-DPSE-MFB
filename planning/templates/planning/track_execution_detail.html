@@ -110,6 +110,8 @@ Traitement des Activités - {{ plan.titre }} - {{ annee }}
                                                         data-last-modified-by="{{ activite.last_modified_by }}">
                                                         Soumettre
                                                 </button>
+                                                <button type="button" class="btn btn-info btn-sm preuve-btn mt-1"
+                                                        data-activite-id="{{ activite.id }}" data-annee="{{ annee }}">Preuves</button>
                                             </td>
                                         </tr>
                                     {% endfor %}
@@ -253,6 +255,9 @@ document.addEventListener('DOMContentLoaded', function () {
     checkEntitySections();
 });
 </script>
+
+{% include "planning/preuves_modal.html" %}
+
 {% endblock %}
 
 {% block style %}

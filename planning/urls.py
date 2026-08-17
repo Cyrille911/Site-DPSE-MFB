@@ -13,4 +13,10 @@ urlpatterns = [
     path('pao_list/<int:plan_id>/', views.pao_list, name='pao_list'),
     path('operational_plan_matrix/<int:plan_id>/<int:annee>/', views.operational_plan_matrix, name='operational_plan_matrix'),
     path('hierarchy_review/<int:plan_id>/', views.hierarchy_review, name='hierarchy_review'),
+    path('preuves/liste/<int:activite_id>/', views.preuve_liste, name='preuve_liste'),
+    path('preuves/ajouter/<int:activite_id>/', views.preuve_ajouter, name='preuve_ajouter'),
+    path('preuves/supprimer/<int:preuve_id>/', views.preuve_supprimer, name='preuve_supprimer'),
+    path('rapport/generer/<int:plan_id>/', views.generer_rapport, name='generer_rapport'),
+    path('rapport/liste/<int:plan_id>/', views.rapport_liste, name='rapport_liste'),
+    path('rapport/telecharger/<int:rapport_id>/', views.rapport_telecharger, name='rapport_telecharger'),
 ]

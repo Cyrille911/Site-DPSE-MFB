@@ -6,12 +6,21 @@ from django.contrib.auth import get_user_model
 from datetime import datetime, timedelta
 from django.http import HttpRequest
 import logging
+import os
 from threading import Timer
 from collections import defaultdict
 
 logger = logging.getLogger(__name__)
 
 User = get_user_model()
+
+
+def preuve_directory_path(instance, filename):
+    return os.path.join('preuves', str(instance.annee), str(instance.activite_id or 'tmp'), filename)
+
+
+def rapport_directory_path(instance, filename):
+    return os.path.join('rapports', str(instance.annee), str(instance.trimestre), filename)
 
 
 # Modèle PlanAction (inchangé)
@@ -879,3 +888,80 @@ class ActiviteLog(models.Model):
         verbose_name = "Journal d'activité"
         verbose_name_plural = "Journaux d'activités"
         ordering = ['-timestamp']
+
+
+class PreuveRealisation(models.Model):
+    TYPE_CHOICES = [
+        ('document', 'Document'),
+        ('lien', 'Lien'),
+        ('image', 'Image'),
+        ('video', 'Vidéo'),
+    ]
+
+    activite = models.ForeignKey('Activite', on_delete=models.CASCADE, related_name='preuves')
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    fichier = models.FileField(upload_to=preuve_directory_path, null=True, blank=True)
+    url = models.URLField(null=True, blank=True)
+    description = models.TextField(blank=True, null=True)
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='preuves_uploaded'
+    )
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    annee = models.PositiveIntegerField()
+
+    class Meta:
+        ordering = ['-uploaded_at']
+        verbose_name = "Preuve de réalisation"
+        verbose_name_plural = "Preuves de réalisation"
+
+    def __str__(self):
+        return f"{self.get_type_display()} pour {self.activite.reference}"
+
+    def clean(self):
+        super().clean()
+        if self.activite_id and PreuveRealisation.objects.filter(activite=self.activite).exclude(pk=self.pk or 0).count() >= 10:
+            raise ValidationError("Une activité ne peut pas avoir plus de 10 preuves.")
+        if self.type == 'lien':
+            if not self.url:
+                raise ValidationError("Une preuve de type 'lien' doit avoir une URL.")
+            self.fichier = None
+        else:
+            if not self.fichier:
+                raise ValidationError("Une preuve de type 'document', 'image' ou 'vidéo' doit avoir un fichier.")
+            self.url = None
+
+
+class QuarterlyReport(models.Model):
+    TRIMESTRE_CHOICES = [
+        ('T1', 'T1'),
+        ('T2', 'T2'),
+        ('T3', 'T3'),
+        ('T4', 'T4'),
+    ]
+
+    plan = models.ForeignKey(PlanAction, on_delete=models.CASCADE, related_name='rapports')
+    annee = models.PositiveIntegerField()
+    trimestre = models.CharField(max_length=2, choices=TRIMESTRE_CHOICES)
+    fichier = models.FileField(upload_to=rapport_directory_path)
+    generated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='rapports_generes'
+    )
+    generated_at = models.DateTimeField(auto_now_add=True)
+    recipients_emails = models.JSONField(default=list, blank=True)
+
+    class Meta:
+        ordering = ['-generated_at']
+        verbose_name = "Rapport trimestriel"
+        verbose_name_plural = "Rapports trimestriels"
+        unique_together = ['plan', 'annee', 'trimestre']
+
+    def __str__(self):
+        return f"Rapport {self.trimestre} {self.annee} - {self.plan.reference}"

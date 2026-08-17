@@ -1,6 +1,8 @@
 # Modules Django
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import PlanAction, Effet, Produit, Action, Activite, ActiviteLog
+from .models import PlanAction, Effet, Produit, Action, Activite, ActiviteLog, PreuveRealisation, QuarterlyReport
+from django.core.exceptions import ValidationError
+from .tasks import generate_quarterly_report
 from django.http import JsonResponse
 from django.db.models import Q
 from django.contrib import messages
@@ -1130,3 +1132,166 @@ def hierarchy_review(request, plan_id):
         'paos': paos,
     }
     return render(request, 'planning/hierarchy_review.html', context)
+
+
+def _can_manage_preuves(user, activite):
+    if not user.is_authenticated:
+        return False
+    if user.role in ['point_focal', 'responsable']:
+        return activite.point_focal == user or activite.responsable == user
+    return False
+
+
+def preuve_liste(request, activite_id):
+    activite = get_object_or_404(Activite, id=activite_id)
+    preuves = activite.preuves.all()
+    data = []
+    for p in preuves:
+        data.append({
+            'id': p.id,
+            'type': p.type,
+            'type_display': p.get_type_display(),
+            'fichier_url': p.fichier.url if p.fichier else None,
+            'url': p.url,
+            'description': p.description or '',
+            'uploaded_by': f"{p.uploaded_by.first_name} {p.uploaded_by.last_name}" if p.uploaded_by else 'Inconnu',
+            'can_delete': _can_manage_preuves(request.user, activite),
+        })
+    return JsonResponse({'success': True, 'preuves': data})
+
+
+def preuve_ajouter(request, activite_id):
+    activite = get_object_or_404(Activite, id=activite_id)
+    if not _can_manage_preuves(request.user, activite):
+        return JsonResponse({'success': False, 'message': "Vous n'avez pas la permission d'ajouter une preuve."}, status=403)
+
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Méthode non autorisée.'}, status=405)
+
+    type_preuve = request.POST.get('type')
+    annee = request.POST.get('annee')
+    description = request.POST.get('description', '').strip()
+
+    if type_preuve not in ['document', 'lien', 'image', 'video']:
+        return JsonResponse({'success': False, 'message': 'Type de preuve invalide.'}, status=400)
+
+    try:
+        annee = int(annee)
+    except (TypeError, ValueError):
+        return JsonResponse({'success': False, 'message': 'Année invalide.'}, status=400)
+
+    fichier = request.FILES.get('fichier')
+    url = request.POST.get('url', '').strip()
+
+    if activite.preuves.count() >= 10:
+        return JsonResponse({'success': False, 'message': 'Cette activité a déjà atteint la limite de 10 preuves.'}, status=400)
+
+    try:
+        preuve = PreuveRealisation(
+            activite=activite,
+            type=type_preuve,
+            annee=annee,
+            description=description,
+            uploaded_by=request.user,
+        )
+        if type_preuve == 'lien':
+            preuve.url = url
+            preuve.fichier = None
+        else:
+            preuve.fichier = fichier
+            preuve.url = ''
+        preuve.full_clean()
+        preuve.save()
+    except ValidationError as e:
+        return JsonResponse({'success': False, 'message': ' '.join(e.messages)}, status=400)
+    except Exception as e:
+        logger.error(f"Erreur ajout preuve : {e}", exc_info=True)
+        return JsonResponse({'success': False, 'message': 'Erreur lors de la sauvegarde.'}, status=500)
+
+    return JsonResponse({
+        'success': True,
+        'message': 'Preuve ajoutée.',
+        'preuve': {
+            'id': preuve.id,
+            'type': preuve.type,
+            'type_display': preuve.get_type_display(),
+            'fichier_url': preuve.fichier.url if preuve.fichier else None,
+            'url': preuve.url,
+            'description': preuve.description or '',
+            'uploaded_by': f"{preuve.uploaded_by.first_name} {preuve.uploaded_by.last_name}" if preuve.uploaded_by else 'Inconnu',
+        }
+    })
+
+
+def preuve_supprimer(request, preuve_id):
+    preuve = get_object_or_404(PreuveRealisation, id=preuve_id)
+    if not _can_manage_preuves(request.user, preuve.activite):
+        return JsonResponse({'success': False, 'message': "Vous n'avez pas la permission de supprimer cette preuve."}, status=403)
+
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Méthode non autorisée.'}, status=405)
+
+    try:
+        if preuve.fichier:
+            preuve.fichier.delete(save=False)
+        preuve.delete()
+    except Exception as e:
+        logger.error(f"Erreur suppression preuve : {e}", exc_info=True)
+        return JsonResponse({'success': False, 'message': 'Erreur lors de la suppression.'}, status=500)
+
+    return JsonResponse({'success': True, 'message': 'Preuve supprimée.'})
+
+
+def _annees_trimestres_for_plan(plan):
+    annees = [plan.annee_debut + i for i in range(plan.horizon)]
+    return annees
+
+
+def generer_rapport(request, plan_id):
+    plan = get_object_or_404(PlanAction, id=plan_id)
+    annees = _annees_trimestres_for_plan(plan)
+    trimestres = ['T1', 'T2', 'T3', 'T4']
+
+    if not request.user.is_authenticated:
+        return render(request, 'planning/access_denied.html')
+
+    if request.method == 'POST':
+        try:
+            annee = int(request.POST.get('annee'))
+            trimestre = request.POST.get('trimestre')
+            if annee not in annees or trimestre not in trimestres:
+                messages.error(request, "Année ou trimestre invalide.")
+                return redirect('generer_rapport', plan_id=plan.id)
+
+            report_id = generate_quarterly_report(plan_id, annee, trimestre, request.user.id)
+            messages.success(request, f"Rapport {trimestre} {annee} généré et envoyé aux acteurs du plan.")
+            return redirect('rapport_liste', plan_id=plan.id)
+        except Exception as e:
+            logger.error(f"Erreur lancement rapport : {e}", exc_info=True)
+            messages.error(request, "Erreur lors du lancement de la génération.")
+
+    context = {
+        'plan': plan,
+        'annees': annees,
+        'trimestres': trimestres,
+    }
+    return render(request, 'planning/generer_rapport.html', context)
+
+
+def rapport_liste(request, plan_id):
+    plan = get_object_or_404(PlanAction, id=plan_id)
+    rapports = plan.rapports.all()
+    return render(request, 'planning/rapport_liste.html', {
+        'plan': plan,
+        'rapports': rapports,
+    })
+
+
+def rapport_telecharger(request, rapport_id):
+    rapport = get_object_or_404(QuarterlyReport, id=rapport_id)
+    if not request.user.is_authenticated:
+        return render(request, 'planning/access_denied.html')
+    if not rapport.fichier:
+        messages.error(request, "Aucun fichier associé.")
+        return redirect('rapport_liste', plan_id=rapport.plan.id)
+    return redirect(rapport.fichier.url)

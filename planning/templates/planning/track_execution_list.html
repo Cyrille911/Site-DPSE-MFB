@@ -49,6 +49,8 @@ Suivi des Plans d'Actions Opérationnels (PAO) - {{ plan.titre }}
 
     <!-- Boutons de navigation -->
     <div class="text-center mt-5 animate-fade-in">
+        <a href="{% url 'generer_rapport' plan.id %}" class="btn btn-success btn-lg px-5 py-3 fw-bold me-3">Générer un rapport</a>
+        <a href="{% url 'rapport_liste' plan.id %}" class="btn btn-primary btn-lg px-5 py-3 fw-bold me-3">Rapports générés</a>
         <a href="{% url 'plan_action_detail' plan.id %}" class="btn btn-secondary btn-lg px-5 py-3 fw-bold">Retour au Plan Stratégique</a>
     </div>
 </div>
