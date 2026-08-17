@@ -380,7 +380,7 @@ class NotificationQueue:
             send_mail(
                 subject=subject,
                 message=message,
-                from_email='cyrilletaha01@gmail.com',
+                from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=list(all_recipients),  # Utiliser la liste mise à jour
                 fail_silently=True
             )
@@ -532,7 +532,7 @@ class Activite(models.Model):
             send_mail(
                 subject=subject,
                 message=message,
-                from_email='cyrilletaha01@gmail.com',
+                from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=recipients,
                 fail_silently=True
             )
