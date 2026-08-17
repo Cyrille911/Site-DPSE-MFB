@@ -517,7 +517,7 @@ class Activite(models.Model):
             if self.responsable and self.responsable.email:
                 recipients.append(self.responsable.email)
             if self.point_focal and self.point_focal.email:
-                recipients.add(self.point_focal.email)
+                recipients.append(self.point_focal.email)
             message = (
                 f"Un suiveur-évaluateur {user.email} a proposé des modifications pour l'activité {self.reference}.\n"
                 f"Titre : {self.titre}\n"

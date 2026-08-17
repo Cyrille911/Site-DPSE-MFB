@@ -38,3 +38,4 @@ xlsxwriter==3.2.9
 
 mysqlclient==2.2.4
 whitenoise==6.6.0
+python-dotenv==1.0.1
