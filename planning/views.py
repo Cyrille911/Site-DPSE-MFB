@@ -6,6 +6,7 @@ from .tasks import generate_quarterly_report
 from django.http import JsonResponse
 from django.db.models import Q
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from .forms import PaoStatusForm
 from django.db import transaction
 import logging
@@ -617,6 +618,7 @@ def pao_list(request, plan_id):
         'entity': entity
     })
 
+@login_required(login_url='connexion_membre')
 def manage_activities(request, plan_id, entity):
     plan = get_object_or_404(PlanAction, id=plan_id)
     
@@ -783,6 +785,7 @@ def manage_activities(request, plan_id, entity):
     }
     return render(request, 'planning/manage_activities.html', context)
 
+@login_required(login_url='connexion_membre')
 def track_execution_list(request, plan_id):
     plan = get_object_or_404(PlanAction, id=plan_id)
     is_se = request.user.groups.filter(name='SuiveurEvaluateur').exists()
@@ -804,6 +807,7 @@ def track_execution_list(request, plan_id):
     }
     return render(request, 'planning/track_execution_list.html', context)
 
+@login_required(login_url='connexion_membre')
 def track_execution_detail(request, plan_id):
     plan = get_object_or_404(PlanAction, id=plan_id)
     
