@@ -86,11 +86,13 @@ Gestion des Activités - {{ plan.titre }} - {{ annee }}
                                 <td>{{ activite.pending_status }}</td>
                                 <td>{{ activite.model_matrix_status }}</td>
                                 <td>
-                                    <button class="btn btn-success action-btn"
-                                            data-last-modified-by="{{ activite.last_modified_by }}"
-                                            data-last-is-responsable="{{ activite.last_is_responsable|lower }}">✔</button>
-                                    <button type="button" class="preuve-btn"
-                                            data-activite-id="{{ activite.id }}" data-annee="{{ annee }}">Preuves</button>
+                                    <div class="d-flex gap-2 align-items-center flex-nowrap">
+                                        <button class="btn btn-success action-btn"
+                                                data-last-modified-by="{{ activite.last_modified_by }}"
+                                                data-last-is-responsable="{{ activite.last_is_responsable|lower }}">✔</button>
+                                        <button type="button" class="preuve-btn"
+                                                data-activite-id="{{ activite.id }}" data-annee="{{ annee }}">Preuves</button>
+                                    </div>
                                 </td>
                             </tr>
                         {% endfor %}

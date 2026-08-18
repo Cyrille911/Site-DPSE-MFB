@@ -102,16 +102,18 @@ Traitement des Activités - {{ plan.titre }} - {{ annee }}
                                                 </select>
                                             </td>
                                             <td>
-                                                <button class="btn btn-success action-btn" 
-                                                        data-model-status="{{ activite.model_status }}" 
-                                                        data-model-commentaire-se="{{ activite.model_commentaire_se }}"
-                                                        data-pending-status="{{ activite.pending_status }}"
-                                                        data-pending-commentaire-se="{{ activite.pending_commentaire_se }}"
-                                                        data-last-modified-by="{{ activite.last_modified_by }}">
-                                                        Soumettre
-                                                </button>
-                                                <button type="button" class="preuve-btn"
-                                                        data-activite-id="{{ activite.id }}" data-annee="{{ annee }}">Preuves</button>
+                                                <div class="d-flex gap-2 align-items-center flex-nowrap">
+                                                    <button class="btn btn-success action-btn" 
+                                                            data-model-status="{{ activite.model_status }}" 
+                                                            data-model-commentaire-se="{{ activite.model_commentaire_se }}"
+                                                            data-pending-status="{{ activite.pending_status }}"
+                                                            data-pending-commentaire-se="{{ activite.pending_commentaire_se }}"
+                                                            data-last-modified-by="{{ activite.last_modified_by }}">
+                                                            Soumettre
+                                                    </button>
+                                                    <button type="button" class="preuve-btn"
+                                                            data-activite-id="{{ activite.id }}" data-annee="{{ annee }}">Preuves</button>
+                                                </div>
                                             </td>
                                         </tr>
                                     {% endfor %}
