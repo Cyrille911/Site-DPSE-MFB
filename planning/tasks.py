@@ -8,7 +8,6 @@ from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.core.mail import EmailMessage
 from docx import Document
-from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import parse_xml
 from docx.oxml.ns import nsdecls, qn
@@ -51,6 +50,7 @@ CIV_BLACK = RGBColor(0x00, 0x00, 0x00)
 
 def _build_report_doc(plan, annee, trimestre, activites_trimestre):
     annee_index = annee - plan.annee_debut
+    today = datetime.now().strftime('%d/%m/%Y')
 
     doc = Document()
 
@@ -60,74 +60,52 @@ def _build_report_doc(plan, annee, trimestre, activites_trimestre):
     style.font.size = Pt(11)
     style._element.rPr.rFonts.set(qn('w:ascii'), 'Arial')
     style._element.rPr.rFonts.set(qn('w:hAnsi'), 'Arial')
+    # Justification par défaut
+    style.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+    style.paragraph_format.space_after = Pt(6)
 
     section = doc.sections[0]
     section.page_height = Cm(29.7)
     section.page_width = Cm(21.0)
-    section.left_margin = Cm(2.0)
+    section.left_margin = Cm(2.5)
     section.right_margin = Cm(2.0)
-    section.top_margin = Cm(1.5)
-    section.bottom_margin = Cm(1.5)
+    section.top_margin = Cm(2.0)
+    section.bottom_margin = Cm(2.0)
 
-    # En-tête : drapeau tricolore + éléments institutionnels
+    # En-tête sobre
     header = section.header
-    header_table = header.add_table(rows=1, cols=3, width=Inches(6.5))
-    header_table.autofit = False
-    for i, width in enumerate([2.17, 2.17, 2.17]):
-        header_table.columns[i].width = Inches(width)
-    flag_cells = header_table.rows[0].cells
-    _set_cell_shading(flag_cells[0], 'FF9A00')
-    _set_cell_shading(flag_cells[1], 'FFFFFF')
-    _set_cell_shading(flag_cells[2], '009639')
-    for cell in flag_cells:
-        p = cell.paragraphs[0]
-        p.add_run(' ')
-
-    header_para = header.add_paragraph()
-    header_para.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    _set_run_font(
-        header_para.add_run('Document officiel - DPSE MFB'),
-        size=8,
-        color=RGBColor(0x66, 0x66, 0x66)
-    )
+    h1 = header.add_paragraph()
+    h1.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    _set_run_font(h1.add_run('RÉPUBLIQUE DE CÔTE D\'IVOIRE'), size=9, bold=True)
+    h2 = header.add_paragraph()
+    h2.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    _set_run_font(h2.add_run('Union - Discipline - Travail'), size=8, italic=True)
+    h3 = header.add_paragraph()
+    h3.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    _set_run_font(h3.add_run('Ministère des Finances et du Budget - DPSE MFB'), size=8)
 
     # Pied de page
     footer = section.footer
     footer_para = footer.paragraphs[0]
     footer_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
     _set_run_font(
-        footer_para.add_run(f'Rapport généré le {datetime.now().strftime("%d/%m/%Y")}'),
+        footer_para.add_run(f'Document confidentiel - Généré le {today}'),
         size=8,
         color=RGBColor(0x66, 0x66, 0x66)
     )
 
-    # Page de garde institutionnelle
+    # Page de garde
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    _set_run_font(p.add_run('RÉPUBLIQUE DE CÔTE D\'IVOIRE'), size=18, bold=True, color=CIV_GREEN)
+    _set_run_font(p.add_run('RÉPUBLIQUE DE CÔTE D\'IVOIRE'), size=16, bold=True)
 
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    _set_run_font(p.add_run('Union - Discipline - Travail'), size=11, italic=True, color=CIV_ORANGE)
-
-    # Bande tricolore décorative sous le titre
-    band = doc.add_table(rows=1, cols=3)
-    band.width = Inches(6.0)
-    band.alignment = WD_TABLE_ALIGNMENT.CENTER
-    band.autofit = False
-    for i, width in enumerate([2.0, 2.0, 2.0]):
-        band.columns[i].width = Inches(width)
-    band_cells = band.rows[0].cells
-    _set_cell_shading(band_cells[0], 'FF9A00')
-    _set_cell_shading(band_cells[1], 'FFFFFF')
-    _set_cell_shading(band_cells[2], '009639')
-    for cell in band_cells:
-        p = cell.paragraphs[0]
-        p.add_run(' ')
+    _set_run_font(p.add_run('Union - Discipline - Travail'), size=11, italic=True)
 
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    _set_run_font(p.add_run('MINISTÈRE DES FINANCES ET DU BUDGET'), size=14, bold=True, color=CIV_ORANGE)
+    _set_run_font(p.add_run('MINISTÈRE DES FINANCES ET DU BUDGET'), size=13, bold=True)
 
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -136,17 +114,45 @@ def _build_report_doc(plan, annee, trimestre, activites_trimestre):
     for _ in range(4):
         doc.add_paragraph()
 
-    # Titre principal du document
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    _set_run_font(p.add_run(f'RAPPORT TRIMESTRIEL {trimestre} {annee}'), size=20, bold=True, color=CIV_GREEN)
+    _set_run_font(p.add_run(f'RAPPORT TRIMESTRIEL {trimestre} {annee}'), size=18, bold=True)
 
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    _set_run_font(p.add_run(f'Plan d\'actions : {plan.titre} ({plan.reference})'), size=13, bold=True)
+    _set_run_font(p.add_run(f'Plan d\'actions : {plan.titre} ({plan.reference})'), size=12, bold=True)
 
-    # 1. Résumé global
-    h = doc.add_heading('1. Résumé global', level=1)
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    _set_run_font(p.add_run(f'Année {annee} - {trimestre}'), size=12)
+
+    for _ in range(2):
+        doc.add_paragraph()
+
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    _set_run_font(p.add_run(f'Abidjan, le {today}'), size=11, italic=True)
+
+    # Section I. Introduction
+    h = doc.add_heading('I. INTRODUCTION', level=1)
+    _set_run_font(h.runs[0], size=14, bold=True, color=CIV_GREEN)
+
+    p = doc.add_paragraph()
+    p.add_run(
+        f'Le présent rapport a été élaboré dans le cadre du dispositif de suivi-évaluation des plans d\'actions opérationnels du Ministère des Finances et du Budget. Il porte sur le {trimestre} de l\'année {annee} du plan d\'actions {plan.reference} intitulé « {plan.titre} ». Son objectif est de rendre compte, de manière factuelle et circonstanciée, de l\'état d\'avancement des activités programmées au cours de la période, d\'apprécier leur coût de mise en œuvre et de formuler, le cas échéant, des observations utiles à la poursuite des travaux. Ce document s\'adresse à l\'ensemble des parties prenantes impliquées dans la mise en œuvre, le suivi et la validation desdites activités.'
+    )
+
+    # Section II. Contexte
+    h = doc.add_heading('II. CONTEXTE DE LA PÉRIODE', level=1)
+    _set_run_font(h.runs[0], size=14, bold=True, color=CIV_GREEN)
+
+    p = doc.add_paragraph()
+    p.add_run(
+        f'Le plan d\'actions {plan.reference} couvre un horizon de {plan.horizon} ans, à compter de l\'année {plan.annee_debut}. Pour l\'année {annee}, le {trimestre} constitue une période déterminante pour le lancement et le suivi des activités prioritaires. Les dispositions retenues pour la période visent à concourir aux effets escomptés du plan, notamment {plan.impact or "l\'amélioration de la gestion des finances publiques"}.'
+    )
+
+    # Section III. Etat d'avancement
+    h = doc.add_heading('III. ÉTAT D\'AVANCEMENT DES ACTIVITÉS', level=1)
     _set_run_font(h.runs[0], size=14, bold=True, color=CIV_GREEN)
 
     total = len(activites_trimestre)
@@ -156,53 +162,16 @@ def _build_report_doc(plan, annee, trimestre, activites_trimestre):
         par_statut[s] = par_statut.get(s, 0) + 1
 
     p = doc.add_paragraph()
-    _set_run_font(
-        p.add_run(f'Nombre d\'activités concernées par {trimestre} : {total}'),
-        bold=True
-    )
-    for s, c in par_statut.items():
-        p = doc.add_paragraph(style='List Bullet')
-        _set_run_font(p.add_run(f'{s} : {c}'))
+    if total == 0:
+        p.add_run(f'Pour le {trimestre} {annee}, aucune activité n\'a été programmée dans le plan d\'actions {plan.reference}.')
+    else:
+        p.add_run(f'Pour le {trimestre} {annee}, un total de {total} activité{"s" if total > 1 else ""} {"ont été" if total > 1 else "a été"} programmée{"s" if total > 1 else ""} au titre du plan d\'actions {plan.reference}. L\'analyse du niveau d\'avancement fait ressortir les éléments suivants :')
+        for s, c in par_statut.items():
+            p = doc.add_paragraph(style='List Bullet')
+            p.add_run(f'{c} activité{"s" if c > 1 else ""} au statut « {s} » ;')
 
-    # 2. Synthèse financière
-    h = doc.add_heading('2. Synthèse financière', level=1)
-    _set_run_font(h.runs[0], size=14, bold=True, color=CIV_GREEN)
-
-    total_cout = sum(float(a.couts[annee_index] or 0) for a in activites_trimestre if a.couts and len(a.couts) > annee_index)
     p = doc.add_paragraph()
-    _set_run_font(
-        p.add_run(f'Coût total des activités du trimestre : {total_cout:,.2f}'),
-        bold=True
-    )
-
-    table = doc.add_table(rows=1, cols=3)
-    table.style = 'Table Grid'
-    hdr = table.rows[0].cells
-    hdr[0].text = 'Structure'
-    hdr[1].text = 'Coût'
-    hdr[2].text = 'Activités'
-    for cell in hdr:
-        _set_cell_shading(cell, '009639')
-        for r in cell.paragraphs[0].runs:
-            _set_run_font(r, bold=True, color=CIV_WHITE)
-
-    by_entity = {}
-    for a in activites_trimestre:
-        e = (a.point_focal.entity if a.point_focal and getattr(a.point_focal, 'entity', None) else
-             a.responsable.entity if a.responsable and getattr(a.responsable, 'entity', None) else 'Sans entité')
-        c = by_entity.setdefault(e, {'cout': 0.0, 'count': 0})
-        c['count'] += 1
-        c['cout'] += float(a.couts[annee_index] or 0) if a.couts and len(a.couts) > annee_index else 0.0
-
-    for e, c in sorted(by_entity.items()):
-        row = table.add_row().cells
-        row[0].text = e
-        row[1].text = f"{c['cout']:,.2f}"
-        row[2].text = str(c['count'])
-
-    # 3. Activités du trimestre
-    h = doc.add_heading('3. Activités du trimestre', level=1)
-    _set_run_font(h.runs[0], size=14, bold=True, color=CIV_GREEN)
+    p.add_run('L\'examen des activités conduites durant la période permet de relever les éléments figurant dans le tableau ci-après :')
 
     table = doc.add_table(rows=1, cols=7)
     table.style = 'Table Grid'
@@ -210,10 +179,8 @@ def _build_report_doc(plan, annee, trimestre, activites_trimestre):
     cols = ['Référence', 'Titre', 'Structure', 'Cible', 'Réalisation', 'Statut', 'Coût']
     for i, text in enumerate(cols):
         hdr[i].text = text
-        _set_cell_shading(hdr[i], 'FF9A00')
         for r in hdr[i].paragraphs[0].runs:
-            _set_run_font(r, bold=True, color=CIV_BLACK)
-
+            _set_run_font(r, bold=True)
     for a in activites_trimestre:
         e = (a.point_focal.entity if a.point_focal and getattr(a.point_focal, 'entity', None) else
              a.responsable.entity if a.responsable and getattr(a.responsable, 'entity', None) else 'Sans entité')
@@ -225,6 +192,87 @@ def _build_report_doc(plan, annee, trimestre, activites_trimestre):
         row[4].text = a.realisation[annee_index] if a.realisation and len(a.realisation) > annee_index else ''
         row[5].text = a.status[annee_index] if a.status and len(a.status) > annee_index else 'Non entamée'
         row[6].text = f"{float(a.couts[annee_index] or 0):,.2f}" if a.couts and len(a.couts) > annee_index else '0.00'
+
+    if total > 0:
+        p = doc.add_paragraph()
+        p.add_run('En termes de conduite, il convient de souligner les points suivants :')
+        for a in activites_trimestre:
+            e = (a.point_focal.entity if a.point_focal and getattr(a.point_focal, 'entity', None) else
+                 a.responsable.entity if a.responsable and getattr(a.responsable, 'entity', None) else 'Sans entité')
+            st = a.status[annee_index] if a.status and len(a.status) > annee_index else 'Non entamée'
+            cible = a.cibles[annee_index] if a.cibles and len(a.cibles) > annee_index else ''
+            real = a.realisation[annee_index] if a.realisation and len(a.realisation) > annee_index else ''
+            cout = float(a.couts[annee_index] or 0) if a.couts and len(a.couts) > annee_index else 0.0
+            p = doc.add_paragraph(style='List Bullet')
+            p.add_run(f'L\'activité {a.reference or a.titre}, conduite par la structure {e}, poursuit l\'objectif suivant : {a.titre}. La cible fixée était « {cible} » et le niveau de réalisation enregistré s\'élève à « {real} ». Le statut actuel est « {st} », pour un coût de mise en œuvre de {cout:,.2f}.')
+
+    # Section IV. Synthèse financière
+    h = doc.add_heading('IV. SYNTHÈSE FINANCIÈRE', level=1)
+    _set_run_font(h.runs[0], size=14, bold=True, color=CIV_GREEN)
+
+    total_cout = sum(float(a.couts[annee_index] or 0) for a in activites_trimestre if a.couts and len(a.couts) > annee_index)
+    p = doc.add_paragraph()
+    if total_cout:
+        p.add_run(f'La mise en œuvre des activités du {trimestre} {annee} a nécessité un montant total de {total_cout:,.2f}. Ce montant se décompose par structure de la manière suivante :')
+    else:
+        p.add_run(f'Pour le {trimestre} {annee}, aucun coût n\'a été enregistré pour les activités retenues.')
+
+    by_entity = {}
+    for a in activites_trimestre:
+        e = (a.point_focal.entity if a.point_focal and getattr(a.point_focal, 'entity', None) else
+             a.responsable.entity if a.responsable and getattr(a.responsable, 'entity', None) else 'Sans entité')
+        c = by_entity.setdefault(e, {'cout': 0.0, 'count': 0})
+        c['count'] += 1
+        c['cout'] += float(a.couts[annee_index] or 0) if a.couts and len(a.couts) > annee_index else 0.0
+
+    table = doc.add_table(rows=1, cols=3)
+    table.style = 'Table Grid'
+    hdr = table.rows[0].cells
+    hdr[0].text = 'Structure'
+    hdr[1].text = 'Coût'
+    hdr[2].text = 'Activités'
+    for cell in hdr:
+        for r in cell.paragraphs[0].runs:
+            _set_run_font(r, bold=True)
+    for e, c in sorted(by_entity.items()):
+        row = table.add_row().cells
+        row[0].text = e
+        row[1].text = f"{c['cout']:,.2f}"
+        row[2].text = str(c['count'])
+
+    p = doc.add_paragraph()
+    p.add_run('Cette répartition fait apparaître la répartition des efforts financiers entre les structures en charge de la mise en œuvre. Elle constitue un indicateur utile pour apprécier la concentration des moyens et l\'équité de l\'allocation des ressources.')
+
+    # Section V. Constats et recommandations
+    h = doc.add_heading('V. CONSTATS ET RECOMMANDATIONS', level=1)
+    _set_run_font(h.runs[0], size=14, bold=True, color=CIV_GREEN)
+
+    p = doc.add_paragraph()
+    if total == 0:
+        p.add_run(f'Pour le {trimestre} {annee}, aucune activité n\'ayant été programmée dans le plan d\'actions {plan.reference}, il est recommandé de veiller à la planification effective des activités des prochains trimestres afin de garantir la cohérence et la régularité de la mise en œuvre.')
+    else:
+        p.add_run(f'L\'analyse des activités du {trimestre} {annee} fait ressortir un ensemble de tendances. Le nombre d\'activités en cours ou réalisées indique un niveau d\'engagement des structures. Il est recommandé de poursuivre le suivi régulier des activités programmées, de mobiliser les ressources nécessaires à leur achèvement et de rapporter, en temps utile, les difficultés rencontrées. Le respect des échéances trimestrielles et la qualité des données de suivi demeurent des facteurs essentiels pour l\'efficacité du dispositif de pilotage.')
+
+    p = doc.add_paragraph()
+    p.add_run('Afin de renforcer la performance du plan d\'actions, il est proposé :')
+    for rec in [
+        'd\'accorder une attention particulière aux activités en retard et de mettre en œuvre les mesures correctives nécessaires ;',
+        'de veiller à la régularité de la saisie des preuves de réalisation et des éléments justificatifs ;',
+        'de tenir les réunions de revue trimestrielle prévues pour l\'examen des progrès et l\'ajustement des actions si nécessaire ;',
+        'de diffuser, en interne, les présents résultats aux responsables et points focaux concernés.'
+    ]:
+        p = doc.add_paragraph(style='List Bullet')
+        p.add_run(rec)
+
+    # Conclusion
+    h = doc.add_heading('VI. CONCLUSION', level=1)
+    _set_run_font(h.runs[0], size=14, bold=True, color=CIV_GREEN)
+
+    p = doc.add_paragraph()
+    if total == 0:
+        p.add_run(f'En conclusion, le {trimestre} {annee} n\'a enregistré aucune activité au titre du plan d\'actions {plan.reference}. Les prochains trimestres offriront l\'opportunité de rattraper le retard et de déployer effectivement les actions retenues.')
+    else:
+        p.add_run(f'En conclusion, le {trimestre} {annee} a vu la mise en œuvre de {total} activité{"s" if total > 1 else ""} au titre du plan d\'actions {plan.reference}. Les résultats enregistrés, bien qu\'encourageants, appellent à une vigilance soutenue afin de garantir la finalisation des actions en cours et la réalisation des objectifs annuels. Le présent rapport, qui sera régulièrement actualisé, constitue un outil de travail pour le pilotage et l\'orientation des décisions à venir.')
 
     return doc
 
