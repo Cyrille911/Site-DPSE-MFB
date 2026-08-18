@@ -23,7 +23,8 @@ RUN pip install --no-cache-dir -r requirements.txt gunicorn
 COPY . .
 
 # Collecter les fichiers statiques
-RUN python manage.py collectstatic --noinput
+# La vraie SECRET_KEY est fournie à l\exécution via .env
+RUN SECRET_KEY=build-secret python manage.py collectstatic --noinput
 
 # Exposer le port
 EXPOSE 8000
