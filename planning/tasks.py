@@ -8,7 +8,11 @@ from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.core.mail import EmailMessage
 from docx import Document
-from docx.shared import Inches
+from docx.enum.table import WD_TABLE_ALIGNMENT
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.oxml import parse_xml
+from docx.oxml.ns import nsdecls, qn
+from docx.shared import Cm, Inches, Pt, RGBColor
 
 from planning.models import Activite, PlanAction, QuarterlyReport
 
@@ -21,38 +25,166 @@ def check_activity_alerts_task():
 User = get_user_model()
 
 
+def _set_run_font(run, name='Arial', size=11, bold=False, italic=False, color=None):
+    font = run.font
+    font.name = name
+    font.size = Pt(size)
+    font.bold = bold
+    font.italic = italic
+    run._element.rPr.rFonts.set(qn('w:ascii'), name)
+    run._element.rPr.rFonts.set(qn('w:hAnsi'), name)
+    if color:
+        font.color.rgb = color
+
+
+def _set_cell_shading(cell, color_hex):
+    cell._tc.get_or_add_tcPr().append(
+        parse_xml(r'<w:shd {} w:fill="{}"/>'.format(nsdecls('w'), color_hex))
+    )
+
+
+CIV_ORANGE = RGBColor(0xFF, 0x9A, 0x00)
+CIV_GREEN = RGBColor(0x00, 0x96, 0x39)
+CIV_WHITE = RGBColor(0xFF, 0xFF, 0xFF)
+CIV_BLACK = RGBColor(0x00, 0x00, 0x00)
+
+
 def _build_report_doc(plan, annee, trimestre, activites_trimestre):
-    doc = Document()
     annee_index = annee - plan.annee_debut
 
-    doc.add_heading(f'Rapport trimestriel {trimestre} {annee}', level=0)
-    doc.add_heading(f'Plan d\'actions : {plan.titre} ({plan.reference})', level=1)
-    doc.add_paragraph(f'Date de génération : {datetime.now().strftime("%d/%m/%Y %H:%M")}')
+    doc = Document()
 
-    # Résumé global
-    doc.add_heading('1. Résumé global', level=1)
+    # Police par défaut
+    style = doc.styles['Normal']
+    style.font.name = 'Arial'
+    style.font.size = Pt(11)
+    style._element.rPr.rFonts.set(qn('w:ascii'), 'Arial')
+    style._element.rPr.rFonts.set(qn('w:hAnsi'), 'Arial')
+
+    section = doc.sections[0]
+    section.page_height = Cm(29.7)
+    section.page_width = Cm(21.0)
+    section.left_margin = Cm(2.0)
+    section.right_margin = Cm(2.0)
+    section.top_margin = Cm(1.5)
+    section.bottom_margin = Cm(1.5)
+
+    # En-tête : drapeau tricolore + éléments institutionnels
+    header = section.header
+    header_table = header.add_table(rows=1, cols=3, width=Inches(6.5))
+    header_table.autofit = False
+    for i, width in enumerate([2.17, 2.17, 2.17]):
+        header_table.columns[i].width = Inches(width)
+    flag_cells = header_table.rows[0].cells
+    _set_cell_shading(flag_cells[0], 'FF9A00')
+    _set_cell_shading(flag_cells[1], 'FFFFFF')
+    _set_cell_shading(flag_cells[2], '009639')
+    for cell in flag_cells:
+        p = cell.paragraphs[0]
+        p.add_run(' ')
+
+    header_para = header.add_paragraph()
+    header_para.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    _set_run_font(
+        header_para.add_run('Document officiel - DPSE MFB'),
+        size=8,
+        color=RGBColor(0x66, 0x66, 0x66)
+    )
+
+    # Pied de page
+    footer = section.footer
+    footer_para = footer.paragraphs[0]
+    footer_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    _set_run_font(
+        footer_para.add_run(f'Rapport généré le {datetime.now().strftime("%d/%m/%Y")}'),
+        size=8,
+        color=RGBColor(0x66, 0x66, 0x66)
+    )
+
+    # Page de garde institutionnelle
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    _set_run_font(p.add_run('RÉPUBLIQUE DE CÔTE D\'IVOIRE'), size=18, bold=True, color=CIV_GREEN)
+
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    _set_run_font(p.add_run('Union - Discipline - Travail'), size=11, italic=True, color=CIV_ORANGE)
+
+    # Bande tricolore décorative sous le titre
+    band = doc.add_table(rows=1, cols=3)
+    band.width = Inches(6.0)
+    band.alignment = WD_TABLE_ALIGNMENT.CENTER
+    band.autofit = False
+    for i, width in enumerate([2.0, 2.0, 2.0]):
+        band.columns[i].width = Inches(width)
+    band_cells = band.rows[0].cells
+    _set_cell_shading(band_cells[0], 'FF9A00')
+    _set_cell_shading(band_cells[1], 'FFFFFF')
+    _set_cell_shading(band_cells[2], '009639')
+    for cell in band_cells:
+        p = cell.paragraphs[0]
+        p.add_run(' ')
+
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    _set_run_font(p.add_run('MINISTÈRE DES FINANCES ET DU BUDGET'), size=14, bold=True, color=CIV_ORANGE)
+
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    _set_run_font(p.add_run('Direction du Pilotage et du Suivi-Évaluation'), size=12, bold=True)
+
+    for _ in range(4):
+        doc.add_paragraph()
+
+    # Titre principal du document
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    _set_run_font(p.add_run(f'RAPPORT TRIMESTRIEL {trimestre} {annee}'), size=20, bold=True, color=CIV_GREEN)
+
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    _set_run_font(p.add_run(f'Plan d\'actions : {plan.titre} ({plan.reference})'), size=13, bold=True)
+
+    # 1. Résumé global
+    h = doc.add_heading('1. Résumé global', level=1)
+    _set_run_font(h.runs[0], size=14, bold=True, color=CIV_GREEN)
+
     total = len(activites_trimestre)
     par_statut = {}
     for a in activites_trimestre:
         s = a.status[annee_index] if a.status and len(a.status) > annee_index else 'Non entamée'
         par_statut[s] = par_statut.get(s, 0) + 1
 
-    resumé = doc.add_paragraph()
-    resumé.add_run(f'Nombre d\'activités concernées par {trimestre} : {total}\n')
+    p = doc.add_paragraph()
+    _set_run_font(
+        p.add_run(f'Nombre d\'activités concernées par {trimestre} : {total}'),
+        bold=True
+    )
     for s, c in par_statut.items():
-        resumé.add_run(f'  - {s} : {c}\n')
+        p = doc.add_paragraph(style='List Bullet')
+        _set_run_font(p.add_run(f'{s} : {c}'))
 
-    # Synthèse financière
-    doc.add_heading('2. Synthèse financière', level=1)
+    # 2. Synthèse financière
+    h = doc.add_heading('2. Synthèse financière', level=1)
+    _set_run_font(h.runs[0], size=14, bold=True, color=CIV_GREEN)
+
     total_cout = sum(float(a.couts[annee_index] or 0) for a in activites_trimestre if a.couts and len(a.couts) > annee_index)
-    doc.add_paragraph(f'Coût total des activités du trimestre : {total_cout:,.2f}')
+    p = doc.add_paragraph()
+    _set_run_font(
+        p.add_run(f'Coût total des activités du trimestre : {total_cout:,.2f}'),
+        bold=True
+    )
 
     table = doc.add_table(rows=1, cols=3)
-    table.style = 'Light Grid Accent 1'
+    table.style = 'Table Grid'
     hdr = table.rows[0].cells
     hdr[0].text = 'Structure'
     hdr[1].text = 'Coût'
     hdr[2].text = 'Activités'
+    for cell in hdr:
+        _set_cell_shading(cell, '009639')
+        for r in cell.paragraphs[0].runs:
+            _set_run_font(r, bold=True, color=CIV_WHITE)
 
     by_entity = {}
     for a in activites_trimestre:
@@ -68,18 +200,19 @@ def _build_report_doc(plan, annee, trimestre, activites_trimestre):
         row[1].text = f"{c['cout']:,.2f}"
         row[2].text = str(c['count'])
 
-    # Activités du trimestre
-    doc.add_heading('3. Activités du trimestre', level=1)
+    # 3. Activités du trimestre
+    h = doc.add_heading('3. Activités du trimestre', level=1)
+    _set_run_font(h.runs[0], size=14, bold=True, color=CIV_GREEN)
+
     table = doc.add_table(rows=1, cols=7)
-    table.style = 'Light Grid Accent 1'
+    table.style = 'Table Grid'
     hdr = table.rows[0].cells
-    hdr[0].text = 'Référence'
-    hdr[1].text = 'Titre'
-    hdr[2].text = 'Structure'
-    hdr[3].text = 'Cible'
-    hdr[4].text = 'Réalisation'
-    hdr[5].text = 'Statut'
-    hdr[6].text = 'Coût'
+    cols = ['Référence', 'Titre', 'Structure', 'Cible', 'Réalisation', 'Statut', 'Coût']
+    for i, text in enumerate(cols):
+        hdr[i].text = text
+        _set_cell_shading(hdr[i], 'FF9A00')
+        for r in hdr[i].paragraphs[0].runs:
+            _set_run_font(r, bold=True, color=CIV_BLACK)
 
     for a in activites_trimestre:
         e = (a.point_focal.entity if a.point_focal and getattr(a.point_focal, 'entity', None) else
