@@ -70,6 +70,7 @@ INSTALLED_APPS = [
     'planning.apps.PlanningConfig',  # Doit être présent
     'stats.apps.StatsConfig',
     'quality.apps.QualityConfig',
+    'audit.apps.AuditConfig',
     'django_celery_beat',
     'whitenoise',  # Ajoutez cette ligne
 ]
@@ -81,6 +82,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'audit.middleware.AuditMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
