@@ -1732,5 +1732,101 @@ section,
 }
 
 /*--------------------------------------------------------------
+# Mobile Responsivity Improvements
+--------------------------------------------------------------*/
+
+@media (max-width: 767px) {
+  /* Hero section mobile improvements */
+  .hero .title {
+    font-size: 1.8rem !important;
+    line-height: 1.2;
+  }
+  
+  .hero .description {
+    font-size: 0.9rem !important;
+  }
+  
+  .hero hr {
+    width: 80% !important;
+    margin: 10px auto !important;
+  }
+  
+  /* Team section mobile */
+  .team-member {
+    margin-bottom: 1rem;
+  }
+  
+  .team-member h4 {
+    font-size: 1rem !important;
+  }
+  
+  .team-member span {
+    font-size: 0.8rem !important;
+  }
+  
+  /* Service items mobile */
+  .service-item h3 {
+    font-size: 1.1rem !important;
+  }
+  
+  .service-item p {
+    font-size: 0.9rem !important;
+  }
+  
+  /* Features mobile */
+  .features-item h4 {
+    font-size: 1rem !important;
+  }
+  
+  .features-item p {
+    font-size: 0.85rem !important;
+  }
+  
+  /* Navigation mobile */
+  .mobile-nav-toggle {
+    margin-right: 10px;
+  }
+  
+  /* Containers mobile */
+  .container {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+  
+  /* Swiper mobile */
+  .swiper-slide {
+    text-align: center;
+  }
+}
+
+@media (max-width: 576px) {
+  /* Extra small mobile */
+  .hero .title {
+    font-size: 1.5rem !important;
+  }
+  
+  .hero .description {
+    font-size: 0.8rem !important;
+  }
+  
+  .section-title h2 {
+    font-size: 1.5rem !important;
+  }
+  
+  .service-item h3 {
+    font-size: 1rem !important;
+  }
+  
+  .features-item {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .features-item i {
+    margin-bottom: 10px;
+  }
+}
+
+/*--------------------------------------------------------------
 # Starter Section Section
 --------------------------------------------------------------*/

@@ -102,12 +102,18 @@ Traitement des Activités - {{ plan.titre }} - {{ annee }}
                                                 </select>
                                             </td>
                                             <td>
-                                                <button class="btn btn-success action-btn" 
-                                                        data-model-status="{{ activite.model_status }}" 
-                                                        data-model-commentaire-se="{{ activite.model_commentaire_se }}"
-                                                        data-pending-status="{{ activite.pending_status }}"
-                                                        data-pending-commentaire-se="{{ activite.pending_commentaire_se }}"
-                                                        data-last-modified-by="{{ activite.last_modified_by }}">Soumettre</button>
+                                                <div class="d-flex gap-2 align-items-center flex-nowrap">
+                                                    <button class="btn btn-success action-btn" 
+                                                            data-model-status="{{ activite.model_status }}" 
+                                                            data-model-commentaire-se="{{ activite.model_commentaire_se }}"
+                                                            data-pending-status="{{ activite.pending_status }}"
+                                                            data-pending-commentaire-se="{{ activite.pending_commentaire_se }}"
+                                                            data-last-modified-by="{{ activite.last_modified_by }}">
+                                                            Soumettre
+                                                    </button>
+                                                    <button type="button" class="preuve-btn"
+                                                            data-activite-id="{{ activite.id }}" data-annee="{{ annee }}">Preuves</button>
+                                                </div>
                                             </td>
                                         </tr>
                                     {% endfor %}
@@ -251,6 +257,9 @@ document.addEventListener('DOMContentLoaded', function () {
     checkEntitySections();
 });
 </script>
+
+{% include "planning/preuves_modal.html" %}
+
 {% endblock %}
 
 {% block style %}
@@ -303,7 +312,16 @@ document.addEventListener('DOMContentLoaded', function () {
     .table-striped tbody tr:nth-of-type(odd) { background-color: #fff3e6; }
     .form-control { min-width: 100px; }
     textarea.form-control { min-height: 80px; resize: vertical; }
-
+    /* Élargir les colonnes Commentaire et Commentaire SE */
+    .table th:nth-child(12), /* Etat d'avancement - en-tête */
+    .table td:nth-child(12), /* Etat d'avancement - données */
+    .table th:nth-child(14), /* Commentaire - en-tête */
+    .table td:nth-child(14), /* Commentaire - données */
+    .table th:nth-child(15), /* Commentaire SE - en-tête */
+    .table td:nth-child(15) { /* Commentaire SE - données */
+        min-width: 200px; /* Ajustez cette valeur selon vos besoins */
+        width: 200px; /* Optionnel : fixe la largeur */
+    }
     .btn-success { background: #28a745; color: white; border: none; border-radius: 25px; padding: 6px 15px; }
     .btn-warning { background: #ffc107; color: black; border: none; border-radius: 25px; padding: 6px 15px; }
     .btn-primary { background: #007bff; color: white; border: none; border-radius: 25px; padding: 8px 20px; font-size: 1rem; white-space: nowrap; }

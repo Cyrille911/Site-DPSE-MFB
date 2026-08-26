@@ -10,12 +10,29 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+import os
 from pathlib import Path
-# SECURITY WARNING: don't run with debug turned on in production!
 
-DEBUG = True
+# Chargement des variables d'environnement depuis un fichier .env (optionnel)
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.pythonanywhere.com']
+# SECURITY WARNING: don't run with debug turned on in production !
+
+DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
+
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.pythonanywhere.com', 'dpse.aidn.ci']
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://dpse.aidn.ci',
+    'https://www.dpse.aidn.ci',
+]
+if os.environ.get('DOMAIN'):
+    ALLOWED_HOSTS.append(os.environ.get('DOMAIN'))
+    ALLOWED_HOSTS.append(f'.{os.environ.get("DOMAIN")}')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,7 +42,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-44aoj+2b@(1t*vkv#l4i&5q1-sm54=5_e*ahegz!v1tnr7s5-!'
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    raise RuntimeError("La variable d'environnement SECRET_KEY doit être définie.")
 
 
 AUTH_USER_MODEL = 'users.User'
@@ -51,15 +70,19 @@ INSTALLED_APPS = [
     'planning.apps.PlanningConfig',  # Doit être présent
     'stats.apps.StatsConfig',
     'quality.apps.QualityConfig',
+    'audit.apps.AuditConfig',
     'django_celery_beat',
+    'whitenoise',  # Ajoutez cette ligne
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Ajoutez cette ligne
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'audit.middleware.AuditMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -98,10 +121,15 @@ WSGI_APPLICATION = 'dpse.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+# Toujours utiliser MySQL
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.environ.get('DB_NAME', 'dpse'),
+        'USER': os.environ.get('DB_USER', 'dpse_user'),
+        'PASSWORD': os.environ.get('DB_PASSWORD'),
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
+        'PORT': os.environ.get('DB_PORT', '3306'),
     }
 }
 
@@ -136,10 +164,9 @@ USE_I18N = True
 
 USE_TZ = True
 
-
-import os
-
 MEDIA_URL = '/media/'
+
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
@@ -167,9 +194,9 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'  # Serveur SMTP pour Gmail
 EMAIL_PORT = 587  # Port pour TLS
 EMAIL_USE_TLS = True  # Utiliser TLS
-EMAIL_HOST_USER = 'cyrilletaha01@gmail.com'  # adresse e-mail
-EMAIL_HOST_PASSWORD = 'ivhsvvuuelnjvzqx'  # mot de passe
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER  # Email par défaut pour l'envoi
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)  # Email par défaut pour l'envoi
 
 LOGGING = {
     'version': 1,
@@ -189,8 +216,8 @@ LOGGING = {
 
 from celery.schedules import crontab  # Ajoute cette ligne pour importer crontab
 # Celery Configuration
-CELERY_BROKER_URL = 'redis://localhost:6379/0'  # Utilise Redis comme broker
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'

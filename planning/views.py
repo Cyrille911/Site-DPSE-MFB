@@ -1,27 +1,22 @@
 # Modules Django
-import json  # Pour traiter les champs JSON
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import PlanAction, Effet, Produit, Action, Activite, ActiviteLog
+from .models import PlanAction, Effet, Produit, Action, Activite, ActiviteLog, PreuveRealisation, QuarterlyReport
+from django.core.exceptions import ValidationError
+from .tasks import generate_quarterly_report
 from django.http import JsonResponse
 from django.db.models import Q
-from datetime import datetime
-from reversion import revisions as reversion
 from django.contrib import messages
-from django.core.paginator import Paginator
-from .forms import PaoStatusForm  # Import du formulaire
-from django.core.exceptions import ValidationError
+from django.contrib.auth.decorators import login_required
+from .forms import PaoStatusForm
 from django.db import transaction
 import logging
-from django.core.exceptions import PermissionDenied
-from django import forms
 
-from users.models import User  # Import corrigé
+from users.models import User
 
 logger = logging.getLogger(__name__)
 
-
 def add_plan_action(request):
-    # Vérification des rôles
+
     is_authenticated = request.user.is_authenticated
     if not (is_authenticated):
         return render(request, 'planning/access_denied.html')
@@ -34,7 +29,7 @@ def add_plan_action(request):
         logger.debug(f"Contenu complet de request.POST : {request.POST}")
         try:
             with transaction.atomic():
-                # 1. Création du PlanAction
+                # Création du PlanAction
                 titre = request.POST.get('titre')
                 impact = request.POST.get('impact')
                 annee_debut = int(request.POST.get('annee_depart', 2025))
@@ -61,7 +56,7 @@ def add_plan_action(request):
                 plan_action.save()
                 logger.debug(f"PlanAction créé avec ID: {plan_action.id}, reference: {plan_action.reference}, couts: {plan_action.couts}")
 
-                # 2. Traitement des Effets
+                # Traitement des Effets
                 effet_count = 0
                 while f'effet_titre_{effet_count + 1}' in request.POST:
                     effet_count += 1
@@ -79,7 +74,7 @@ def add_plan_action(request):
                     effet.save()
                     logger.debug(f"Effet {effet_count} créé avec ID: {effet.id}, reference: {effet.reference}, couts: {effet.couts}")
 
-                    # 3. Traitement des Produits
+                    # Traitement des Produits
                     produit_count = 0
                     while f'produit_titre_{effet_count}_{produit_count + 1}' in request.POST:
                         produit_count += 1
@@ -97,7 +92,7 @@ def add_plan_action(request):
                         produit.save()
                         logger.debug(f"Produit {effet_count}.{produit_count} créé avec ID: {produit.id}, reference: {produit.reference}, couts: {produit.couts}")
 
-                        # 4. Traitement des Actions
+                        # Traitement des Actions
                         action_count = 0
                         while f'action_titre_{effet_count}_{produit_count}_{action_count + 1}' in request.POST:
                             action_count += 1
@@ -115,7 +110,7 @@ def add_plan_action(request):
                             action.save()
                             logger.debug(f"Action {effet_count}.{produit_count}.{action_count} créé avec ID: {action.id}, reference: {action.reference}, couts: {action.couts}")
 
-                            # 5. Traitement des Activités avec logs détaillés
+                            # Traitement des Activités avec logs détaillés
                             activite_count = 0
                             logger.debug(f"Début du traitement des activités pour Action {action.reference}")
                             while f'activite_titre_{effet_count}_{produit_count}_{action_count}_{activite_count + 1}' in request.POST:
@@ -125,11 +120,12 @@ def add_plan_action(request):
                                 # Récupération des champs de base
                                 activite_titre = request.POST.get(f'activite_titre_{effet_count}_{produit_count}_{action_count}_{activite_count}')
                                 activite_type = request.POST.get(f'activite_type_{effet_count}_{produit_count}_{action_count}_{activite_count}')
+                                activite_structure = request.POST.get(f'activite_structure_{effet_count}_{produit_count}_{action_count}_{activite_count}')
                                 indicateur_label = request.POST.get(f'indicateur_label_{effet_count}_{produit_count}_{action_count}_{activite_count}')
                                 indicateur_reference = request.POST.get(f'indicateur_reference_{effet_count}_{produit_count}_{action_count}_{activite_count}')
-                                logger.debug(f"Activité {effet_count}.{produit_count}.{action_count}.{activite_count} - titre: {activite_titre}, type: {activite_type}, indicateur_label: {indicateur_label}, indicateur_reference: {indicateur_reference}")
+                                logger.debug(f"Activité {effet_count}.{produit_count}.{action_count}.{activite_count} - titre: {activite_titre}, type: {activite_type}, structure: {activite_structure}, indicateur_label: {indicateur_label}, indicateur_reference: {indicateur_reference}")
 
-                                if not all([activite_titre, activite_type, indicateur_label, indicateur_reference]):
+                                if not all([activite_titre, activite_type, activite_structure, indicateur_label, indicateur_reference]):
                                     raise ValueError(f"Les champs de l'activité {effet_count}.{produit_count}.{action_count}.{activite_count} doivent être remplis.")
 
                                 # Récupération des cibles, coûts et périodes
@@ -140,7 +136,7 @@ def add_plan_action(request):
                                     cout = request.POST.get(f'cout_{effet_count}_{produit_count}_{action_count}_{activite_count}_{i}', '0')
                                     activite_couts.append(float(cout) if cout else 0.0)
                                     cible = request.POST.get(f'cible_{effet_count}_{produit_count}_{action_count}_{activite_count}_{i}', '')
-                                    activite_cibles.append(cible if cible else "Non définie")  # Gestion des cibles vides
+                                    activite_cibles.append(cible if cible else "Non définie")
                                     periodes = []
                                     for t in range(1, 5):
                                         periode_key = f'periode_{effet_count}_{produit_count}_{action_count}_{activite_count}_{i}_T{t}'
@@ -158,10 +154,11 @@ def add_plan_action(request):
                                     action=action,
                                     titre=activite_titre,
                                     type=activite_type,
+                                    structure=activite_structure,
                                     indicateur_label=indicateur_label,
                                     indicateur_reference=indicateur_reference,
                                     point_focal=request.user,
-                                    responsable=None,  # À ajuster selon votre logique
+                                    responsable=None,
                                     couts=activite_couts,
                                     cibles=activite_cibles,
                                     periodes_execution=activite_periodes,
@@ -204,7 +201,7 @@ def edit_plan_action(request, id):
         logger.debug(f"Contenu complet de request.POST : {request.POST}")
         try:
             with transaction.atomic():
-                # 1. Mise à jour du PlanAction
+                # Mise à jour du PlanAction
                 titre = request.POST.get('titre')
                 impact = request.POST.get('impact')
                 annee_debut = int(request.POST.get('annee_depart', plan_action.annee_debut))
@@ -223,7 +220,7 @@ def edit_plan_action(request, id):
                 plan_action.save()
                 logger.debug(f"PlanAction mis à jour avec ID: {plan_action.id}, reference: {plan_action.reference}, couts: {plan_action.couts}")
 
-                # 2. Traitement des Effets existants et nouveaux
+                # Traitement des Effets existants et nouveaux
                 effet_count = 0
                 effets_existants = {effet.id: effet for effet in plan_action.plan_effet.all()}
                 effets_a_supprimer = set(effets_existants.keys())
@@ -252,7 +249,7 @@ def edit_plan_action(request, id):
                         effet.save()
                         logger.debug(f"Effet {effet_count} créé avec ID: {effet.id}, reference: {effet.reference}")
 
-                    # 3. Traitement des Produits
+                    # Traitement des Produits
                     produit_count = 0
                     produits_existants = {produit.id: produit for produit in effet.effet_produit.all()}
                     produits_a_supprimer = set(produits_existants.keys())
@@ -281,7 +278,7 @@ def edit_plan_action(request, id):
                             produit.save()
                             logger.debug(f"Produit {effet_count}.{produit_count} créé avec ID: {produit.id}")
 
-                        # 4. Traitement des Actions
+                        # Traitement des Actions
                         action_count = 0
                         actions_existantes = {action.id: action for action in produit.produit_action.all()}
                         actions_a_supprimer = set(actions_existantes.keys())
@@ -310,7 +307,7 @@ def edit_plan_action(request, id):
                                 action.save()
                                 logger.debug(f"Action {effet_count}.{produit_count}.{action_count} créé avec ID: {action.id}")
 
-                            # 5. Traitement des Activités
+                            # Traitement des Activités
                             activite_count = 0
                             activites_existantes = {activite.id: activite for activite in action.action_activite.all()}
                             activites_a_supprimer = set(activites_existantes.keys())
@@ -319,12 +316,13 @@ def edit_plan_action(request, id):
                                 activite_count += 1
                                 activite_titre = request.POST.get(f'activite_titre_{effet_count}_{produit_count}_{action_count}_{activite_count}')
                                 activite_type = request.POST.get(f'activite_type_{effet_count}_{produit_count}_{action_count}_{activite_count}')
+                                activite_structure = request.POST.get(f'activite_structure_{effet_count}_{produit_count}_{action_count}_{activite_count}')
                                 indicateur_label = request.POST.get(f'indicateur_label_{effet_count}_{produit_count}_{action_count}_{activite_count}')
                                 indicateur_reference = request.POST.get(f'indicateur_reference_{effet_count}_{produit_count}_{action_count}_{activite_count}')
                                 activite_id = request.POST.get(f'activite_id_{effet_count}_{produit_count}_{action_count}_{activite_count}', None)
-                                logger.debug(f"Activité {effet_count}.{produit_count}.{action_count}.{activite_count} - titre: {activite_titre}, type: {activite_type}, id: {activite_id}")
+                                logger.debug(f"Activité {effet_count}.{produit_count}.{action_count}.{activite_count} - titre: {activite_titre}, type: {activite_type}, structure: {activite_structure}, id: {activite_id}")
 
-                                if not all([activite_titre, activite_type, indicateur_label, indicateur_reference]):
+                                if not all([activite_titre, activite_type, activite_structure, indicateur_label, indicateur_reference]):
                                     raise ValueError(f"Les champs de l'activité {effet_count}.{produit_count}.{action_count}.{activite_count} doivent être remplis.")
 
                                 activite_couts = []
@@ -346,6 +344,7 @@ def edit_plan_action(request, id):
                                     activite = activites_existantes[int(activite_id)]
                                     activite.titre = activite_titre
                                     activite.type = activite_type
+                                    activite.structure = activite_structure
                                     activite.indicateur_label = indicateur_label
                                     activite.indicateur_reference = indicateur_reference
                                     activite.couts = activite_couts
@@ -360,6 +359,7 @@ def edit_plan_action(request, id):
                                         action=action,
                                         titre=activite_titre,
                                         type=activite_type,
+                                        structure=activite_structure,
                                         indicateur_label=indicateur_label,
                                         indicateur_reference=indicateur_reference,
                                         point_focal=request.user,
@@ -418,7 +418,7 @@ def plan_action_list(request):
     if not (is_pf_or_resp_or_se_or_cab):
         return render(request, 'planning/access_denied.html')
 
-    plans = PlanAction.objects.all()  # Ou filtre selon tes besoins
+    plans = PlanAction.objects.all()
     context = {
         'plans': plans,
     }
@@ -618,6 +618,7 @@ def pao_list(request, plan_id):
         'entity': entity
     })
 
+@login_required(login_url='connexion_membre')
 def manage_activities(request, plan_id, entity):
     plan = get_object_or_404(PlanAction, id=plan_id)
     
@@ -763,6 +764,9 @@ def manage_activities(request, plan_id, entity):
             'cible': a.cibles[index],
             'pending_changes': a.pending_changes[index],
             'proposed_changes': a.proposed_changes[index],
+            'pending_status' : a.pending_changes[index].get('status', '') if a.pending_changes and len(a.pending_changes) > index else '',  
+            'pending_commentaire_se' : a.pending_changes[index].get('commentaire_se', '') if a.pending_changes and len(a.pending_changes) > index else '',
+            'pending_matrix_status' : a.pending_changes[index].get('matrix_status', '') if a.pending_changes and len(a.pending_changes) > index else '',
             'is_submitted': bool(a.pending_changes[index]),
             'trimestres_suivi': trimestres_suivi,
             'last_modified_by': last_modified_by,
@@ -781,6 +785,7 @@ def manage_activities(request, plan_id, entity):
     }
     return render(request, 'planning/manage_activities.html', context)
 
+@login_required(login_url='connexion_membre')
 def track_execution_list(request, plan_id):
     plan = get_object_or_404(PlanAction, id=plan_id)
     is_se = request.user.groups.filter(name='SuiveurEvaluateur').exists()
@@ -802,6 +807,7 @@ def track_execution_list(request, plan_id):
     }
     return render(request, 'planning/track_execution_list.html', context)
 
+@login_required(login_url='connexion_membre')
 def track_execution_detail(request, plan_id):
     plan = get_object_or_404(PlanAction, id=plan_id)
     
@@ -830,7 +836,7 @@ def track_execution_detail(request, plan_id):
     modified_activite_ids = []
     for activite in activites:
         if len(activite.pending_changes) <= index or not activite.pending_changes[index]:
-            continue  # Pas de pending changes à cet index
+            continue
 
         pending = activite.pending_changes[index]
         last_modified_by = pending.get('last_modified_by', '')
@@ -913,7 +919,7 @@ def track_execution_detail(request, plan_id):
                     commentaire_se=current_commentaire_se
                 )
                 response_data.update({
-                    'message': 'Propositions renvoyées au point focal ou responsable',
+                    'message': 'Propositions renvoyées au point focal et son responsable',
                     'action': 'pending',
                     'pending_status': current_status,
                     'pending_commentaire_se': current_commentaire_se,
@@ -991,7 +997,7 @@ def operational_plan_matrix(request, plan_id, annee):
     plan = get_object_or_404(PlanAction, id=plan_id)
     annees = [plan.annee_debut + i for i in range(plan.horizon)]
     if annee not in annees:
-        annee = annees[0]  # Par défaut à la première année si invalide
+        annee = annees[0]
     annee_index = annees.index(annee)
 
     # Pré-chargement optimisé des relations avec prefetch_related
@@ -1015,8 +1021,9 @@ def operational_plan_matrix(request, plan_id, annee):
                         ('couts', 0.0),
                         ('cibles', None),
                         ('etat_avancement', ''),
+                        ('commentaire', ''),
                         ('commentaire_se', ''),
-                        ('status', 'Non entamée'),  # Changement de 'Draft' à 'Non entamée' pour cohérence
+                        ('status', 'Non entamée'),
                         ('matrix_status', 'en cours')
                     ]:
                         current = getattr(activite, field)
@@ -1038,10 +1045,11 @@ def operational_plan_matrix(request, plan_id, annee):
                         'cout': float(activite.couts[annee_index]),
                         'realisation': activite.realisation[annee_index],
                         'etat_avancement': activite.etat_avancement[annee_index],
-                        'commentaire': activite.commentaire or '',
+                        'commentaire': activite.commentaire[annee_index],
                         'commentaire_se': activite.commentaire_se[annee_index],
                         'status': activite.status[annee_index],
                         'matrix_status': activite.matrix_status[annee_index],
+                        'programme': activite.point_focal.program,
                     })
                 if activites_data:
                     actions_data.append({
@@ -1128,3 +1136,166 @@ def hierarchy_review(request, plan_id):
         'paos': paos,
     }
     return render(request, 'planning/hierarchy_review.html', context)
+
+
+def _can_manage_preuves(user, activite):
+    if not user.is_authenticated:
+        return False
+    if user.role in ['point_focal', 'responsable']:
+        return activite.point_focal == user or activite.responsable == user
+    return False
+
+
+def preuve_liste(request, activite_id):
+    activite = get_object_or_404(Activite, id=activite_id)
+    preuves = activite.preuves.all()
+    data = []
+    for p in preuves:
+        data.append({
+            'id': p.id,
+            'type': p.type,
+            'type_display': p.get_type_display(),
+            'fichier_url': p.fichier.url if p.fichier else None,
+            'url': p.url,
+            'description': p.description or '',
+            'uploaded_by': f"{p.uploaded_by.first_name} {p.uploaded_by.last_name}" if p.uploaded_by else 'Inconnu',
+            'can_delete': _can_manage_preuves(request.user, activite),
+        })
+    return JsonResponse({'success': True, 'preuves': data})
+
+
+def preuve_ajouter(request, activite_id):
+    activite = get_object_or_404(Activite, id=activite_id)
+    if not _can_manage_preuves(request.user, activite):
+        return JsonResponse({'success': False, 'message': "Vous n'avez pas la permission d'ajouter une preuve."}, status=403)
+
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Méthode non autorisée.'}, status=405)
+
+    type_preuve = request.POST.get('type')
+    annee = request.POST.get('annee')
+    description = request.POST.get('description', '').strip()
+
+    if type_preuve not in ['document', 'lien', 'image', 'video']:
+        return JsonResponse({'success': False, 'message': 'Type de preuve invalide.'}, status=400)
+
+    try:
+        annee = int(annee)
+    except (TypeError, ValueError):
+        return JsonResponse({'success': False, 'message': 'Année invalide.'}, status=400)
+
+    fichier = request.FILES.get('fichier')
+    url = request.POST.get('url', '').strip()
+
+    if activite.preuves.count() >= 10:
+        return JsonResponse({'success': False, 'message': 'Cette activité a déjà atteint la limite de 10 preuves.'}, status=400)
+
+    try:
+        preuve = PreuveRealisation(
+            activite=activite,
+            type=type_preuve,
+            annee=annee,
+            description=description,
+            uploaded_by=request.user,
+        )
+        if type_preuve == 'lien':
+            preuve.url = url
+            preuve.fichier = None
+        else:
+            preuve.fichier = fichier
+            preuve.url = ''
+        preuve.full_clean()
+        preuve.save()
+    except ValidationError as e:
+        return JsonResponse({'success': False, 'message': ' '.join(e.messages)}, status=400)
+    except Exception as e:
+        logger.error(f"Erreur ajout preuve : {e}", exc_info=True)
+        return JsonResponse({'success': False, 'message': 'Erreur lors de la sauvegarde.'}, status=500)
+
+    return JsonResponse({
+        'success': True,
+        'message': 'Preuve ajoutée.',
+        'preuve': {
+            'id': preuve.id,
+            'type': preuve.type,
+            'type_display': preuve.get_type_display(),
+            'fichier_url': preuve.fichier.url if preuve.fichier else None,
+            'url': preuve.url,
+            'description': preuve.description or '',
+            'uploaded_by': f"{preuve.uploaded_by.first_name} {preuve.uploaded_by.last_name}" if preuve.uploaded_by else 'Inconnu',
+        }
+    })
+
+
+def preuve_supprimer(request, preuve_id):
+    preuve = get_object_or_404(PreuveRealisation, id=preuve_id)
+    if not _can_manage_preuves(request.user, preuve.activite):
+        return JsonResponse({'success': False, 'message': "Vous n'avez pas la permission de supprimer cette preuve."}, status=403)
+
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Méthode non autorisée.'}, status=405)
+
+    try:
+        if preuve.fichier:
+            preuve.fichier.delete(save=False)
+        preuve.delete()
+    except Exception as e:
+        logger.error(f"Erreur suppression preuve : {e}", exc_info=True)
+        return JsonResponse({'success': False, 'message': 'Erreur lors de la suppression.'}, status=500)
+
+    return JsonResponse({'success': True, 'message': 'Preuve supprimée.'})
+
+
+def _annees_trimestres_for_plan(plan):
+    annees = [plan.annee_debut + i for i in range(plan.horizon)]
+    return annees
+
+
+def generer_rapport(request, plan_id):
+    plan = get_object_or_404(PlanAction, id=plan_id)
+    annees = _annees_trimestres_for_plan(plan)
+    trimestres = ['T1', 'T2', 'T3', 'T4']
+
+    if not request.user.is_authenticated:
+        return render(request, 'planning/access_denied.html')
+
+    if request.method == 'POST':
+        try:
+            annee = int(request.POST.get('annee'))
+            trimestre = request.POST.get('trimestre')
+            if annee not in annees or trimestre not in trimestres:
+                messages.error(request, "Année ou trimestre invalide.")
+                return redirect('generer_rapport', plan_id=plan.id)
+
+            report_id = generate_quarterly_report(plan_id, annee, trimestre, request.user.id)
+            messages.success(request, f"Rapport {trimestre} {annee} généré et envoyé aux acteurs du plan.")
+            return redirect('rapport_liste', plan_id=plan.id)
+        except Exception as e:
+            logger.error(f"Erreur lancement rapport : {e}", exc_info=True)
+            messages.error(request, "Erreur lors du lancement de la génération.")
+
+    context = {
+        'plan': plan,
+        'annees': annees,
+        'trimestres': trimestres,
+    }
+    return render(request, 'planning/generer_rapport.html', context)
+
+
+def rapport_liste(request, plan_id):
+    plan = get_object_or_404(PlanAction, id=plan_id)
+    rapports = plan.rapports.all()
+    return render(request, 'planning/rapport_liste.html', {
+        'plan': plan,
+        'rapports': rapports,
+    })
+
+
+def rapport_telecharger(request, rapport_id):
+    rapport = get_object_or_404(QuarterlyReport, id=rapport_id)
+    if not request.user.is_authenticated:
+        return render(request, 'planning/access_denied.html')
+    if not rapport.fichier:
+        messages.error(request, "Aucun fichier associé.")
+        return redirect('rapport_liste', plan_id=rapport.plan.id)
+    return redirect(rapport.fichier.url)

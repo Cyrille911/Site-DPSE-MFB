@@ -14,6 +14,17 @@ def times(value):
         return []
 
 @register.filter
+def remove_prefix(value, prefix):
+    """Retire le préfixe de référence parent + le point séparateur.
+    Ex: remove_prefix("1.1", "1") → "1", remove_prefix("1.1.2", "1.1") → "2"
+    """
+    value = str(value)
+    prefix = str(prefix)
+    if value.startswith(prefix + '.'):
+        return value[len(prefix) + 1:]
+    return value
+
+@register.filter
 def index(sequence, position):
     """Retourne l'élément à l'index donné dans une liste ou None si hors limite."""
     try:

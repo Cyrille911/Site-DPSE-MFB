@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from datetime import datetime, timedelta
 from django.http import HttpRequest
 import logging
+import os
 from threading import Timer
 from collections import defaultdict
 
@@ -14,10 +15,18 @@ logger = logging.getLogger(__name__)
 User = get_user_model()
 
 
+def preuve_directory_path(instance, filename):
+    return os.path.join('preuves', str(instance.annee), str(instance.activite_id or 'tmp'), filename)
+
+
+def rapport_directory_path(instance, filename):
+    return os.path.join('rapports', str(instance.annee), str(instance.trimestre), filename)
+
+
 # Modèle PlanAction (inchangé)
 class PlanAction(models.Model):
     id = models.AutoField(primary_key=True)
-    titre = models.CharField(max_length=255)
+    titre = models.CharField(max_length=500)
     impact = models.TextField()
     annee_debut = models.PositiveIntegerField(default=2025)
     horizon = models.PositiveIntegerField()
@@ -75,11 +84,15 @@ class PlanAction(models.Model):
     def __str__(self):
         return f"Plan d'actions {self.reference} : {self.titre}"
 
+    class Meta:
+        verbose_name = "Plan d'actions"
+        verbose_name_plural = "Plans d'actions"
+
 # Modèle Effet (inchangé)
 class Effet(models.Model):
     id = models.AutoField(primary_key=True)
     plan = models.ForeignKey(PlanAction, related_name="plan_effet", on_delete=models.CASCADE)
-    titre = models.CharField(max_length=255)
+    titre = models.CharField(max_length=500)
     couts = models.JSONField(default=list)
     nombre_produits = models.PositiveIntegerField(default=0)
     nombre_actions = models.PositiveIntegerField(default=0)
@@ -140,11 +153,15 @@ class Effet(models.Model):
     def __str__(self):
         return f"Effet {self.reference} : {self.titre}"
 
+    class Meta:
+        verbose_name = "Effet"
+        verbose_name_plural = "Effets"
+
 # Modèle Produit (inchangé)
 class Produit(models.Model):
     id = models.AutoField(primary_key=True)
     effet = models.ForeignKey(Effet, related_name="effet_produit", on_delete=models.CASCADE)
-    titre = models.CharField(max_length=255)
+    titre = models.CharField(max_length=500)
     couts = models.JSONField(default=list)
     nombre_actions = models.PositiveIntegerField(default=0)
     nombre_activites = models.PositiveIntegerField(default=0)
@@ -203,11 +220,15 @@ class Produit(models.Model):
     def __str__(self):
         return f"Produit {self.reference} : {self.titre}"
 
+    class Meta:
+        verbose_name = "Produit"
+        verbose_name_plural = "Produits"
+
 # Modèle Action (inchangé)
 class Action(models.Model):
     id = models.AutoField(primary_key=True)
     produit = models.ForeignKey(Produit, related_name="produit_action", on_delete=models.CASCADE)
-    titre = models.CharField(max_length=255)
+    titre = models.CharField(max_length=500)
     couts = models.JSONField(default=list)
     nombre_activites = models.PositiveIntegerField(default=0)
     reference = models.CharField(max_length=50, blank=True)
@@ -262,6 +283,10 @@ class Action(models.Model):
 
     def __str__(self):
         return f"Action {self.reference} : {self.titre}"
+
+    class Meta:
+        verbose_name = "Action"
+        verbose_name_plural = "Actions"
 
 # Modèle Activite
 # File d'attente temporaire pour regrouper les notifications
@@ -364,7 +389,7 @@ class NotificationQueue:
             send_mail(
                 subject=subject,
                 message=message,
-                from_email='cyrilletaha01@gmail.com',
+                from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=list(all_recipients),  # Utiliser la liste mise à jour
                 fail_silently=True
             )
@@ -375,7 +400,7 @@ class NotificationQueue:
 class Activite(models.Model):
     id = models.AutoField(primary_key=True)
     reference = models.CharField(max_length=50, blank=True)
-    titre = models.CharField(max_length=255)
+    titre = models.CharField(max_length=500)
     type = models.CharField(
         max_length=50,
         choices=[
@@ -386,13 +411,27 @@ class Activite(models.Model):
             ('Activité ordinaire', 'Activité ordinaire')
         ]
     )
+    structure = models.CharField(
+        max_length=50,
+        choices=[
+            ('DGI', 'DGI'),
+            ('DGD', 'DGD'),
+            ('DGTCP', 'DGTCP'),
+            ('DGMP', 'DGMP'),
+            ('DGF', 'DGF'),
+            ('DGBF', 'DGBF'),
+            ('DGE', 'DGE'),
+        ],
+        default='',
+        blank=True,
+    )
     
     action = models.ForeignKey('Action', related_name="action_activite", on_delete=models.CASCADE)
     point_focal = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        null=False,
-        blank=False,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name='point_focal_activites'
     )
     responsable = models.ForeignKey(
@@ -403,8 +442,8 @@ class Activite(models.Model):
         related_name='responsable_activites'
     )
     
-    indicateur_label = models.CharField(max_length=255)
-    indicateur_reference = models.CharField(max_length=255)
+    indicateur_label = models.CharField(max_length=500)
+    indicateur_reference = models.CharField(max_length=500)
     
     cibles = models.JSONField(default=list)
     realisation = models.JSONField(default=list)
@@ -487,7 +526,7 @@ class Activite(models.Model):
             if self.responsable and self.responsable.email:
                 recipients.append(self.responsable.email)
             if self.point_focal and self.point_focal.email:
-                recipients.add(self.point_focal.email)
+                recipients.append(self.point_focal.email)
             message = (
                 f"Un suiveur-évaluateur {user.email} a proposé des modifications pour l'activité {self.reference}.\n"
                 f"Titre : {self.titre}\n"
@@ -502,7 +541,7 @@ class Activite(models.Model):
             send_mail(
                 subject=subject,
                 message=message,
-                from_email='cyrilletaha01@gmail.com',
+                from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=recipients,
                 fail_silently=True
             )
@@ -846,4 +885,83 @@ class ActiviteLog(models.Model):
         return f"Log pour {self.activite.titre} par {self.user.username if self.user else 'Inconnu'} - {self.timestamp}"
 
     class Meta:
+        verbose_name = "Journal d'activité"
+        verbose_name_plural = "Journaux d'activités"
         ordering = ['-timestamp']
+
+
+class PreuveRealisation(models.Model):
+    TYPE_CHOICES = [
+        ('document', 'Document'),
+        ('lien', 'Lien'),
+        ('image', 'Image'),
+        ('video', 'Vidéo'),
+    ]
+
+    activite = models.ForeignKey('Activite', on_delete=models.CASCADE, related_name='preuves')
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    fichier = models.FileField(upload_to=preuve_directory_path, null=True, blank=True)
+    url = models.URLField(null=True, blank=True)
+    description = models.TextField(blank=True, null=True)
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='preuves_uploaded'
+    )
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    annee = models.PositiveIntegerField()
+
+    class Meta:
+        ordering = ['-uploaded_at']
+        verbose_name = "Preuve de réalisation"
+        verbose_name_plural = "Preuves de réalisation"
+
+    def __str__(self):
+        return f"{self.get_type_display()} pour {self.activite.reference}"
+
+    def clean(self):
+        super().clean()
+        if self.activite_id and PreuveRealisation.objects.filter(activite=self.activite).exclude(pk=self.pk or 0).count() >= 10:
+            raise ValidationError("Une activité ne peut pas avoir plus de 10 preuves.")
+        if self.type == 'lien':
+            if not self.url:
+                raise ValidationError("Une preuve de type 'lien' doit avoir une URL.")
+            self.fichier = None
+        else:
+            if not self.fichier:
+                raise ValidationError("Une preuve de type 'document', 'image' ou 'vidéo' doit avoir un fichier.")
+            self.url = None
+
+
+class QuarterlyReport(models.Model):
+    TRIMESTRE_CHOICES = [
+        ('T1', 'T1'),
+        ('T2', 'T2'),
+        ('T3', 'T3'),
+        ('T4', 'T4'),
+    ]
+
+    plan = models.ForeignKey(PlanAction, on_delete=models.CASCADE, related_name='rapports')
+    annee = models.PositiveIntegerField()
+    trimestre = models.CharField(max_length=2, choices=TRIMESTRE_CHOICES)
+    fichier = models.FileField(upload_to=rapport_directory_path)
+    generated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='rapports_generes'
+    )
+    generated_at = models.DateTimeField(auto_now_add=True)
+    recipients_emails = models.JSONField(default=list, blank=True)
+
+    class Meta:
+        ordering = ['-generated_at']
+        verbose_name = "Rapport trimestriel"
+        verbose_name_plural = "Rapports trimestriels"
+        unique_together = ['plan', 'annee', 'trimestre']
+
+    def __str__(self):
+        return f"Rapport {self.trimestre} {self.annee} - {self.plan.reference}"

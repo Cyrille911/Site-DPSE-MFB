@@ -14,7 +14,7 @@ Liste des Plans d'Actions Stratégiques (PAS)
     <!-- Liste des Plans d'Actions Stratégiques -->
     <div id="plans-actions-list">
         {% for plan in plans %}
-            <div class="card shadow-lg mb-4 border-0 rounded-4 animate-slide-up" style="animation-delay: {{ forloop.counter0|mul:0.1 }}s; background: linear-gradient(135deg, #f8f9fa, #e9ecef); max-width: 900px; margin-left: auto; margin-right: auto;">
+            <div class="card shadow-lg mb-4 border-0 rounded-4 animate-slide-up" style="animation-delay: {{ forloop.counter0|mul:0.1 }}s; background: linear-gradient(135deg, #f8f9fa, #e9ecef); max-width: 850px; margin-left: auto; margin-right: auto;">
                 <div class="card-header bg-success text-white d-flex align-items-center justify-content-between" style="border-radius: 15px 15px 0 0; padding: 12px 20px;">
                     <h4 class="card-title mb-0 fw-bold" style="font-size: 1.4rem;">{{ plan.titre }}</h4>
                     <span class="badge bg-warning text-dark fw-bold" style="font-size: 0.8rem;">{{ plan.reference }}</span>
@@ -28,7 +28,7 @@ Liste des Plans d'Actions Stratégiques (PAS)
                             <span class="ms-1">{{ plan.impact|truncatewords:20 }}</span>
                         </div>
                     </div>
-                    <!-- Ligne 2 : Effets, Produits, Actions, Activités, Coût -->
+                    <!-- Ligne 2 : Effets, Produits, Actions, Activités -->
                     <div class="d-flex align-items-center text-dark mb-2 line-container" style="flex-wrap: wrap;">
                         <div class="line-item">
                             <i class="bi bi-bar-chart text-dark me-1"></i>
@@ -50,17 +50,8 @@ Liste des Plans d'Actions Stratégiques (PAS)
                             <span class="fw-bold">Activités :</span> 
                             <span class="ms-1">{{ plan.nombre_activites }}</span>
                         </div>
-                        <div class="line-item">
-                            <i class="bi bi-currency-dollar text-dark me-1"></i>
-                            <span class="fw-bold">Coût :</span> 
-                            <span class="ms-1">
-                                {% with total_cost=plan.couts|sum_list %}
-                                    {{ total_cost|floatformat:0 }} M
-                                {% endwith %}
-                            </span>
-                        </div>
                     </div>
-                    <!-- Ligne 3 : Début, Horizon, Statut -->
+                    <!-- Ligne 3 : Début, Horizon, Coût, Statut -->
                     <div class="d-flex justify-content-between align-items-center text-dark mb-2 line-container">
                         <div class="line-item">
                             <i class="bi bi-calendar-check text-dark me-1"></i>
@@ -71,6 +62,14 @@ Liste des Plans d'Actions Stratégiques (PAS)
                             <i class="bi bi-calendar3 text-dark me-1"></i>
                             <span class="fw-bold">Horizon :</span> 
                             <span class="ms-1">{{ plan.horizon }} ans</span>
+                        </div>
+                        <div class="line-item">
+                            <span class="fw-bold">Coût (FCFA) :</span> 
+                            <span class="ms-1">
+                                {% with total_cost=plan.couts|sum_list %}
+                                    {{ total_cost|floatformat:0 }} M
+                                {% endwith %}
+                            </span>
                         </div>
                         <div class="line-item full-width">
                             <i class="bi bi-link-45deg text-dark me-1"></i>
@@ -197,17 +196,17 @@ Liste des Plans d'Actions Stratégiques (PAS)
     }
     .line-item {
         flex: 1; /* Espace égal pour chaque élément */
-        min-width: 120px; /* Réduit pour s'adapter à une boîte plus étroite */
-        max-width: 20%; /* Limite pour 5 éléments */
+        min-width: 120px; /* Largeur minimale pour éviter le chevauchement */
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        padding: 0 8px; /* Réduit légèrement le padding */
+        padding: 0 10px; /* Marges gauche et droite équilibrées */
         text-align: left;
     }
     .line-item.full-width {
         max-width: 100%; /* Pour les lignes avec un seul élément */
         text-align: left;
+        padding: 0 10px; /* Marges équilibrées */
     }
     .bi {
         font-size: 1.2rem;
@@ -318,9 +317,11 @@ Liste des Plans d'Actions Stratégiques (PAS)
             max-width: 100%; /* Pleine largeur sur petits écrans */
             margin-bottom: 10px;
             text-align: center;
+            padding: 0; /* Pas de padding sur mobile pour maximiser l'espace */
         }
         .line-item.full-width {
             text-align: center;
+            padding: 0;
         }
         .btn {
             display: block;

@@ -41,4 +41,4 @@ class BlogComment(models.Model):
         ordering = ['created_at']
 
     def __str__(self):
-        return f"Commentaire de {self.author} sur {self.blog}"
+        return f"Commentaire de {self.user} sur {self.blog}"

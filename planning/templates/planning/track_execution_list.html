@@ -31,14 +31,6 @@ Suivi des Plans d'Actions Opérationnels (PAO) - {{ plan.titre }}
                                     {{ pao.statut }}
                                 </span>
                             </p>
-                            {% if pao.has_pending %}
-                                <p class="text-muted mb-0 text-center mt-2">
-                                    <span class="fw-bold">En attente :</span>
-                                    <span class="text-warning">
-                                        {% if pao.last_modified_by_se %}Validation par PF/R{% else %}Validation par SE{% endif %}
-                                    </span>
-                                </p>
-                            {% endif %}
                         </div>
                     </a>
                 </div>
@@ -57,6 +49,8 @@ Suivi des Plans d'Actions Opérationnels (PAO) - {{ plan.titre }}
 
     <!-- Boutons de navigation -->
     <div class="text-center mt-5 animate-fade-in">
+        <a href="{% url 'generer_rapport' plan.id %}" class="btn btn-success btn-lg px-5 py-3 fw-bold me-3">Générer un rapport</a>
+        <a href="{% url 'rapport_liste' plan.id %}" class="btn btn-primary btn-lg px-5 py-3 fw-bold me-3">Rapports générés</a>
         <a href="{% url 'plan_action_detail' plan.id %}" class="btn btn-secondary btn-lg px-5 py-3 fw-bold">Retour au Plan Stratégique</a>
     </div>
 </div>
