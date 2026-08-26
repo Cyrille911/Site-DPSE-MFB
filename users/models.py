@@ -3,6 +3,8 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser, Group
 from django.db.models.signals import post_migrate
 from django.dispatch import receiver
+from django.utils import timezone
+from datetime import timedelta
 import os
 
 def user_directory_path(instance, filename):
@@ -46,6 +48,9 @@ class User(AbstractUser):
     profession = models.CharField(max_length=100, blank=True, null=True)
     interest = models.CharField(max_length=100, blank=True, null=True)
 
+    # Rôles considérés comme "membres" (hors visiteurs) pour le nettoyage automatique
+    MEMBER_ROLES = ['point_focal', 'responsable', 'suiveur_evaluateur', 'cabinet']
+
     def save(self, *args, **kwargs):
         if not self.username:
             self.username = self.email
@@ -73,6 +78,22 @@ class User(AbstractUser):
 
     def has_role(self, role_name):
         return self.groups.filter(name=role_name).exists() or self.role == role_name.lower().replace(' ', '_')
+
+    @staticmethod
+    def delete_unactivated_members(days=7):
+        """Supprime les comptes membres (hors visiteurs) restés inactifs plus de `days` jours après leur inscription."""
+        cutoff = timezone.now() - timedelta(days=days)
+        queryset = User.objects.filter(
+            is_active=False,
+            is_superuser=False,
+            role__in=User.MEMBER_ROLES,
+            date_joined__lt=cutoff,
+        )
+        count = queryset.count()
+        emails = list(queryset.values_list('email', flat=True)) if count else []
+        if count:
+            queryset.delete()
+        return count, emails
 
 @receiver(post_migrate)
 def create_default_groups(sender, **kwargs):

@@ -202,4 +202,8 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'planning.tasks.check_activity_alerts_task',
         'schedule': crontab(day_of_week=1, hour=8, minute=0),  # Tous les lundis à 8h00
     },
+    'delete-unactivated-members': {
+        'task': 'users.tasks.delete_unactivated_members_task',
+        'schedule': crontab(hour=2, minute=0),  # Tous les jours à 2h00 du matin
+    },
 }
