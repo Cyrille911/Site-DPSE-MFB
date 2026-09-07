@@ -20,6 +20,7 @@ urlpatterns = [
     path('gestion-utilisateurs/update-role/<int:user_id>/', views.update_user_role, name='update_user_role'),
     path('gestion-utilisateurs/update-details/<int:user_id>/', views.update_user_details, name='update_user_details'),
     path('gestion-utilisateurs/update-permissions/<int:user_id>/', views.update_user_permissions, name='update_user_permissions'),
+    path('gestion-utilisateurs/historique-activations/', views.historique_activations, name='historique_activations'),
 
     path('déconnexion/', views.deconnexion, name='deconnexion'),
 ]

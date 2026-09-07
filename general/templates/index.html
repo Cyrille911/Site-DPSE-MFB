@@ -54,6 +54,43 @@
       color: #ff7200;
     }
 
+    /* Navbar centrée : logo gauche, liens centre, auth droite */
+    @media (min-width: 1200px) {
+      .header .container-fluid {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .header .header-logo {
+        position: absolute;
+        left: 15px;
+        flex-shrink: 0;
+      }
+
+      .header .navmenu {
+        flex: 0 1 auto;
+      }
+
+      .header .header-auth {
+        position: absolute;
+        right: 15px;
+        flex-shrink: 0;
+        font-family: var(--nav-font);
+        font-size: 16px;
+        font-weight: 400;
+      }
+
+      .header .header-auth a {
+        color: var(--nav-color);
+        transition: 0.3s;
+      }
+
+      .header .header-auth a:hover {
+        color: var(--nav-hover-color);
+      }
+    }
+
     .menu-title {
       display: flex;
       align-items: center;
@@ -110,13 +147,13 @@
 <body class="index-page">
 
   <header id="header" class="header fixed-top">
-    <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
-      <!-- Logo -->
-      <a href="/" class="">
+    <div class="container-fluid container-xl position-relative d-flex align-items-center">
+      <!-- Logo (gauche) -->
+      <a href="/" class="header-logo">
         <img class="logo" width="150" height="60" src="{% static 'general/images/logo.png' %}" alt="">
       </a>
 
-      <!-- Menu de navigation -->
+      <!-- Menu de navigation (centré) -->
       <nav id="navmenu" class="navmenu">
         <ul>
           <li><a href="{% url 'accueil' %}">Accueil</a></li>
@@ -202,6 +239,29 @@
         </ul>
         <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
       </nav>
+
+      <!-- Zone connexion (droite, desktop uniquement) -->
+      <div class="header-auth d-none d-xl-flex align-items-center">
+        {% if request.user.is_authenticated %}
+          <a href="#" data-bs-toggle="modal" data-bs-target="#profileModal" class="d-flex align-items-center text-decoration-none">
+            {% if request.user.photo %}
+            <img src="{{ request.user.photo.url }}" class="rounded-circle" width="34" height="34" alt="Photo"
+              style="margin-right: 8px; border: 2px solid #ff7200;">
+            {% else %}
+            <div class="rounded-circle d-flex justify-content-center align-items-center"
+              style="width: 34px; height: 34px; font-size: 13px; font-weight: bold; margin-right: 8px; background: #ff7200; color: #fff;">
+              {{ request.user.first_name|default:''|slice:":1" }}{{ request.user.last_name|default:''|slice:":1" }}
+            </div>
+            {% endif %}
+            <span style="white-space: nowrap;">{{ request.user.first_name }} {{ request.user.last_name }}</span>
+          </a>
+        {% else %}
+          <a href="#" data-bs-toggle="modal" data-bs-target="#loginModal"
+            style="white-space: nowrap;">
+            Se connecter
+          </a>
+        {% endif %}
+      </div>
     </div>
   </header>
 

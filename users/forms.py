@@ -25,15 +25,15 @@ class InscriptionMembreForm(forms.ModelForm):
     )
     program = forms.ChoiceField(
         label="Programme",
-        choices=User.PROGRAM_CHOICES,
+        choices=[('', '-- Sélectionner --')] + User.PROGRAM_CHOICES,
         required=False,
         widget=forms.Select(attrs={'class': 'input100'})
     )
-    entity = forms.CharField(
+    entity = forms.ChoiceField(
         label="Structure",
-        max_length=50,
+        choices=[('', '-- Sélectionner --')] + User.ENTITY_CHOICES,
         required=False,
-        widget=forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Entité'})
+        widget=forms.Select(attrs={'class': 'input100'})
     )
     function = forms.CharField(
         label="Fonction",
@@ -220,15 +220,15 @@ class ProfileUpdateForm(forms.ModelForm):
     # Champs spécifiques aux membres
     program = forms.ChoiceField(
         label="Programme",
-        choices=User.PROGRAM_CHOICES,
+        choices=[('', '-- Sélectionner --')] + User.PROGRAM_CHOICES,
         required=False,
         widget=forms.Select(attrs={'class': 'input100'})
     )
-    entity = forms.CharField(
+    entity = forms.ChoiceField(
         label="Structure",
-        max_length=100,
+        choices=[('', '-- Sélectionner --')] + User.ENTITY_CHOICES,
         required=False,
-        widget=forms.TextInput(attrs={'class': 'input100', 'placeholder': 'Entité'})
+        widget=forms.Select(attrs={'class': 'input100'})
     )
     function = forms.CharField(
         label="Fonction",

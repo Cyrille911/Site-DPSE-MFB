@@ -91,6 +91,9 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Gestion des Utilisateurs</h1>
         <div class="d-flex gap-2">
+            <a href="{% url 'historique_activations' %}" class="btn btn-outline-info align-self-center">
+                <i class="bi bi-clock-history me-1"></i>Historique activations
+            </a>
             <span class="badge bg-primary rounded-pill align-self-center px-3 py-2">Total: {{ users.count }}</span>
         </div>
     </div>
@@ -295,7 +298,16 @@
                                                                 {% else %}
                                                                 <div class="col-sm-6">
                                                                     <label class="form-label small text-muted text-uppercase fw-bold">Entité / Structure</label>
-                                                                    <input type="text" name="entity" class="form-control" value="{{ user.entity|default:'' }}">
+                                                                    <select name="entity" class="form-select">
+                                                                        <option value="">-- Sélectionner --</option>
+                                                                        <option value="DGI" {% if user.entity == 'DGI' %}selected{% endif %}>DGI</option>
+                                                                        <option value="DGD" {% if user.entity == 'DGD' %}selected{% endif %}>DGD</option>
+                                                                        <option value="DGTCP" {% if user.entity == 'DGTCP' %}selected{% endif %}>DGTCP</option>
+                                                                        <option value="DGBF" {% if user.entity == 'DGBF' %}selected{% endif %}>DGBF</option>
+                                                                        <option value="DGF" {% if user.entity == 'DGF' %}selected{% endif %}>DGF</option>
+                                                                        <option value="DGMP" {% if user.entity == 'DGMP' %}selected{% endif %}>DGMP</option>
+                                                                        <option value="DGE" {% if user.entity == 'DGE' %}selected{% endif %}>DGE</option>
+                                                                    </select>
                                                                 </div>
                                                                 <div class="col-sm-6">
                                                                     <label class="form-label small text-muted text-uppercase fw-bold">Fonction</label>

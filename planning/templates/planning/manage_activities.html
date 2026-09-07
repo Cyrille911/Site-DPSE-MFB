@@ -74,6 +74,9 @@ Gestion des Activités - {{ plan.titre }} - {{ annee }}
                                               data-model="{{ activite.model_etat_avancement }}"
                                               data-pf="{{ activite.pf_etat_avancement }}"
                                               data-resp="{{ activite.resp_etat_avancement }}">{% if is_responsable %}{{ activite.resp_etat_avancement }}{% else %}{{ activite.pf_etat_avancement }}{% endif %}</textarea>
+                                    <a href="{% url 'preuves_activite' activite.id %}" class="btn btn-sm btn-outline-primary mt-1 w-100" title="Preuves de réalisation">
+                                        <i class="bi bi-paperclip me-1"></i>Preuves ({{ activite.preuves.count }})
+                                    </a>
                                 </td>
                                 <td>{{ activite.cout }}</td>
                                 <td>

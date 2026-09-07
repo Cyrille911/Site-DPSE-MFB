@@ -122,6 +122,9 @@ DATABASES = {
 }
 
 
+# Durée de validité des tokens d'activation (7 jours en secondes)
+PASSWORD_RESET_TIMEOUT = 60 * 60 * 24 * 7  # 604800 secondes = 7 jours
+
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 

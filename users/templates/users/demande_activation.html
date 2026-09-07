@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Demande d’activation de compte</title>
+    <title>Demande d'activation de compte</title>
 </head>
 <body>
-    <h1>Demande d’activation de compte</h1>
+    <h1>Demande d'activation de compte</h1>
     <p>Monsieur/Madame,</p>
-    <p>Un nouveau collaborateur a soumis une demande d’activation de compte sur la plateforme. Voici les informations le concernant :</p>
+    <p>Un nouveau collaborateur a soumis une demande d'activation de compte sur la plateforme. Voici les informations le concernant :</p>
     <ul>
-        <li><strong>Nom d’utilisateur :</strong> {{ user.username }}</li>
+        <li><strong>Nom d'utilisateur :</strong> {{ user.username }}</li>
         <li><strong>Nom :</strong> {{ user.last_name }}</li>
         <li><strong>Prénoms :</strong> {{ user.first_name }}</li>
         <li><strong>Programme :</strong> {{ user.program|default:"Non spécifié" }}</li>
@@ -18,10 +18,24 @@
         <li><strong>Fonction :</strong> {{ user.function|default:"Non spécifié" }}</li>
         <li><strong>Email :</strong> {{ user.email }}</li>
         <li><strong>Téléphone :</strong> {{ user.phone_number|default:"Non spécifié" }}</li>
-        <li><strong>Rôle :</strong> {{ user.role }}</li>
+        <li><strong>Rôle :</strong> {{ user.get_role_display }}</li>
     </ul>
+
+    {% if current_active %}
+    <div style="background-color: #fff3cd; border: 1px solid #ffc107; padding: 15px; margin: 15px 0; border-radius: 5px;">
+        <p style="color: #856404; margin: 0;"><strong>&#9888; Attention :</strong></p>
+        <p style="color: #856404; margin: 5px 0 0 0;">
+            En activant ce compte, le {{ user.get_role_display }} actuellement actif
+            pour la structure <strong>{{ user.entity }}</strong> sera automatiquement <strong>désactivé</strong> :
+        </p>
+        <ul style="color: #856404;">
+            <li><strong>{{ current_active.first_name }} {{ current_active.last_name }}</strong> ({{ current_active.email }})</li>
+        </ul>
+    </div>
+    {% endif %}
+
     <p>Pour valider cette demande et activer le compte, merci de cliquer sur le lien suivant :</p>
-    <p><a href="http://{{ domain }}/User/nouveau/membre/{{ uid }}/{{ token }}">Valider l’activation</a></p>
+    <p><a href="http://{{ domain }}/User/nouveau/membre/{{ uid }}/{{ token }}">Valider l'activation</a></p>
     <p>Nous vous remercions par avance pour votre diligence dans le traitement de cette requête.</p>
     <p>Salutations distinguées !</p>
 </body>

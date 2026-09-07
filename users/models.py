@@ -3,6 +3,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser, Group
 from django.db.models.signals import post_migrate
 from django.dispatch import receiver
+from django.utils import timezone
 import os
 
 def user_directory_path(instance, filename):
@@ -27,6 +28,16 @@ class User(AbstractUser):
         ('Programme 7', 'Programme 7'),
     ]
 
+    ENTITY_CHOICES = [
+        ('DGI', 'DGI'),
+        ('DGD', 'DGD'),
+        ('DGTCP', 'DGTCP'),
+        ('DGBF', 'DGBF'),
+        ('DGF', 'DGF'),
+        ('DGMP', 'DGMP'),
+        ('DGE', 'DGE'),
+    ]
+
     # Champs communs
     email = models.EmailField(unique=True)
     username = models.CharField(max_length=150, blank=True, null=True)
@@ -39,12 +50,16 @@ class User(AbstractUser):
     
     # Champs spécifiques aux membres
     program = models.CharField(max_length=50, blank=True, null=True, choices=PROGRAM_CHOICES)
-    entity = models.CharField(max_length=50, blank=True, null=True)
+    entity = models.CharField(max_length=50, blank=True, null=True, choices=ENTITY_CHOICES)
     function = models.CharField(max_length=100, blank=True, null=True)
 
     # Champs spécifiques aux visiteurs
     profession = models.CharField(max_length=100, blank=True, null=True)
     interest = models.CharField(max_length=100, blank=True, null=True)
+
+    # Dates d'activation et de désactivation (pour point_focal et responsable)
+    date_activation = models.DateTimeField(null=True, blank=True)
+    date_desactivation = models.DateTimeField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
         if not self.username:

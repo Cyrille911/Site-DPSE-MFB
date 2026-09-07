@@ -1,13 +1,24 @@
 import json
 from django.contrib import admin
-from .models import PlanAction, Effet, Produit, Action, Activite, ActiviteLog
+from .models import PlanAction, Axe, Effet, IndicateurEffet, Produit, IndicateurProduit, Action, Activite, ActiviteLog, PreuveRealisation
 
 # Enregistrer chaque modèle dans l'admin
 admin.site.register(PlanAction)
+admin.site.register(Axe)
 admin.site.register(Effet)
+admin.site.register(IndicateurEffet)
 admin.site.register(Produit)
+admin.site.register(IndicateurProduit)
 admin.site.register(Action)
 admin.site.register(Activite)
+
+
+@admin.register(PreuveRealisation)
+class PreuveRealisationAdmin(admin.ModelAdmin):
+    list_display = ('titre', 'type_preuve', 'activite', 'uploaded_by', 'created_at')
+    list_filter = ('type_preuve', 'created_at')
+    search_fields = ('titre', 'activite__titre', 'activite__reference')
+    readonly_fields = ('created_at', 'updated_at')
 
 @admin.register(ActiviteLog)
 class ActiviteLogAdmin(admin.ModelAdmin):

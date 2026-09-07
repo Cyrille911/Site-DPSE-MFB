@@ -1,6 +1,6 @@
 from django.test import TestCase
 from django.contrib.auth.models import User, Group
-from .models import PlanAction, Effet, Produit, Action, Activite, ActivityLog
+from .models import PlanAction, Axe, Effet, Produit, Action, Activite, ActiviteLog
 
 class ActiviteTestCase(TestCase):
     def setUp(self):
@@ -13,7 +13,8 @@ class ActiviteTestCase(TestCase):
 
         # Créer une hiérarchie
         self.plan = PlanAction.objects.create(titre="Test Plan", horizon=3, annee_debut=2025)
-        self.effet = Effet.objects.create(plan=self.plan, titre="Effet Test")
+        self.axe = Axe.objects.create(plan=self.plan, titre="Axe Test")
+        self.effet = Effet.objects.create(axe=self.axe, titre="Effet Test")
         self.produit = Produit.objects.create(effet=self.effet, titre="Produit Test")
         self.action = Action.objects.create(produit=self.produit, titre="Action Test")
         self.activite = Activite.objects.create(

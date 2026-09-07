@@ -21,6 +21,7 @@ from .forms import (
 )
 from .models import User
 from .tokens import account_activation_token
+from django.utils import timezone
 from django.contrib.auth.models import Permission
 from .permissions_config import get_grouped_permissions
 
@@ -153,7 +154,24 @@ Si vous n'êtes pas à l'origine de ces changements ou si vous constatez une err
 def toggle_user_active(request, user_id):
     user = get_object_or_404(User, id=user_id)
     if user != request.user:  # Empêcher de se désactiver soi-même
-        user.is_active = not user.is_active
+        new_active_state = not user.is_active
+        
+        # Si on active un point_focal ou responsable, désactiver le seul actif actuel de même rôle et structure
+        if new_active_state and user.role in ('point_focal', 'responsable') and user.entity:
+            current_active = User.objects.filter(
+                role=user.role, entity=user.entity, is_active=True
+            ).exclude(id=user.id).first()
+            if current_active:
+                current_active.is_active = False
+                current_active.date_desactivation = timezone.now()
+                current_active.save()
+            # Enregistrer la date d'activation du nouveau
+            user.date_activation = timezone.now()
+        elif not new_active_state and user.role in ('point_focal', 'responsable') and user.entity:
+            # Enregistrer la date de désactivation
+            user.date_desactivation = timezone.now()
+        
+        user.is_active = new_active_state
         user.save()
         status = "activé" if user.is_active else "désactivé"
         messages.success(request, f"L'utilisateur {user.email} a été {status}.")
@@ -324,6 +342,14 @@ def activer_compte_membre(request, uidb64, token):
             current_site = get_current_site(request)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             token = account_activation_token.make_token(user)
+            
+            # Chercher le point_focal/responsable actuellement actif pour la même structure
+            current_active = None
+            if user.role in ('point_focal', 'responsable') and user.entity:
+                current_active = User.objects.filter(
+                    role=user.role, entity=user.entity, is_active=True
+                ).exclude(id=user.id).first()
+
             subject = 'Demande d\'activation de compte'
             message = render_to_string('users/demande_activation.html', {
                 'user': user,
@@ -331,6 +357,7 @@ def activer_compte_membre(request, uidb64, token):
                 'uid': uid,
                 'token': token,
                 'activation_link': f"http://{current_site.domain}/User/nouveau/membre/{uid}/{token}/",
+                'current_active': current_active,
             })
             plain_message = strip_tags(message)
             try:
@@ -360,6 +387,18 @@ def activer_nouveau_membre(request, uidb64, token):
 
     if user is not None and account_activation_token.check_token(user, token):
         if user.role in ['point_focal', 'responsable', 'suiveur_evaluateur', 'cabinet']:
+            # Si point_focal ou responsable, désactiver le seul actif actuel de même rôle et structure
+            if user.role in ('point_focal', 'responsable') and user.entity:
+                current_active = User.objects.filter(
+                    role=user.role, entity=user.entity, is_active=True
+                ).exclude(id=user.id).first()
+                if current_active:
+                    current_active.is_active = False
+                    current_active.date_desactivation = timezone.now()
+                    current_active.save()
+                # Enregistrer la date d'activation du nouveau
+                user.date_activation = timezone.now()
+
             user.is_active = True
             user.save()
             current_site = get_current_site(request)
@@ -537,6 +576,46 @@ def modifier_profil(request):
     
     context['form'] = form
     return render(request, 'users/formulaire.html', context)
+
+@login_required
+@user_passes_test(is_suiveur_evaluateur)
+def historique_activations(request):
+    """Vue pour l'historique d'activation/désactivation des points focaux et responsables par structure."""
+    structure_filter = request.GET.get('structure')
+    role_filter = request.GET.get('role')
+    
+    # Récupérer tous les point_focal et responsables (actifs et désactivés)
+    members = User.objects.filter(
+        role__in=('point_focal', 'responsable'),
+        entity__isnull=False
+    ).exclude(entity='').order_by('entity', 'role', '-date_activation')
+    
+    if structure_filter:
+        members = members.filter(entity=structure_filter)
+    if role_filter:
+        members = members.filter(role=role_filter)
+    
+    # Utiliser toutes les structures définies (toujours visibles, même sans utilisateurs)
+    structures = [code for code, label in User.ENTITY_CHOICES]
+    
+    # Récupérer les points focaux et responsables actifs par structure
+    active_by_structure = {}
+    for structure in structures:
+        active_by_structure[structure] = {
+            'point_focal': User.objects.filter(role='point_focal', entity=structure, is_active=True).first(),
+            'responsable': User.objects.filter(role='responsable', entity=structure, is_active=True).first(),
+        }
+
+    context = {
+        'title': "Historique des activations",
+        'members': members,
+        'structures': structures,
+        'current_structure_filter': structure_filter,
+        'current_role_filter': role_filter,
+        'active_by_structure': active_by_structure,
+    }
+    return render(request, 'users/historique_activations.html', context)
+
 
 def deconnexion(request):
     """

@@ -32,7 +32,7 @@ class AccountActivationTokenGenerator(PasswordResetTokenGenerator):
         timestamp = self._get_timestamp_from_token(token)
         if timestamp:
             # Définir la durée d'expiration
-            expiration_time = timestamp + timedelta(hours=24)  # Changer à 24 heures
+            expiration_time = timestamp + timedelta(days=7)  # Expiration après 7 jours
             if timezone.now() > expiration_time:
                 return False  # Le jeton a expiré
         return super().check_token(user, token)

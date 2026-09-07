@@ -1,0 +1,124 @@
+{% extends 'index.html' %}
+{% load static %}
+
+{% block title %}Historique des activations{% endblock %}
+
+{% block style %}
+<style>
+    .structure-card {
+        transition: all 0.3s ease;
+    }
+    .structure-card:hover {
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5" style="min-height: 60vh;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Historique des Activations</h1>
+        <a href="{% url 'manage_users' %}" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-left me-2"></i>Retour gestion utilisateurs
+        </a>
+    </div>
+
+    <!-- Filtres -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label small text-muted fw-bold">Structure</label>
+                    <select name="structure" class="form-select" onchange="this.form.submit()">
+                        <option value="">Toutes les structures</option>
+                        {% for structure in structures %}
+                        <option value="{{ structure }}" {% if current_structure_filter == structure %}selected{% endif %}>{{ structure }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small text-muted fw-bold">R&ocirc;le</label>
+                    <select name="role" class="form-select" onchange="this.form.submit()">
+                        <option value="">Tous les r&ocirc;les</option>
+                        <option value="point_focal" {% if current_role_filter == 'point_focal' %}selected{% endif %}>Point Focal</option>
+                        <option value="responsable" {% if current_role_filter == 'responsable' %}selected{% endif %}>Responsable</option>
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-funnel-fill me-1"></i>Filtrer</button>
+                    {% if current_structure_filter or current_role_filter %}
+                    <a href="{% url 'historique_activations' %}" class="btn btn-outline-secondary"><i class="bi bi-x-lg me-1"></i>R&eacute;initialiser</a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tableau historique -->
+    <div class="card shadow-lg border-0 rounded-3">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Historique par membre</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light text-secondary">
+                        <tr>
+                            <th scope="col" class="ps-4">Membre</th>
+                            <th scope="col">R&ocirc;le</th>
+                            <th scope="col">Structure</th>
+                            <th scope="col">Statut</th>
+                            <th scope="col">Date d'activation</th>
+                            <th scope="col">Date de d&eacute;sactivation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for member in members %}
+                        <tr>
+                            <td class="ps-4">
+                                <div class="fw-bold">{{ member.first_name }} {{ member.last_name }}</div>
+                                <div class="text-muted small">{{ member.email }}</div>
+                            </td>
+                            <td>
+                                <span class="badge {% if member.role == 'point_focal' %}bg-info text-dark{% else %}bg-warning text-dark{% endif %} rounded-pill">
+                                    {{ member.get_role_display }}
+                                </span>
+                            </td>
+                            <td><strong>{{ member.entity }}</strong></td>
+                            <td>
+                                {% if member.is_active %}
+                                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Actif</span>
+                                {% else %}
+                                    <span class="badge bg-secondary"><i class="bi bi-dash-circle me-1"></i>Inactif</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if member.date_activation %}
+                                    <span class="text-success">{{ member.date_activation|date:"d/m/Y H:i" }}</span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if member.date_desactivation %}
+                                    <span class="text-danger">{{ member.date_desactivation|date:"d/m/Y H:i" }}</span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="bi bi-clock-history display-4 d-block mb-3"></i>
+                                Aucun point focal ou responsable enregistr&eacute;.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

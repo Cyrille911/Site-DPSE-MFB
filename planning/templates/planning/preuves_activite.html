@@ -1,0 +1,210 @@
+{% extends "index.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block style %}
+<style>
+    .text-orange { color: #ff6200 !important; }
+    .bg-orange { background: #ff6200 !important; }
+    .btn-orange { background: #ff6200; color: white; border: none; }
+    .btn-orange:hover { background: #e55800; color: white; }
+    .preuve-card { transition: all 0.3s ease; border-left: 4px solid #ff6200; }
+    .preuve-card:hover { box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .type-badge { font-size: 0.85em; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5" style="min-height: 60vh;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="text-orange fw-bold">Preuves de réalisation</h2>
+            <p class="text-muted mb-0">
+                <strong>{{ activite.reference }}</strong> - {{ activite.titre }}
+            </p>
+        </div>
+        <a href="javascript:history.back()" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Retour
+        </a>
+    </div>
+
+    {% if messages %}
+    <div class="mt-2 mb-3">
+        {% for message in messages %}
+        <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="row g-4">
+        <!-- Colonne formulaire -->
+        <div class="col-md-5">
+            <div class="card shadow-sm">
+                <div class="card-header bg-orange text-white">
+                    <h5 class="mb-0">
+                        {% if is_edit %}
+                            <i class="bi bi-pencil me-2"></i>Modifier la preuve
+                        {% else %}
+                            <i class="bi bi-plus-circle me-2"></i>Ajouter une preuve
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="id_type_preuve" class="form-label fw-bold">Type de preuve</label>
+                            {{ form.type_preuve }}
+                            {% if form.type_preuve.errors %}
+                            <div class="text-danger small mt-1">{{ form.type_preuve.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_titre" class="form-label fw-bold">Titre</label>
+                            {{ form.titre }}
+                            {% if form.titre.errors %}
+                            <div class="text-danger small mt-1">{{ form.titre.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3" id="field-fichier">
+                            <label for="id_fichier" class="form-label fw-bold">Fichier</label>
+                            {{ form.fichier }}
+                            {% if form.fichier.errors %}
+                            <div class="text-danger small mt-1">{{ form.fichier.errors.0 }}</div>
+                            {% endif %}
+                            {% if is_edit and preuve.fichier %}
+                            <div class="small text-muted mt-1">Fichier actuel : {{ preuve.fichier.name }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3" id="field-lien" style="display:none;">
+                            <label for="id_lien" class="form-label fw-bold">Lien URL</label>
+                            {{ form.lien }}
+                            {% if form.lien.errors %}
+                            <div class="text-danger small mt-1">{{ form.lien.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger small">{{ form.non_field_errors.0 }}</div>
+                        {% endif %}
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-orange w-100">
+                                {% if is_edit %}Enregistrer{% else %}Ajouter{% endif %}
+                            </button>
+                            {% if is_edit %}
+                            <a href="{% url 'preuves_activite' activite.id %}" class="btn btn-outline-secondary">Annuler</a>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Colonne liste des preuves -->
+        <div class="col-md-7">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="bi bi-folder2-open me-2"></i>Preuves existantes ({{ preuves.count }})</h5>
+                </div>
+                <div class="card-body">
+                    {% for preuve in preuves %}
+                    <div class="card preuve-card mb-3">
+                        <div class="card-body py-3 px-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="d-flex align-items-center mb-1">
+                                        {% if preuve.type_preuve == 'lien' %}
+                                            <span class="badge bg-primary type-badge me-2"><i class="bi bi-link-45deg me-1"></i>Lien</span>
+                                        {% elif preuve.type_preuve == 'document' %}
+                                            <span class="badge bg-success type-badge me-2"><i class="bi bi-file-earmark-text me-1"></i>Document</span>
+                                        {% elif preuve.type_preuve == 'image' %}
+                                            <span class="badge bg-info text-dark type-badge me-2"><i class="bi bi-image me-1"></i>Image</span>
+                                        {% elif preuve.type_preuve == 'video' %}
+                                            <span class="badge bg-danger type-badge me-2"><i class="bi bi-camera-video me-1"></i>Vidéo</span>
+                                        {% endif %}
+                                        <strong>{{ preuve.titre }}</strong>
+                                    </div>
+                                    <div class="small text-muted">
+                                        {% if preuve.type_preuve == 'lien' %}
+                                            <a href="{{ preuve.lien }}" target="_blank" class="text-primary">
+                                                <i class="bi bi-box-arrow-up-right me-1"></i>{{ preuve.lien|truncatechars:60 }}
+                                            </a>
+                                        {% else %}
+                                            <a href="{{ preuve.fichier.url }}" target="_blank" class="text-primary">
+                                                <i class="bi bi-download me-1"></i>Télécharger le fichier
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                    <div class="small text-muted mt-1">
+                                        <i class="bi bi-clock me-1"></i>{{ preuve.created_at|date:"d/m/Y H:i" }}
+                                        {% if preuve.uploaded_by %}
+                                        - par {{ preuve.uploaded_by.first_name }} {{ preuve.uploaded_by.last_name }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-1">
+                                    <a href="{% url 'modifier_preuve' preuve.id %}" class="btn btn-sm btn-outline-warning" title="Modifier">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" title="Supprimer"
+                                            data-bs-toggle="modal" data-bs-target="#deleteModal{{ preuve.id }}">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modale de confirmation de suppression -->
+                    <div class="modal fade" id="deleteModal{{ preuve.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered modal-sm">
+                            <div class="modal-content">
+                                <div class="modal-header bg-danger text-white">
+                                    <h6 class="modal-title">Confirmer la suppression</h6>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p class="small mb-0">Supprimer la preuve <strong>{{ preuve.titre }}</strong> ?</p>
+                                </div>
+                                <div class="modal-footer py-1">
+                                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                    <a href="{% url 'supprimer_preuve' preuve.id %}" class="btn btn-sm btn-danger">Supprimer</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-folder display-4 d-block mb-2"></i>
+                        Aucune preuve enregistrée pour cette activité.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const typeSelect = document.getElementById('id_type_preuve');
+    const fieldFichier = document.getElementById('field-fichier');
+    const fieldLien = document.getElementById('field-lien');
+
+    function toggleFields() {
+        if (typeSelect.value === 'lien') {
+            fieldFichier.style.display = 'none';
+            fieldLien.style.display = 'block';
+        } else {
+            fieldFichier.style.display = 'block';
+            fieldLien.style.display = 'none';
+        }
+    }
+
+    typeSelect.addEventListener('change', toggleFields);
+    toggleFields();
+});
+</script>
+{% endblock %}

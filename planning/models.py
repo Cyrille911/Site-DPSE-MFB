@@ -1,3 +1,4 @@
+import os
 from django.db import models
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.conf import settings
@@ -31,18 +32,18 @@ class PlanAction(models.Model):
 
     def calculer_couts(self):
         couts = [0.0] * self.horizon
-        for effet in self.plan_effet.all():
-            for i, cout in enumerate(effet.couts):
+        for axe in self.plan_axe.all():
+            for i, cout in enumerate(axe.couts):
                 couts[i] += float(cout)
         self.couts = couts
         self.save()
 
     def calculer_nombres(self):
-        plan_effet = self.plan_effet.prefetch_related('effet_produit__produit_action__action_activite')
-        self.nombre_effets = plan_effet.count()
-        self.nombre_produits = sum(effet.effet_produit.count() for effet in plan_effet)
-        self.nombre_actions = sum(produit.produit_action.count() for effet in plan_effet for produit in effet.effet_produit.all())
-        self.nombre_activites = sum(action.action_activite.count() for effet in plan_effet for produit in effet.effet_produit.all() for action in produit.produit_action.all())
+        plan_axe = self.plan_axe.prefetch_related('axe_effet__effet_produit__produit_action__action_activite')
+        self.nombre_effets = sum(axe.axe_effet.count() for axe in plan_axe)
+        self.nombre_produits = sum(effet.effet_produit.count() for axe in plan_axe for effet in axe.axe_effet.all())
+        self.nombre_actions = sum(produit.produit_action.count() for axe in plan_axe for effet in axe.axe_effet.all() for produit in effet.effet_produit.all())
+        self.nombre_activites = sum(action.action_activite.count() for axe in plan_axe for effet in axe.axe_effet.all() for produit in effet.effet_produit.all() for action in produit.produit_action.all())
         self.save()
 
     def save(self, *args, **kwargs):
@@ -66,8 +67,8 @@ class PlanAction(models.Model):
             self.reference = f"PA{position}"
         
         super().save(*args, **kwargs)
-        for effet in self.plan_effet.all():
-            effet.update_reference()
+        for axe in self.plan_axe.all():
+            axe.update_reference()
 
     def is_en_cours(self):
         return "En cours" in self.statut_pao
@@ -79,12 +80,13 @@ class PlanAction(models.Model):
         verbose_name = "Plan d'actions"
         verbose_name_plural = "Plans d'actions"
 
-# Modèle Effet (inchangé)
-class Effet(models.Model):
+# Modèle Axe
+class Axe(models.Model):
     id = models.AutoField(primary_key=True)
-    plan = models.ForeignKey(PlanAction, related_name="plan_effet", on_delete=models.CASCADE)
+    plan = models.ForeignKey(PlanAction, related_name="plan_axe", on_delete=models.CASCADE)
     titre = models.CharField(max_length=500)
     couts = models.JSONField(default=list)
+    nombre_effets = models.PositiveIntegerField(default=0)
     nombre_produits = models.PositiveIntegerField(default=0)
     nombre_actions = models.PositiveIntegerField(default=0)
     nombre_activites = models.PositiveIntegerField(default=0)
@@ -92,48 +94,43 @@ class Effet(models.Model):
 
     def calculer_couts(self):
         couts = [0.0] * self.plan.horizon
-        for produit in self.effet_produit.all():
-            for i, cout in enumerate(produit.couts):
+        for effet in self.axe_effet.all():
+            for i, cout in enumerate(effet.couts):
                 couts[i] += float(cout)
         self.couts = couts
         self.save()
         self.plan.calculer_couts()
 
     def calculer_nombres(self):
-        effet_produit = self.effet_produit.prefetch_related('produit_action__action_activite')
-        self.nombre_produits = effet_produit.count()
-        self.nombre_actions = sum(produit.produit_action.count() for produit in effet_produit)
-        self.nombre_activites = sum(action.action_activite.count() for produit in effet_produit for action in produit.produit_action.all())
+        axe_effet = self.axe_effet.prefetch_related('effet_produit__produit_action__action_activite')
+        self.nombre_effets = axe_effet.count()
+        self.nombre_produits = sum(effet.effet_produit.count() for effet in axe_effet)
+        self.nombre_actions = sum(produit.produit_action.count() for effet in axe_effet for produit in effet.effet_produit.all())
+        self.nombre_activites = sum(action.action_activite.count() for effet in axe_effet for produit in effet.effet_produit.all() for action in produit.produit_action.all())
         self.save()
         self.plan.calculer_nombres()
 
     def update_reference(self):
         if not self.reference or self.pk is None:
             if not self.pk:
-                position = self.plan.plan_effet.count() + 1
+                position = self.plan.plan_axe.count() + 1
             else:
-                position = list(self.plan.plan_effet.order_by('id')).index(self) + 1
+                position = list(self.plan.plan_axe.order_by('id')).index(self) + 1
             self.reference = f"{position}"
             self.save(update_fields=['reference'])
-        for produit in self.effet_produit.all():
-            produit.update_reference()
+        for effet in self.axe_effet.all():
+            effet.update_reference()
 
     def save(self, *args, **kwargs):
         if not self.couts or len(self.couts) != self.plan.horizon:
             self.couts = [0.0] * self.plan.horizon
-        
-        old_instance = None
-        if self.pk:
-            old_instance = Effet.objects.get(pk=self.pk)
-        self.full_clean()
+        if not self.reference:
+            if not self.pk:
+                position = self.plan.plan_axe.count() + 1
+            else:
+                position = list(self.plan.plan_axe.order_by('id')).index(self) + 1
+            self.reference = f"{position}"
         super().save(*args, **kwargs)
-        for produit in self.effet_produit.all():
-            produit.update_reference()
-        if old_instance and old_instance.plan != self.plan:
-            old_instance.plan.calculer_nombres()
-            old_instance.plan.calculer_couts()
-        self.plan.calculer_nombres()
-        self.plan.calculer_couts()
 
     def delete(self, *args, **kwargs):
         plan = self.plan
@@ -142,11 +139,104 @@ class Effet(models.Model):
         plan.calculer_couts()
 
     def __str__(self):
+        return f"Axe {self.reference} : {self.titre}"
+
+    class Meta:
+        verbose_name = "Axe"
+        verbose_name_plural = "Axes"
+
+
+# Modèle Effet
+class Effet(models.Model):
+    id = models.AutoField(primary_key=True)
+    axe = models.ForeignKey(Axe, related_name="axe_effet", on_delete=models.CASCADE)
+    titre = models.CharField(max_length=500)
+    couts = models.JSONField(default=list)
+    nombre_produits = models.PositiveIntegerField(default=0)
+    nombre_actions = models.PositiveIntegerField(default=0)
+    nombre_activites = models.PositiveIntegerField(default=0)
+    reference = models.CharField(max_length=50, blank=True)
+
+    def calculer_couts(self):
+        couts = [0.0] * self.axe.plan.horizon
+        for produit in self.effet_produit.all():
+            for i, cout in enumerate(produit.couts):
+                couts[i] += float(cout)
+        self.couts = couts
+        self.save()
+        self.axe.calculer_couts()
+
+    def calculer_nombres(self):
+        effet_produit = self.effet_produit.prefetch_related('produit_action__action_activite')
+        self.nombre_produits = effet_produit.count()
+        self.nombre_actions = sum(produit.produit_action.count() for produit in effet_produit)
+        self.nombre_activites = sum(action.action_activite.count() for produit in effet_produit for action in produit.produit_action.all())
+        self.save()
+        self.axe.calculer_nombres()
+
+    def update_reference(self):
+        if not self.reference or self.pk is None:
+            if not self.pk:
+                position = self.axe.axe_effet.count() + 1
+            else:
+                position = list(self.axe.axe_effet.order_by('id')).index(self) + 1
+            self.reference = f"{self.axe.reference}.{position}"
+            self.save(update_fields=['reference'])
+        for produit in self.effet_produit.all():
+            produit.update_reference()
+
+    def save(self, *args, **kwargs):
+        if not self.couts or len(self.couts) != self.axe.plan.horizon:
+            self.couts = [0.0] * self.axe.plan.horizon
+        
+        old_instance = None
+        if self.pk:
+            old_instance = Effet.objects.get(pk=self.pk)
+        self.full_clean()
+        super().save(*args, **kwargs)
+        for produit in self.effet_produit.all():
+            produit.update_reference()
+        if old_instance and old_instance.axe != self.axe:
+            old_instance.axe.calculer_nombres()
+            old_instance.axe.calculer_couts()
+        self.axe.calculer_nombres()
+        self.axe.calculer_couts()
+
+    def delete(self, *args, **kwargs):
+        axe = self.axe
+        super().delete(*args, **kwargs)
+        axe.calculer_nombres()
+        axe.calculer_couts()
+
+    def __str__(self):
         return f"Effet {self.reference} : {self.titre}"
 
     class Meta:
         verbose_name = "Effet"
         verbose_name_plural = "Effets"
+
+
+# Modèle IndicateurEffet
+class IndicateurEffet(models.Model):
+    id = models.AutoField(primary_key=True)
+    effet = models.ForeignKey(Effet, related_name="indicateurs", on_delete=models.CASCADE)
+    label = models.CharField(max_length=500)
+    reference = models.CharField(max_length=500, blank=True)
+    cibles = models.JSONField(default=list)  # Valeurs par année
+
+    def save(self, *args, **kwargs):
+        horizon = self.effet.axe.plan.horizon
+        if not self.cibles or len(self.cibles) != horizon:
+            self.cibles = [""] * horizon
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Indicateur Effet: {self.label}"
+
+    class Meta:
+        verbose_name = "Indicateur d'effet"
+        verbose_name_plural = "Indicateurs d'effets"
+
 
 # Modèle Produit (inchangé)
 class Produit(models.Model):
@@ -159,7 +249,7 @@ class Produit(models.Model):
     reference = models.CharField(max_length=50, blank=True)
 
     def calculer_couts(self):
-        couts = [0.0] * self.effet.plan.horizon
+        couts = [0.0] * self.effet.axe.plan.horizon
         for action in self.produit_action.all():
             for i, cout in enumerate(action.couts):
                 couts[i] += float(cout)
@@ -186,8 +276,8 @@ class Produit(models.Model):
             action.update_reference()
 
     def save(self, *args, **kwargs):
-        if not self.couts or len(self.couts) != self.effet.plan.horizon:
-            self.couts = [0.0] * self.effet.plan.horizon
+        if not self.couts or len(self.couts) != self.effet.axe.plan.horizon:
+            self.couts = [0.0] * self.effet.axe.plan.horizon
         
         old_instance = None
         if self.pk:
@@ -215,6 +305,29 @@ class Produit(models.Model):
         verbose_name = "Produit"
         verbose_name_plural = "Produits"
 
+
+# Modèle IndicateurProduit
+class IndicateurProduit(models.Model):
+    id = models.AutoField(primary_key=True)
+    produit = models.ForeignKey(Produit, related_name="indicateurs", on_delete=models.CASCADE)
+    label = models.CharField(max_length=500)
+    reference = models.CharField(max_length=500, blank=True)
+    cibles = models.JSONField(default=list)  # Valeurs par année
+
+    def save(self, *args, **kwargs):
+        horizon = self.produit.effet.axe.plan.horizon
+        if not self.cibles or len(self.cibles) != horizon:
+            self.cibles = [""] * horizon
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Indicateur Produit: {self.label}"
+
+    class Meta:
+        verbose_name = "Indicateur de produit"
+        verbose_name_plural = "Indicateurs de produits"
+
+
 # Modèle Action (inchangé)
 class Action(models.Model):
     id = models.AutoField(primary_key=True)
@@ -225,7 +338,7 @@ class Action(models.Model):
     reference = models.CharField(max_length=50, blank=True)
 
     def calculer_couts(self):
-        couts = [0.0] * self.produit.effet.plan.horizon
+        couts = [0.0] * self.produit.effet.axe.plan.horizon
         for activite in self.action_activite.all():
             for i, cout in enumerate(activite.couts):
                 couts[i] += float(cout)
@@ -250,8 +363,8 @@ class Action(models.Model):
             activite.update_reference()
 
     def save(self, *args, **kwargs):
-        if not self.couts or len(self.couts) != self.produit.effet.plan.horizon:
-            self.couts = [0.0] * self.produit.effet.plan.horizon
+        if not self.couts or len(self.couts) != self.produit.effet.axe.plan.horizon:
+            self.couts = [0.0] * self.produit.effet.axe.plan.horizon
         
         old_instance = None
         if self.pk:
@@ -316,7 +429,7 @@ class NotificationQueue:
             # Construire une liste de destinataires mise à jour avec suiveurs et évaluateurs
             all_recipients = set(recipients)  # Convertir en set pour éviter les doublons
             for activite in activites:
-                plan = activite.action.produit.effet.plan  # Accès au PlanAction
+                plan = activite.action.produit.effet.axe.plan  # Accès au PlanAction
 
                 # Ajouter les suiveurs (supposons qu'ils sont dans une relation ManyToMany ou ForeignKey)
                 if hasattr(plan, 'suiveurs') and plan.suiveurs.exists():
@@ -339,7 +452,7 @@ class NotificationQueue:
             )
 
             for activite in activites:
-                plan = activite.action.produit.effet.plan
+                plan = activite.action.produit.effet.axe.plan
                 annee_debut = plan.annee_debut
                 horizon = plan.horizon
                 annees = [annee_debut + i for i in range(horizon)]
@@ -459,7 +572,7 @@ class Activite(models.Model):
         return f"Activité {self.reference} : {self.titre}"
 
     def clean(self):
-        horizon = self.action.produit.effet.plan.horizon
+        horizon = self.action.produit.effet.axe.plan.horizon
         fields_to_check = [
             'cibles', 'realisation', 'couts', 'periodes_execution', 'etat_avancement',
             'commentaire', 'commentaire_se', 'pending_changes', 'proposed_changes', 'status', 'matrix_status'
@@ -540,18 +653,19 @@ class Activite(models.Model):
             logger.debug("Aucun destinataire valide trouvé pour la notification de changement.")
 
     def update_responsable(self):
-        """Met à jour dynamiquement le responsable en fonction de l'entité du point focal."""
-        if self.point_focal and hasattr(self.point_focal, 'entity') and self.point_focal.entity:
-            # Recherche d'un responsable avec la même entité
+        """Met à jour dynamiquement le responsable en fonction de la structure de l'activité."""
+        if self.structure:
+            # Recherche d'un responsable actif avec la même structure
             responsable = User.objects.filter(
-                entity=self.point_focal.entity,
-                groups__name='Responsable'  # Suppose un groupe "Responsable", ajuste si nécessaire
-            ).exclude(id=self.point_focal.id).first()  # Exclut le point focal lui-même
+                entity=self.structure,
+                role='responsable',
+                is_active=True
+            ).first()
 
             if responsable:
                 self.responsable = responsable
             else:
-                self.responsable = None  # Aucun responsable trouvé pour cette entité
+                self.responsable = None  # Aucun responsable actif trouvé pour cette structure
 
     def save(self, *args, **kwargs):
         user = kwargs.pop('user', None)
@@ -566,7 +680,7 @@ class Activite(models.Model):
         # Mise à jour dynamique du responsable
         self.update_responsable()
 
-        horizon = self.action.produit.effet.plan.horizon
+        horizon = self.action.produit.effet.axe.plan.horizon
         if not self.couts or len(self.couts) != horizon:
             self.couts = [0.0] * horizon
         if not self.cibles or len(self.cibles) != horizon:
@@ -631,7 +745,7 @@ class Activite(models.Model):
             self.reference = f"{self.action.reference}.{position}"
             
     def propose_changes(self, user, index, etat_avancement=None, realisation=None, commentaire=None, commentaire_se=None, status=None):
-        horizon = self.action.produit.effet.plan.horizon
+        horizon = self.action.produit.effet.axe.plan.horizon
         if index >= horizon:
             raise ValueError("Index hors de l'horizon du plan.")
 
@@ -702,7 +816,7 @@ class Activite(models.Model):
         if not user.groups.filter(name='SuiveurEvaluateur').exists():
             raise PermissionDenied("Seul un suiveur-évaluateur peut appliquer les changements définitivement.")
         
-        horizon = self.action.produit.effet.plan.horizon
+        horizon = self.action.produit.effet.axe.plan.horizon
         if index >= horizon or not self.pending_changes[index]:
             raise ValueError("Aucune modification en attente pour cette année.")
 
@@ -720,7 +834,7 @@ class Activite(models.Model):
         if not user.groups.filter(name='SuiveurEvaluateur').exists():
             raise PermissionDenied("Seul un suiveur-évaluateur peut modifier le statut directement.")
         
-        horizon = self.action.produit.effet.plan.horizon
+        horizon = self.action.produit.effet.axe.plan.horizon
         if index >= horizon:
             raise ValueError("Index hors de l'horizon du plan.")
         
@@ -734,7 +848,7 @@ class Activite(models.Model):
         if user != self.responsable and not user.groups.filter(name='SuiveurEvaluateur').exists():
             raise PermissionDenied("Seul le responsable ou un suiveur-évaluateur peut rejeter des modifications.")
         
-        horizon = self.action.produit.effet.plan.horizon
+        horizon = self.action.produit.effet.axe.plan.horizon
         if index >= horizon:
             raise ValueError("Index hors de l'horizon du plan.")
         
@@ -767,7 +881,7 @@ class Activite(models.Model):
 
     def _log_changes(self, user):
         old_instance = Activite.objects.get(pk=self.pk)
-        horizon = self.action.produit.effet.plan.horizon
+        horizon = self.action.produit.effet.axe.plan.horizon
         for i in range(horizon):
             changes = {}
             for field in ['etat_avancement', 'realisation', 'commentaire', 'commentaire_se', 'status']:
@@ -803,8 +917,8 @@ class Activite(models.Model):
         suiveurs = User.objects.filter(is_active=True, groups__name='SuiveurEvaluateur')
         suiveurs_emails = [u.email for u in suiveurs if u.email]
 
-        for activite in Activite.objects.select_related('action__produit__effet__plan').all():
-            plan = activite.action.produit.effet.plan
+        for activite in Activite.objects.select_related('action__produit__effet__axe__plan').all():
+            plan = activite.action.produit.effet.axe.plan
             horizon = plan.horizon
             annee_debut = plan.annee_debut
 
@@ -879,3 +993,48 @@ class ActiviteLog(models.Model):
         verbose_name = "Journal d'activité"
         verbose_name_plural = "Journaux d'activités"
         ordering = ['-timestamp']
+
+
+def preuve_upload_path(instance, filename):
+    return os.path.join('preuves', f'activite_{instance.activite.id}', filename)
+
+
+class PreuveRealisation(models.Model):
+    TYPE_CHOICES = [
+        ('lien', 'Lien'),
+        ('document', 'Document (Word, Excel, PPTX, PDF)'),
+        ('image', 'Image'),
+        ('video', 'Vidéo'),
+    ]
+
+    activite = models.ForeignKey(
+        'Activite',
+        on_delete=models.CASCADE,
+        related_name='preuves'
+    )
+    type_preuve = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    titre = models.CharField(max_length=255)
+    fichier = models.FileField(upload_to=preuve_upload_path, blank=True, null=True)
+    lien = models.URLField(max_length=500, blank=True, null=True)
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Preuve de réalisation"
+        verbose_name_plural = "Preuves de réalisation"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.get_type_preuve_display()} - {self.titre} ({self.activite.reference})"
+
+    def clean(self):
+        if self.type_preuve == 'lien' and not self.lien:
+            raise ValidationError("Un lien est requis pour ce type de preuve.")
+        if self.type_preuve != 'lien' and not self.fichier:
+            raise ValidationError("Un fichier est requis pour ce type de preuve.")

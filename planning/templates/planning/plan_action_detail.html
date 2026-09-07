@@ -375,6 +375,19 @@
                             effetRow += `<td class="effet-bg">${effet.totalCost.toFixed(2)}</td></tr>`;
                             tableBody.innerHTML += effetRow;
 
+                            // Indicateurs de l'effet
+                            if (effet.indicateurs && effet.indicateurs.length > 0) {
+                                effet.indicateurs.forEach(ind => {
+                                    let indRow = `<tr class="indicateur-row"><td class="indicateur-bg"></td><td class="indicateur-bg" colspan="2"><em>↳ ${ind.label}</em></td><td class="indicateur-bg">${ind.reference || '—'}</td>`;
+                                    annees.forEach((annee, idx) => {
+                                        const cible = (ind.cibles && idx >= 0 && idx < ind.cibles.length) ? (ind.cibles[idx] || '—') : '—';
+                                        indRow += `<td class="indicateur-bg">${cible}</td>`;
+                                    });
+                                    indRow += `<td class="indicateur-bg" colspan="${annees.length + 3}"></td></tr>`;
+                                    tableBody.innerHTML += indRow;
+                                });
+                            }
+
                             effet.produits.forEach((produit, j) => {
                                 let produitRow = `
                                     <tr class="hierarchy-row produit-row">
@@ -384,6 +397,19 @@
                                 annees.forEach((annee, index) => produitRow += `<td class="produit-bg">${produit.coutsParAnnee[index].toFixed(2)}</td>`);
                                 produitRow += `<td class="produit-bg">${produit.totalCost.toFixed(2)}</td></tr>`;
                                 tableBody.innerHTML += produitRow;
+
+                                // Indicateurs du produit
+                                if (produit.indicateurs && produit.indicateurs.length > 0) {
+                                    produit.indicateurs.forEach(ind => {
+                                        let indRow = `<tr class="indicateur-row"><td class="indicateur-bg"></td><td class="indicateur-bg" colspan="2"><em>↳ ${ind.label}</em></td><td class="indicateur-bg">${ind.reference || '—'}</td>`;
+                                        annees.forEach((annee, idx) => {
+                                            const cible = (ind.cibles && idx >= 0 && idx < ind.cibles.length) ? (ind.cibles[idx] || '—') : '—';
+                                            indRow += `<td class="indicateur-bg">${cible}</td>`;
+                                        });
+                                        indRow += `<td class="indicateur-bg" colspan="${annees.length + 3}"></td></tr>`;
+                                        tableBody.innerHTML += indRow;
+                                    });
+                                }
 
                                 produit.actions.forEach((action, k) => {
                                     let actionRow = `
@@ -874,6 +900,12 @@
 
         .activite-bg {
             background-color: #ffffff; /* Fond blanc pour les activités */
+        }
+
+        .indicateur-bg {
+            background-color: #e8f5e9; /* Vert très clair pour les indicateurs */
+            font-style: italic;
+            font-size: 0.9em;
         }
 
         .table-container {

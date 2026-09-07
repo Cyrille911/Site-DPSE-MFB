@@ -66,12 +66,30 @@ Matrice Opérationnelle - {{ plan.titre }} - {{ annee }}
                                 <td class="effet-bg" colspan="12">{{ effet.titre }}</td>
                                 <td class="effet-bg">{{ effet.cout }}</td>
                             </tr>
+                            {% for ind in effet.indicateurs %}
+                                <tr class="indicateur-row">
+                                    <td class="indicateur-bg"></td>
+                                    <td class="indicateur-bg" colspan="2"><em>↳ {{ ind.label }}</em></td>
+                                    <td class="indicateur-bg">{{ ind.reference|default:"—" }}</td>
+                                    <td class="indicateur-bg">{{ ind.cible|default:"—" }}</td>
+                                    <td class="indicateur-bg" colspan="9"></td>
+                                </tr>
+                            {% endfor %}
                             {% for produit in effet.produits %}
                                 <tr class="hierarchy-row produit-row">
                                     <td class="produit-bg">Produit {{ forloop.parentloop.counter }}.{{ forloop.counter }}</td>
                                     <td class="produit-bg" colspan="12">{{ produit.titre }}</td>
                                     <td class="produit-bg">{{ produit.cout }}</td>
                                 </tr>
+                                {% for ind in produit.indicateurs %}
+                                    <tr class="indicateur-row">
+                                        <td class="indicateur-bg"></td>
+                                        <td class="indicateur-bg" colspan="2"><em>↳ {{ ind.label }}</em></td>
+                                        <td class="indicateur-bg">{{ ind.reference|default:"—" }}</td>
+                                        <td class="indicateur-bg">{{ ind.cible|default:"—" }}</td>
+                                        <td class="indicateur-bg" colspan="9"></td>
+                                    </tr>
+                                {% endfor %}
                                 {% for action in produit.actions %}
                                     <tr class="hierarchy-row action-row">
                                         <td class="action-bg">Action {{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}</td>
@@ -141,6 +159,13 @@ Matrice Opérationnelle - {{ plan.titre }} - {{ annee }}
         {% endif %}
         {% if user.role == 'suiveur_evaluateur' %}
             <a href="{% url 'track_execution_list' plan.id %}" class="btn btn-orange btn-lg px-5 py-2 fw-bold me-3">Liste des PAO</a>
+            <a href="{% url 'rapport_word' plan.id annee %}" class="btn btn-success btn-lg px-5 py-2 fw-bold me-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-file-earmark-word me-2" viewBox="0 0 16 16" style="vertical-align: text-bottom;">
+                    <path d="M5.485 6.879a.5.5 0 1 0-.97.242l1.5 6a.5.5 0 0 0 .967.01L8 9.402l1.018 3.73a.5.5 0 0 0 .967-.01l1.5-6a.5.5 0 0 0-.97-.242l-1.036 4.144-.997-3.655a.5.5 0 0 0-.964 0l-.997 3.655L5.485 6.88z"/>
+                    <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2M9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5z"/>
+                </svg>
+                Télécharger le rapport
+            </a>
         {% endif %}
     </div>
 
@@ -510,6 +535,20 @@ document.addEventListener('DOMContentLoaded', function () {
                         <td class="effet-bg">${effet.cout}</td>
                     </tr>
                 `;
+                // Indicateurs de l'effet (AJAX)
+                if (effet.indicateurs && effet.indicateurs.length > 0) {
+                    effet.indicateurs.forEach(ind => {
+                        tableBody.innerHTML += `
+                            <tr class="indicateur-row">
+                                <td class="indicateur-bg"></td>
+                                <td class="indicateur-bg" colspan="2"><em>↳ ${ind.label}</em></td>
+                                <td class="indicateur-bg">${ind.reference || '—'}</td>
+                                <td class="indicateur-bg">${ind.cible || '—'}</td>
+                                <td class="indicateur-bg" colspan="9"></td>
+                            </tr>
+                        `;
+                    });
+                }
                 effetCounter++;
 
                 let produitCounter = 1;
@@ -521,6 +560,20 @@ document.addEventListener('DOMContentLoaded', function () {
                             <td class="produit-bg">${produit.cout}</td>
                         </tr>
                     `;
+                    // Indicateurs du produit (AJAX)
+                    if (produit.indicateurs && produit.indicateurs.length > 0) {
+                        produit.indicateurs.forEach(ind => {
+                            tableBody.innerHTML += `
+                                <tr class="indicateur-row">
+                                    <td class="indicateur-bg"></td>
+                                    <td class="indicateur-bg" colspan="2"><em>↳ ${ind.label}</em></td>
+                                    <td class="indicateur-bg">${ind.reference || '—'}</td>
+                                    <td class="indicateur-bg">${ind.cible || '—'}</td>
+                                    <td class="indicateur-bg" colspan="9"></td>
+                                </tr>
+                            `;
+                        });
+                    }
                     produitCounter++;
 
                     let actionCounter = 1;
@@ -733,6 +786,7 @@ document.addEventListener('DOMContentLoaded', function () {
     .produit-bg { background-color: #fff3cd; }
     .action-bg { background-color: #cce5ff; }
     .activite-bg { background-color: #ffffff; }
+    .indicateur-bg { background-color: #e8f5e9; font-style: italic; font-size: 0.9em; }
 
     .hierarchy-row { font-weight: bold; }
     .sortable { cursor: pointer; }

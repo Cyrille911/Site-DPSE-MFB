@@ -1,0 +1,167 @@
+{% extends 'index.html' %}
+
+{% block title %}
+Matrice de Cadre de Performance - {{ plan.titre }} ({{ annee }})
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <h2 class="text-center mb-4 text-primary fw-bold">Matrice de Cadre de Performance</h2>
+    <h4 class="text-center mb-3 text-secondary">{{ plan.titre }} - Année {{ annee }}</h4>
+
+    <!-- Sélection d'année -->
+    <div class="d-flex justify-content-center mb-4">
+        {% for a in annees %}
+            <a href="{% url 'performance_matrix' plan.id a %}" 
+               class="btn {% if a == annee %}btn-primary{% else %}btn-outline-primary{% endif %} mx-1">
+                {{ a }}
+            </a>
+        {% endfor %}
+    </div>
+
+    <!-- Tableau principal -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped shadow-sm">
+            <thead class="table-dark">
+                <tr>
+                    <th style="width: 5%;">Réf.</th>
+                    <th style="width: 30%;">Intitulé</th>
+                    <th style="width: 25%;">Indicateur</th>
+                    <th style="width: 15%;">Référence Indicateur</th>
+                    <th style="width: 10%;">Cible {{ annee }}</th>
+                    {% for a in annees %}
+                        {% if a != annee %}
+                        <th style="width: 8%;">Cible {{ a }}</th>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for axe in axes %}
+                    <!-- Ligne Axe -->
+                    <tr class="table-dark">
+                        <td colspan="5" class="fw-bold fs-6">
+                            {% for a in annees %}{% if a != annee %}{% endif %}{% endfor %}
+                            <span class="text-white">Axe {{ axe.reference }} : {{ axe.titre }}</span>
+                        </td>
+                        {% for a in annees %}
+                            {% if a != annee %}
+                            <td class="table-dark"></td>
+                            {% endif %}
+                        {% endfor %}
+                    </tr>
+
+                    {% for effet in axe.effets %}
+                        <!-- Ligne Effet -->
+                        <tr class="table-success">
+                            <td class="fw-bold">{{ effet.reference }}</td>
+                            <td class="fw-bold">{{ effet.titre }}</td>
+                            <td colspan="3">
+                                {% for a in annees %}{% if a != annee %}{% endif %}{% endfor %}
+                            </td>
+                            {% for a in annees %}
+                                {% if a != annee %}
+                                <td class="table-success"></td>
+                                {% endif %}
+                            {% endfor %}
+                        </tr>
+                        <!-- Indicateurs d'effet -->
+                        {% for ind in effet.indicateurs %}
+                            <tr class="bg-light">
+                                <td></td>
+                                <td class="ps-4 fst-italic text-success">↳ Indicateur</td>
+                                <td>{{ ind.label }}</td>
+                                <td>{{ ind.reference|default:"—" }}</td>
+                                <td class="fw-bold text-center">{{ ind.cible|default:"—" }}</td>
+                                {% for a in annees %}
+                                    {% if a != annee %}
+                                        <td class="text-center text-muted small">
+                                            {% with forloop.counter0 as idx %}
+                                                {% for c in ind.cibles %}
+                                                    {% if forloop.counter0 == idx %}{{ c|default:"—" }}{% endif %}
+                                                {% endfor %}
+                                            {% endwith %}
+                                        </td>
+                                    {% endif %}
+                                {% endfor %}
+                            </tr>
+                        {% empty %}
+                            <tr class="bg-light">
+                                <td></td>
+                                <td class="ps-4 fst-italic text-muted">Aucun indicateur</td>
+                                <td colspan="3">
+                                    {% for a in annees %}{% if a != annee %}{% endif %}{% endfor %}
+                                </td>
+                                {% for a in annees %}
+                                    {% if a != annee %}
+                                    <td></td>
+                                    {% endif %}
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+
+                        {% for produit in effet.produits %}
+                            <!-- Ligne Produit -->
+                            <tr class="table-warning">
+                                <td class="fw-bold">{{ produit.reference }}</td>
+                                <td class="fw-bold ps-3">{{ produit.titre }}</td>
+                                <td colspan="3">
+                                    {% for a in annees %}{% if a != annee %}{% endif %}{% endfor %}
+                                </td>
+                                {% for a in annees %}
+                                    {% if a != annee %}
+                                    <td class="table-warning"></td>
+                                    {% endif %}
+                                {% endfor %}
+                            </tr>
+                            <!-- Indicateurs de produit -->
+                            {% for ind in produit.indicateurs %}
+                                <tr>
+                                    <td></td>
+                                    <td class="ps-5 fst-italic text-warning">↳ Indicateur</td>
+                                    <td>{{ ind.label }}</td>
+                                    <td>{{ ind.reference|default:"—" }}</td>
+                                    <td class="fw-bold text-center">{{ ind.cible|default:"—" }}</td>
+                                    {% for a in annees %}
+                                        {% if a != annee %}
+                                            <td class="text-center text-muted small">
+                                                {% with forloop.counter0 as idx %}
+                                                    {% for c in ind.cibles %}
+                                                        {% if forloop.counter0 == idx %}{{ c|default:"—" }}{% endif %}
+                                                    {% endfor %}
+                                                {% endwith %}
+                                            </td>
+                                        {% endif %}
+                                    {% endfor %}
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td></td>
+                                    <td class="ps-5 fst-italic text-muted">Aucun indicateur</td>
+                                    <td colspan="3">
+                                        {% for a in annees %}{% if a != annee %}{% endif %}{% endfor %}
+                                    </td>
+                                    {% for a in annees %}
+                                        {% if a != annee %}
+                                        <td></td>
+                                        {% endif %}
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                        {% endfor %}
+                    {% endfor %}
+                {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">Aucun axe défini pour ce plan.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Bouton retour -->
+    <div class="text-center mt-4 mb-4">
+        <a href="{% url 'pao_list' plan.id %}" class="btn btn-secondary btn-lg px-5">Retour aux PAO</a>
+    </div>
+</div>
+{% endblock %}
