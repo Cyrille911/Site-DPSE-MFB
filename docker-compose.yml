@@ -1,8 +1,12 @@
-version: '3.8'
+﻿version: '3.8'
 
 services:
   web:
-    build: .
+    build:
+      context: .
+      args:
+        - SECRET_KEY=
+    env_file: .env
     command: python manage.py runserver 0.0.0.0:8000
     ports:
       - "8001:8000"
@@ -27,14 +31,16 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "6380:6379"
     restart: unless-stopped
 
   db:
     image: mysql:8.0
     environment:
       - MYSQL_ROOT_PASSWORD=rootpassword
-      - MYSQL_DATABASE=dpse_dev
+      - MYSQL_DATABASE=
+      - MYSQL_USER=
+      - MYSQL_PASSWORD=
     ports:
       - "3306:3306"
     volumes:
@@ -42,7 +48,11 @@ services:
     restart: unless-stopped
 
   celery:
-    build: .
+    build:
+      context: .
+      args:
+        - SECRET_KEY=
+    env_file: .env
     command: celery -A dpse worker -l info
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
@@ -53,7 +63,11 @@ services:
     restart: unless-stopped
 
   celery-beat:
-    build: .
+    build:
+      context: .
+      args:
+        - SECRET_KEY=
+    env_file: .env
     command: celery -A dpse beat -l info
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0

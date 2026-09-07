@@ -32,11 +32,11 @@ apt update && apt install -y mysql-server
 - **Hôte** : MySQL Docker (site-dpse-mfb-mysql-1)
 - **Base de données** : dpse
 - **Utilisateur** : root
-- **Mot de passe** : `dpse_password_strong_2024`
+- **Mot de passe** : `<DB_PASSWORD>`
 
 ### Création de la base
 ```bash
-docker exec -i site-dpse-mfb-mysql-1 mysql -u root -p'dpse_password_strong_2024' -e "DROP DATABASE IF EXISTS dpse; CREATE DATABASE dpse CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+docker exec -i site-dpse-mfb-mysql-1 mysql -u root -p'<DB_PASSWORD>' -e "DROP DATABASE IF EXISTS dpse; CREATE DATABASE dpse CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 ```
 
 ---
@@ -49,13 +49,13 @@ docker exec -i site-dpse-mfb-mysql-1 mysql -u root -p'dpse_password_strong_2024'
 # Configuration MySQL
 DB_NAME=dpse
 DB_USER=dpse_user
-DB_PASSWORD=dpse_password_strong_2024
+DB_PASSWORD=<DB_PASSWORD>
 DB_HOST=site-dpse-mfb-mysql-1
 DB_PORT=3306
 
 # Django
 DEBUG=False
-SECRET_KEY=nppx0GKfObA93t7MwRNAJNBvTVZkabxOZXpsmkgCTFjKrB9oio4bICB_4KUJaVuHjPM
+SECRET_KEY=<SECRET_KEY>
 
 # Domaine
 DOMAIN=dpse.aidn.ci
@@ -90,7 +90,7 @@ with open('/tmp/db_dump.sql', 'r') as f:
 sql = sql.replace('BEGIN TRANSACTION;', '').replace('COMMIT;', '')
 cursor.executescript(sql)
 
-mysql_conn = pymysql.connect(host='site-dpse-mfb-mysql-1', port=3306, user='root', passwd='dpse_password_strong_2024', db='dpse', charset='utf8mb4')
+mysql_conn = pymysql.connect(host='site-dpse-mfb-mysql-1', port=3306, user='root', passwd='<DB_PASSWORD>', db='dpse', charset='utf8mb4')
 mysql_cursor = mysql_conn.cursor()
 
 # Import des utilisateurs
@@ -269,7 +269,7 @@ docker exec site-dpse-mfb-web-1 python manage.py shell -c "from django.contrib.a
 ### Accès base de données
 ```bash
 # Connexion MySQL via Docker
-docker exec -it site-dpse-mfb-mysql-1 mysql -u root -p'dpse_password_strong_2024' dpse
+docker exec -it site-dpse-mfb-mysql-1 mysql -u root -p'<DB_PASSWORD>' dpse
 ```
 
 ---

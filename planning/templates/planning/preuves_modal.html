@@ -1,0 +1,281 @@
+<!-- Modale de gestion des preuves de réalisation -->
+<style>
+    .preuve-btn {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        color: #0e7490;
+        border: 1px solid #bae6fd;
+        border-radius: 999px;
+        padding: .25rem .9rem;
+        font-size: .82rem;
+        font-weight: 500;
+        box-shadow: 0 1px 2px rgba(14, 116, 144, 0.05);
+        transition: all .2s ease;
+    }
+    .preuve-btn:hover, .preuve-btn:focus {
+        background: linear-gradient(135deg, #e0f2fe 0%, #cff4ff 100%);
+        color: #155e75;
+        border-color: #7dd3fc;
+        transform: translateY(-1px);
+    }
+    .preuve-modal-content {
+        border: none;
+        border-radius: 1.25rem;
+        box-shadow: 0 18px 40px rgba(0,0,0,.10);
+    }
+    .preuve-modal-header {
+        background: linear-gradient(to right, #f0f9ff, #ffffff);
+        color: #0e7490;
+        border-bottom: 1px solid #e0f2fe;
+        border-radius: 1.25rem 1.25rem 0 0;
+        padding: 1.25rem 1.5rem;
+    }
+    .preuve-form-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 1rem;
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+    .preuve-form-card .form-label {
+        color: #475569;
+        font-weight: 500;
+        font-size: .9rem;
+    }
+    .preuve-form-card .form-control,
+    .preuve-form-card .form-select {
+        border: 1px solid #cbd5e1;
+        border-radius: .6rem;
+    }
+    .preuve-add-btn {
+        background: #0d9488;
+        color: #fff;
+        border: none;
+        border-radius: .6rem;
+        padding: .45rem 1.25rem;
+        font-weight: 500;
+    }
+    .preuve-add-btn:hover {
+        background: #0f766e;
+    }
+    .preuve-list .preuve-item {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: .75rem;
+        padding: .85rem 1rem;
+        margin-bottom: .75rem;
+        box-shadow: 0 1px 2px rgba(0,0,0,.04);
+        transition: box-shadow .2s;
+    }
+    .preuve-list .preuve-item:hover {
+        box-shadow: 0 4px 8px rgba(0,0,0,.06);
+    }
+    .preuve-delete {
+        color: #ef4444;
+        background: #fef2f2;
+        border: none;
+        border-radius: .4rem;
+        padding: .25rem .55rem;
+        font-size: .8rem;
+        line-height: 1;
+    }
+    .preuve-delete:hover {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+</style>
+
+<div class="modal fade" id="preuveModal" tabindex="-1" aria-labelledby="preuveModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content preuve-modal-content">
+            <div class="modal-header preuve-modal-header">
+                <h5 class="modal-title fw-bold" id="preuveModalLabel">Preuves de réalisation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="preuveMessages" class="mb-3"></div>
+
+                <form id="preuveForm" method="post" enctype="multipart/form-data" class="preuve-form-card mb-4">
+                    {% csrf_token %}
+                    <input type="hidden" id="preuveAnnee" name="annee" value="{{ annee }}">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label for="preuveType" class="form-label">Type de preuve</label>
+                            <select class="form-select" id="preuveType" name="type" required>
+                                <option value="document">Document</option>
+                                <option value="lien">Lien</option>
+                                <option value="image">Image</option>
+                                <option value="video">Vidéo</option>
+                            </select>
+                        </div>
+                        <div class="col-md-9" id="preuveFichierCol">
+                            <label for="preuveFichier" class="form-label">Fichier</label>
+                            <input type="file" class="form-control" id="preuveFichier" name="fichier">
+                        </div>
+                        <div class="col-md-9 d-none" id="preuveUrlCol">
+                            <label for="preuveUrl" class="form-label">Adresse web (URL)</label>
+                            <input type="url" class="form-control" id="preuveUrl" name="url" placeholder="https://...">
+                        </div>
+                        <div class="col-12">
+                            <label for="preuveDescription" class="form-label">Description (optionnelle)</label>
+                            <textarea class="form-control" id="preuveDescription" name="description" rows="2"></textarea>
+                        </div>
+                        <div class="col-12 text-end">
+                            <button type="submit" class="btn preuve-add-btn">Ajouter la preuve</button>
+                        </div>
+                    </div>
+                </form>
+
+                <h6 class="fw-bold mb-3 text-secondary">Preuves enregistrées</h6>
+                <div id="preuveList" class="preuve-list">
+                    <p class="text-muted">Aucune preuve pour le moment.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const PREUVE_LISTE_URL = "{% url 'preuve_liste' 0 %}";
+    const PREUVE_AJOUTER_URL = "{% url 'preuve_ajouter' 0 %}";
+    const PREUVE_SUPPRIMER_URL = "{% url 'preuve_supprimer' 0 %}";
+
+    function showPreuveMessage(message, type) {
+        const box = document.getElementById('preuveMessages');
+        box.innerHTML = `<div class="alert alert-${type}" role="alert">${message}</div>`;
+    }
+
+    function escapeHtml(text) {
+        return text ? text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : '';
+    }
+
+    function renderPreuves(preuves) {
+        const list = document.getElementById('preuveList');
+        if (!preuves || preuves.length === 0) {
+            list.innerHTML = '<p class="text-muted">Aucune preuve pour le moment.</p>';
+            return;
+        }
+        let html = '';
+        preuves.forEach(p => {
+            let content = '';
+            if (p.type === 'lien' && p.url) {
+                content = `<a href="${escapeHtml(p.url)}" target="_blank" class="text-decoration-none">${escapeHtml(p.url)}</a>`;
+            } else if (p.fichier_url) {
+                content = `<a href="${escapeHtml(p.fichier_url)}" target="_blank" class="text-decoration-none">Télécharger le fichier</a>`;
+            }
+            const deleteBtn = p.can_delete
+                ? `<button class="preuve-delete ms-2 preuve-delete" data-id="${p.id}">&times;</button>`
+                : '';
+            html += `
+                <div class="preuve-item d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="fw-bold text-dark">${escapeHtml(p.type_display)} <small class="text-muted">— ${escapeHtml(p.uploaded_by)}</small></div>
+                        <div class="mb-1">${content}</div>
+                        <small class="text-muted">${escapeHtml(p.description)}</small>
+                    </div>
+                    ${deleteBtn}
+                </div>
+            `;
+        });
+        list.innerHTML = html;
+        document.querySelectorAll('.preuve-delete').forEach(btn => {
+            btn.addEventListener('click', deletePreuve);
+        });
+    }
+
+    async function loadPreuves(activiteId) {
+        const url = PREUVE_LISTE_URL.replace('0', activiteId);
+        try {
+            const resp = await fetch(url);
+            const data = await resp.json();
+            if (data.success) {
+                renderPreuves(data.preuves);
+            }
+        } catch (err) {
+            console.error('Erreur chargement preuves :', err);
+        }
+    }
+
+    async function deletePreuve(e) {
+        e.preventDefault();
+        const preuveId = this.dataset.id;
+        const url = PREUVE_SUPPRIMER_URL.replace('0', preuveId);
+        if (!confirm('Confirmer la suppression de cette preuve ?')) return;
+        try {
+            const resp = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            const data = await resp.json();
+            if (data.success) {
+                const activiteId = document.getElementById('preuveForm').dataset.activiteId;
+                loadPreuves(activiteId);
+                showPreuveMessage(data.message, 'success');
+            } else {
+                showPreuveMessage(data.message, 'danger');
+            }
+        } catch (err) {
+            console.error(err);
+            showPreuveMessage('Erreur lors de la suppression.', 'danger');
+        }
+    }
+
+    function openPreuveModal(activiteId) {
+        const form = document.getElementById('preuveForm');
+        form.dataset.activiteId = activiteId;
+        form.reset();
+        document.getElementById('preuveMessages').innerHTML = '';
+        loadPreuves(activiteId);
+        const modal = new bootstrap.Modal(document.getElementById('preuveModal'));
+        modal.show();
+    }
+
+    document.getElementById('preuveType').addEventListener('change', function () {
+        const type = this.value;
+        const fichierCol = document.getElementById('preuveFichierCol');
+        const urlCol = document.getElementById('preuveUrlCol');
+        if (type === 'lien') {
+            fichierCol.classList.add('d-none');
+            urlCol.classList.remove('d-none');
+        } else {
+            fichierCol.classList.remove('d-none');
+            urlCol.classList.add('d-none');
+        }
+    });
+
+    document.getElementById('preuveForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const activiteId = this.dataset.activiteId;
+        const url = PREUVE_AJOUTER_URL.replace('0', activiteId);
+        const formData = new FormData(this);
+        try {
+            const resp = await fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            const data = await resp.json();
+            if (data.success) {
+                this.reset();
+                loadPreuves(activiteId);
+                showPreuveMessage(data.message, 'success');
+            } else {
+                showPreuveMessage(data.message, 'danger');
+            }
+        } catch (err) {
+            console.error(err);
+            showPreuveMessage('Erreur lors de l\'ajout.', 'danger');
+        }
+    });
+
+    document.querySelectorAll('.preuve-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            openPreuveModal(this.dataset.activiteId);
+        });
+    });
+</script>

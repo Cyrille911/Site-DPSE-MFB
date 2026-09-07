@@ -7,12 +7,21 @@ from django.contrib.auth import get_user_model
 from datetime import datetime, timedelta
 from django.http import HttpRequest
 import logging
+import os
 from threading import Timer
 from collections import defaultdict
 
 logger = logging.getLogger(__name__)
 
 User = get_user_model()
+
+
+def preuve_directory_path(instance, filename):
+    return os.path.join('preuves', str(instance.annee), str(instance.activite_id or 'tmp'), filename)
+
+
+def rapport_directory_path(instance, filename):
+    return os.path.join('rapports', str(instance.annee), str(instance.trimestre), filename)
 
 
 # Modèle PlanAction (inchangé)
@@ -493,7 +502,7 @@ class NotificationQueue:
             send_mail(
                 subject=subject,
                 message=message,
-                from_email='cyrilletaha01@gmail.com',
+                from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=list(all_recipients),  # Utiliser la liste mise à jour
                 fail_silently=True
             )
@@ -630,7 +639,7 @@ class Activite(models.Model):
             if self.responsable and self.responsable.email:
                 recipients.append(self.responsable.email)
             if self.point_focal and self.point_focal.email:
-                recipients.add(self.point_focal.email)
+                recipients.append(self.point_focal.email)
             message = (
                 f"Un suiveur-évaluateur {user.email} a proposé des modifications pour l'activité {self.reference}.\n"
                 f"Titre : {self.titre}\n"
@@ -645,7 +654,7 @@ class Activite(models.Model):
             send_mail(
                 subject=subject,
                 message=message,
-                from_email='cyrilletaha01@gmail.com',
+                from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=recipients,
                 fail_silently=True
             )
@@ -995,6 +1004,7 @@ class ActiviteLog(models.Model):
         ordering = ['-timestamp']
 
 
+<<<<<<< HEAD
 def preuve_upload_path(instance, filename):
     return os.path.join('preuves', f'activite_{instance.activite.id}', filename)
 
@@ -1003,10 +1013,17 @@ class PreuveRealisation(models.Model):
     TYPE_CHOICES = [
         ('lien', 'Lien'),
         ('document', 'Document (Word, Excel, PPTX, PDF)'),
+=======
+class PreuveRealisation(models.Model):
+    TYPE_CHOICES = [
+        ('document', 'Document'),
+        ('lien', 'Lien'),
+>>>>>>> 9800f3858682969e9bcf877aa3d23c715dbb2ea2
         ('image', 'Image'),
         ('video', 'Vidéo'),
     ]
 
+<<<<<<< HEAD
     activite = models.ForeignKey(
         'Activite',
         on_delete=models.CASCADE,
@@ -1016,10 +1033,18 @@ class PreuveRealisation(models.Model):
     titre = models.CharField(max_length=255)
     fichier = models.FileField(upload_to=preuve_upload_path, blank=True, null=True)
     lien = models.URLField(max_length=500, blank=True, null=True)
+=======
+    activite = models.ForeignKey('Activite', on_delete=models.CASCADE, related_name='preuves')
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    fichier = models.FileField(upload_to=preuve_directory_path, null=True, blank=True)
+    url = models.URLField(null=True, blank=True)
+    description = models.TextField(blank=True, null=True)
+>>>>>>> 9800f3858682969e9bcf877aa3d23c715dbb2ea2
     uploaded_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
+<<<<<<< HEAD
         blank=True
     )
     created_at = models.DateTimeField(auto_now_add=True)
@@ -1038,3 +1063,63 @@ class PreuveRealisation(models.Model):
             raise ValidationError("Un lien est requis pour ce type de preuve.")
         if self.type_preuve != 'lien' and not self.fichier:
             raise ValidationError("Un fichier est requis pour ce type de preuve.")
+=======
+        blank=True,
+        related_name='preuves_uploaded'
+    )
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    annee = models.PositiveIntegerField()
+
+    class Meta:
+        ordering = ['-uploaded_at']
+        verbose_name = "Preuve de réalisation"
+        verbose_name_plural = "Preuves de réalisation"
+
+    def __str__(self):
+        return f"{self.get_type_display()} pour {self.activite.reference}"
+
+    def clean(self):
+        super().clean()
+        if self.activite_id and PreuveRealisation.objects.filter(activite=self.activite).exclude(pk=self.pk or 0).count() >= 10:
+            raise ValidationError("Une activité ne peut pas avoir plus de 10 preuves.")
+        if self.type == 'lien':
+            if not self.url:
+                raise ValidationError("Une preuve de type 'lien' doit avoir une URL.")
+            self.fichier = None
+        else:
+            if not self.fichier:
+                raise ValidationError("Une preuve de type 'document', 'image' ou 'vidéo' doit avoir un fichier.")
+            self.url = None
+
+
+class QuarterlyReport(models.Model):
+    TRIMESTRE_CHOICES = [
+        ('T1', 'T1'),
+        ('T2', 'T2'),
+        ('T3', 'T3'),
+        ('T4', 'T4'),
+    ]
+
+    plan = models.ForeignKey(PlanAction, on_delete=models.CASCADE, related_name='rapports')
+    annee = models.PositiveIntegerField()
+    trimestre = models.CharField(max_length=2, choices=TRIMESTRE_CHOICES)
+    fichier = models.FileField(upload_to=rapport_directory_path)
+    generated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='rapports_generes'
+    )
+    generated_at = models.DateTimeField(auto_now_add=True)
+    recipients_emails = models.JSONField(default=list, blank=True)
+
+    class Meta:
+        ordering = ['-generated_at']
+        verbose_name = "Rapport trimestriel"
+        verbose_name_plural = "Rapports trimestriels"
+        unique_together = ['plan', 'annee', 'trimestre']
+
+    def __str__(self):
+        return f"Rapport {self.trimestre} {self.annee} - {self.plan.reference}"
+>>>>>>> 9800f3858682969e9bcf877aa3d23c715dbb2ea2

@@ -3,20 +3,14 @@ import os
 import zipfile
 from openpyxl import load_workbook
 from docx import Document as DocxDocument
-from docx import Document as DocxDocument
-from openpyxl import load_workbook
 from pptx import Presentation
 
+# Modules Django
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.core.exceptions import ValidationError
-
-# Modules Django
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
 from django.conf import settings
+from django.core.exceptions import ValidationError
 
 from .models import (
     Document_mfb, Document_dpse_planification, Document_dpse_suivi_evaluation,
