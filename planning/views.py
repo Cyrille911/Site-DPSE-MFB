@@ -1,22 +1,13 @@
 # Modules Django
 from django.shortcuts import render, get_object_or_404, redirect
-<<<<<<< HEAD
-from .models import PlanAction, Axe, Effet, IndicateurEffet, Produit, IndicateurProduit, Action, Activite, ActiviteLog, PreuveRealisation
+from .models import PlanAction, Axe, Effet, IndicateurEffet, Produit, IndicateurProduit, Action, Activite, ActiviteLog, PreuveRealisation, QuarterlyReport
+from django.core.exceptions import ValidationError
+from .tasks import generate_quarterly_report
 from django.http import JsonResponse, HttpResponse
 from django.db.models import Q
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from .forms import PaoStatusForm, PreuveRealisationForm
-=======
-from .models import PlanAction, Effet, Produit, Action, Activite, ActiviteLog, PreuveRealisation, QuarterlyReport
-from django.core.exceptions import ValidationError
-from .tasks import generate_quarterly_report
-from django.http import JsonResponse
-from django.db.models import Q
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from .forms import PaoStatusForm
->>>>>>> 9800f3858682969e9bcf877aa3d23c715dbb2ea2
 from django.db import transaction
 import logging
 
@@ -1509,13 +1500,13 @@ def hierarchy_review(request, plan_id):
     return render(request, 'planning/hierarchy_review.html', context)
 
 
-<<<<<<< HEAD
 @login_required
 def preuves_activite(request, activite_id):
     """Affiche les preuves d'une activité et permet d'en ajouter."""
     activite = get_object_or_404(Activite, id=activite_id)
     preuves = activite.preuves.all()
-    form = PreuveRealisationForm()
+    annee = request.GET.get('annee', activite.action.produit.effet.axe.plan.annee_debut if hasattr(activite, 'action') else None)
+    form = PreuveRealisationForm(initial={'annee': annee})
 
     if request.method == 'POST':
         form = PreuveRealisationForm(request.POST, request.FILES)
@@ -1525,12 +1516,13 @@ def preuves_activite(request, activite_id):
             preuve.uploaded_by = request.user
             preuve.save()
             messages.success(request, 'Preuve ajoutée avec succès.')
-            return redirect('preuves_activite', activite_id=activite.id)
+            return redirect(f"{request.path}?annee={preuve.annee}")
 
     context = {
         'activite': activite,
         'preuves': preuves,
         'form': form,
+        'annee': annee,
         'title': f"Preuves - {activite.reference}",
     }
     return render(request, 'planning/preuves_activite.html', context)
@@ -1546,7 +1538,7 @@ def modifier_preuve(request, preuve_id):
         if form.is_valid():
             form.save()
             messages.success(request, 'Preuve modifiée avec succès.')
-            return redirect('preuves_activite', activite_id=preuve.activite.id)
+            return redirect(f"/planning/activite/{preuve.activite.id}/preuves/?annee={preuve.annee}")
     else:
         form = PreuveRealisationForm(instance=preuve)
 
@@ -1554,7 +1546,7 @@ def modifier_preuve(request, preuve_id):
         'activite': preuve.activite,
         'form': form,
         'preuve': preuve,
-        'title': f"Modifier preuve - {preuve.titre}",
+        'title': f"Modifier preuve - {preuve.description or preuve.get_type_display()}",
         'is_edit': True,
     }
     return render(request, 'planning/preuves_activite.html', context)
@@ -1565,12 +1557,14 @@ def supprimer_preuve(request, preuve_id):
     """Supprimer une preuve."""
     preuve = get_object_or_404(PreuveRealisation, id=preuve_id)
     activite_id = preuve.activite.id
+    annee = preuve.annee
     if preuve.fichier:
         preuve.fichier.delete(save=False)
     preuve.delete()
     messages.success(request, 'Preuve supprimée avec succès.')
-    return redirect('preuves_activite', activite_id=activite_id)
-=======
+    return redirect(f"/planning/activite/{activite_id}/preuves/?annee={annee}")
+
+
 def _can_manage_preuves(user, activite):
     if not user.is_authenticated:
         return False
@@ -1732,4 +1726,3 @@ def rapport_telecharger(request, rapport_id):
         messages.error(request, "Aucun fichier associé.")
         return redirect('rapport_liste', plan_id=rapport.plan.id)
     return redirect(rapport.fichier.url)
->>>>>>> 9800f3858682969e9bcf877aa3d23c715dbb2ea2

@@ -9,7 +9,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('planning', '0010_alter_action_options_alter_activitelog_options_and_more'),
+        ('planning', '0012_add_indicateur_models'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 

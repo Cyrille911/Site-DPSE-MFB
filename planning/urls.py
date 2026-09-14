@@ -15,16 +15,16 @@ urlpatterns = [
     path('rapport_word/<int:plan_id>/<int:annee>/', views.rapport_word, name='rapport_word'),
     path('performance_matrix/<int:plan_id>/<int:annee>/', views.performance_matrix, name='performance_matrix'),
     path('hierarchy_review/<int:plan_id>/', views.hierarchy_review, name='hierarchy_review'),
-<<<<<<< HEAD
+    # Preuves - page dédiée
     path('activite/<int:activite_id>/preuves/', views.preuves_activite, name='preuves_activite'),
     path('preuve/<int:preuve_id>/modifier/', views.modifier_preuve, name='modifier_preuve'),
     path('preuve/<int:preuve_id>/supprimer/', views.supprimer_preuve, name='supprimer_preuve'),
-=======
+    # Preuves - API AJAX (modale)
     path('preuves/liste/<int:activite_id>/', views.preuve_liste, name='preuve_liste'),
     path('preuves/ajouter/<int:activite_id>/', views.preuve_ajouter, name='preuve_ajouter'),
     path('preuves/supprimer/<int:preuve_id>/', views.preuve_supprimer, name='preuve_supprimer'),
+    # Rapports trimestriels
     path('rapport/generer/<int:plan_id>/', views.generer_rapport, name='generer_rapport'),
     path('rapport/liste/<int:plan_id>/', views.rapport_liste, name='rapport_liste'),
     path('rapport/telecharger/<int:rapport_id>/', views.rapport_telecharger, name='rapport_telecharger'),
->>>>>>> 9800f3858682969e9bcf877aa3d23c715dbb2ea2
 ]

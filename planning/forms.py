@@ -16,23 +16,24 @@ class PaoStatusForm(forms.Form):
 class PreuveRealisationForm(forms.ModelForm):
     class Meta:
         model = PreuveRealisation
-        fields = ['type_preuve', 'titre', 'fichier', 'lien']
+        fields = ['type', 'fichier', 'url', 'description', 'annee']
         widgets = {
-            'type_preuve': forms.Select(attrs={'class': 'form-select', 'id': 'id_type_preuve'}),
-            'titre': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Titre de la preuve'}),
+            'type': forms.Select(attrs={'class': 'form-select', 'id': 'id_type_preuve'}),
             'fichier': forms.ClearableFileInput(attrs={'class': 'form-control'}),
-            'lien': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'https://...'}),
+            'url': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'https://...'}),
+            'description': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Description de la preuve'}),
+            'annee': forms.HiddenInput(),
         }
 
     def clean(self):
         cleaned_data = super().clean()
-        type_preuve = cleaned_data.get('type_preuve')
+        type_preuve = cleaned_data.get('type')
         fichier = cleaned_data.get('fichier')
-        lien = cleaned_data.get('lien')
+        url = cleaned_data.get('url')
 
         if type_preuve == 'lien':
-            if not lien:
-                self.add_error('lien', 'Un lien est requis pour ce type de preuve.')
+            if not url:
+                self.add_error('url', 'Un lien est requis pour ce type de preuve.')
         else:
             if not fichier and not self.instance.pk:
                 self.add_error('fichier', 'Un fichier est requis pour ce type de preuve.')

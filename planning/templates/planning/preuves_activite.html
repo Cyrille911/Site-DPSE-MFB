@@ -55,18 +55,19 @@
                 <div class="card-body">
                     <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
+                        {{ form.annee }}
                         <div class="mb-3">
                             <label for="id_type_preuve" class="form-label fw-bold">Type de preuve</label>
-                            {{ form.type_preuve }}
-                            {% if form.type_preuve.errors %}
-                            <div class="text-danger small mt-1">{{ form.type_preuve.errors.0 }}</div>
+                            {{ form.type }}
+                            {% if form.type.errors %}
+                            <div class="text-danger small mt-1">{{ form.type.errors.0 }}</div>
                             {% endif %}
                         </div>
                         <div class="mb-3">
-                            <label for="id_titre" class="form-label fw-bold">Titre</label>
-                            {{ form.titre }}
-                            {% if form.titre.errors %}
-                            <div class="text-danger small mt-1">{{ form.titre.errors.0 }}</div>
+                            <label for="id_description" class="form-label fw-bold">Description</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                            <div class="text-danger small mt-1">{{ form.description.errors.0 }}</div>
                             {% endif %}
                         </div>
                         <div class="mb-3" id="field-fichier">
@@ -80,10 +81,10 @@
                             {% endif %}
                         </div>
                         <div class="mb-3" id="field-lien" style="display:none;">
-                            <label for="id_lien" class="form-label fw-bold">Lien URL</label>
-                            {{ form.lien }}
-                            {% if form.lien.errors %}
-                            <div class="text-danger small mt-1">{{ form.lien.errors.0 }}</div>
+                            <label for="id_url" class="form-label fw-bold">Lien URL</label>
+                            {{ form.url }}
+                            {% if form.url.errors %}
+                            <div class="text-danger small mt-1">{{ form.url.errors.0 }}</div>
                             {% endif %}
                         </div>
                         {% if form.non_field_errors %}
@@ -94,7 +95,7 @@
                                 {% if is_edit %}Enregistrer{% else %}Ajouter{% endif %}
                             </button>
                             {% if is_edit %}
-                            <a href="{% url 'preuves_activite' activite.id %}" class="btn btn-outline-secondary">Annuler</a>
+                            <a href="{% url 'preuves_activite' activite.id %}?annee={{ annee }}" class="btn btn-outline-secondary">Annuler</a>
                             {% endif %}
                         </div>
                     </form>
@@ -115,21 +116,21 @@
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
                                     <div class="d-flex align-items-center mb-1">
-                                        {% if preuve.type_preuve == 'lien' %}
+                                        {% if preuve.type == 'lien' %}
                                             <span class="badge bg-primary type-badge me-2"><i class="bi bi-link-45deg me-1"></i>Lien</span>
-                                        {% elif preuve.type_preuve == 'document' %}
+                                        {% elif preuve.type == 'document' %}
                                             <span class="badge bg-success type-badge me-2"><i class="bi bi-file-earmark-text me-1"></i>Document</span>
-                                        {% elif preuve.type_preuve == 'image' %}
+                                        {% elif preuve.type == 'image' %}
                                             <span class="badge bg-info text-dark type-badge me-2"><i class="bi bi-image me-1"></i>Image</span>
-                                        {% elif preuve.type_preuve == 'video' %}
+                                        {% elif preuve.type == 'video' %}
                                             <span class="badge bg-danger type-badge me-2"><i class="bi bi-camera-video me-1"></i>Vidéo</span>
                                         {% endif %}
-                                        <strong>{{ preuve.titre }}</strong>
+                                        <strong>{{ preuve.description|default:preuve.get_type_display }}</strong>
                                     </div>
                                     <div class="small text-muted">
-                                        {% if preuve.type_preuve == 'lien' %}
-                                            <a href="{{ preuve.lien }}" target="_blank" class="text-primary">
-                                                <i class="bi bi-box-arrow-up-right me-1"></i>{{ preuve.lien|truncatechars:60 }}
+                                        {% if preuve.type == 'lien' %}
+                                            <a href="{{ preuve.url }}" target="_blank" class="text-primary">
+                                                <i class="bi bi-box-arrow-up-right me-1"></i>{{ preuve.url|truncatechars:60 }}
                                             </a>
                                         {% else %}
                                             <a href="{{ preuve.fichier.url }}" target="_blank" class="text-primary">
@@ -138,7 +139,7 @@
                                         {% endif %}
                                     </div>
                                     <div class="small text-muted mt-1">
-                                        <i class="bi bi-clock me-1"></i>{{ preuve.created_at|date:"d/m/Y H:i" }}
+                                        <i class="bi bi-clock me-1"></i>{{ preuve.uploaded_at|date:"d/m/Y H:i" }}
                                         {% if preuve.uploaded_by %}
                                         - par {{ preuve.uploaded_by.first_name }} {{ preuve.uploaded_by.last_name }}
                                         {% endif %}
@@ -166,7 +167,7 @@
                                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                                 </div>
                                 <div class="modal-body">
-                                    <p class="small mb-0">Supprimer la preuve <strong>{{ preuve.titre }}</strong> ?</p>
+                                    <p class="small mb-0">Supprimer la preuve <strong>{{ preuve.description|default:preuve.get_type_display }}</strong> ?</p>
                                 </div>
                                 <div class="modal-footer py-1">
                                     <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Annuler</button>

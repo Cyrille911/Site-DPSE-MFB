@@ -7,7 +7,6 @@ from django.contrib.auth import get_user_model
 from datetime import datetime, timedelta
 from django.http import HttpRequest
 import logging
-import os
 from threading import Timer
 from collections import defaultdict
 
@@ -1004,66 +1003,23 @@ class ActiviteLog(models.Model):
         ordering = ['-timestamp']
 
 
-<<<<<<< HEAD
-def preuve_upload_path(instance, filename):
-    return os.path.join('preuves', f'activite_{instance.activite.id}', filename)
-
-
-class PreuveRealisation(models.Model):
-    TYPE_CHOICES = [
-        ('lien', 'Lien'),
-        ('document', 'Document (Word, Excel, PPTX, PDF)'),
-=======
 class PreuveRealisation(models.Model):
     TYPE_CHOICES = [
         ('document', 'Document'),
         ('lien', 'Lien'),
->>>>>>> 9800f3858682969e9bcf877aa3d23c715dbb2ea2
         ('image', 'Image'),
         ('video', 'Vidéo'),
     ]
 
-<<<<<<< HEAD
-    activite = models.ForeignKey(
-        'Activite',
-        on_delete=models.CASCADE,
-        related_name='preuves'
-    )
-    type_preuve = models.CharField(max_length=20, choices=TYPE_CHOICES)
-    titre = models.CharField(max_length=255)
-    fichier = models.FileField(upload_to=preuve_upload_path, blank=True, null=True)
-    lien = models.URLField(max_length=500, blank=True, null=True)
-=======
     activite = models.ForeignKey('Activite', on_delete=models.CASCADE, related_name='preuves')
     type = models.CharField(max_length=20, choices=TYPE_CHOICES)
     fichier = models.FileField(upload_to=preuve_directory_path, null=True, blank=True)
     url = models.URLField(null=True, blank=True)
     description = models.TextField(blank=True, null=True)
->>>>>>> 9800f3858682969e9bcf877aa3d23c715dbb2ea2
     uploaded_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
-<<<<<<< HEAD
-        blank=True
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name = "Preuve de réalisation"
-        verbose_name_plural = "Preuves de réalisation"
-        ordering = ['-created_at']
-
-    def __str__(self):
-        return f"{self.get_type_preuve_display()} - {self.titre} ({self.activite.reference})"
-
-    def clean(self):
-        if self.type_preuve == 'lien' and not self.lien:
-            raise ValidationError("Un lien est requis pour ce type de preuve.")
-        if self.type_preuve != 'lien' and not self.fichier:
-            raise ValidationError("Un fichier est requis pour ce type de preuve.")
-=======
         blank=True,
         related_name='preuves_uploaded'
     )
@@ -1122,4 +1078,3 @@ class QuarterlyReport(models.Model):
 
     def __str__(self):
         return f"Rapport {self.trimestre} {self.annee} - {self.plan.reference}"
->>>>>>> 9800f3858682969e9bcf877aa3d23c715dbb2ea2
