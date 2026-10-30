@@ -1,6 +1,5 @@
 {% load static %}
 {% load table_tags %}
-<link rel="stylesheet" href="{% static 'adminlte/plugins/fontawesome-free/css/all.min.css' %}">
 <!DOCTYPE html>
 <html lang="en">
       <!--begin::Head-->
@@ -46,7 +45,8 @@
         <!--end::Third Party Plugin(Bootstrap Icons)-->
         <!--begin::Required Plugin(AdminLTE)-->
         <link rel="stylesheet" href="{% static 'adminlte/dist/css/adminlte.css' %}" />
-        <link rel="stylesheet" href="{% static 'adminlte/custom.css' %}">
+        <!-- Font Awesome (icônes fas fa-* des cartes KPI) -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
         <!--end::Required Plugin(AdminLTE)-->
         <!-- apexcharts -->
         <link
@@ -445,7 +445,7 @@
                 { label: 'Douanes', url: '{% url "douanes_dashboard" %}', parentDashboard: 'douanes' },
                 { label: 'Financements', url: '{% url "financements_dashboard" %}', parentDashboard: 'financements' },
                 {% for tableau in tableaux %}
-                    { label: '{{ tableau.name|split:": "|slice:"1:"|join:"" }}', tableauId: '{{ tableau.id }}', parentDashboard: 'financements' },
+                    { label: '{{ tableau.name|split:": "|slice:"1:"|join:""|default:tableau.name|escapejs }}', tableauId: '{{ tableau.id }}' },
                 {% endfor %}
             ];
 
@@ -465,17 +465,16 @@
                         li.textContent = match.label;
                         li.dataset.tableauId = match.tableauId || '';
                         li.dataset.url = match.url || '';
-                        li.dataset.parentDashboard = match.parentDashboard || '';
                         li.addEventListener('click', function() {
                             const tableauId = this.dataset.tableauId;
                             const url = this.dataset.url;
-                            const parentDashboard = this.dataset.parentDashboard;
 
                             if (url && !tableauId) {
                                 window.location.href = url;
-                            } else if (tableauId && parentDashboard === 'financements') {
-                                const targetUrl = '{% url "financements_dashboard" %}';
-                                window.location.href = `${targetUrl}?tableau_id=${tableauId}`;
+                            } else if (tableauId) {
+                                // Les tableaux proposés sont ceux du tableau de bord courant : on sélectionne le lien correspondant
+                                const lien = document.querySelector(`.tableau-link[data-tableau-id="${tableauId}"]`);
+                                if (lien) lien.click();
                             }
                             suggestionsList.style.display = 'none';
                             searchInput.value = match.label;

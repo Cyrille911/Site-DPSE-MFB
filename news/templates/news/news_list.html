@@ -34,6 +34,14 @@
         padding: 2rem;
     }
     /* Modal */
+    #youtubeModal {
+        --transition-speed: 0.3s;
+        --bg-modal: #1e1e1e;
+        --border-color: rgba(255, 255, 255, 0.1);
+        --text-primary: #ffffff;
+        --text-secondary: rgba(255, 255, 255, 0.7);
+    }
+
     .modal-overlay {
         position: fixed;
         top: 0;
@@ -295,6 +303,9 @@
             <div class="wpo-section-title">
                 <h2>Les Temps Forts d'Aujourd'hui</h2>
             </div>
+            {% for message in messages %}
+            <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ message }}</div>
+            {% endfor %}
             <div class="row">
                 <div class="col-lg-9 col-12">
                     <div class="wpo-blog-highlights-wrap">
@@ -309,7 +320,7 @@
                                                 class="card-img-top"
                                                 style="width: 100%; height: 250px; object-fit: cover; border-radius: 5px;">
                                             {% else %}
-                                            <img src="{% static 'assets/images/blog/default.jpg' %}"
+                                            <img src="{% static 'assets/images/blog/img-1.jpg' %}"
                                                 alt="Image non disponible" class="card-img-top"
                                                 style="width: 100%; height: 250px; object-fit: cover; border-radius: 5px;">
                                             {% endif %}
@@ -318,22 +329,22 @@
                                         <div class="wpo-blog-content">
                                             <h2><a href="{% url 'news_detail' news.id %}">{{ news.headline }}</a></h2>
                                             <ul>
-                                                <li> {% if comment.user.photo %}
-                                                    <img src="{{ news.creator.get_full_name|default:news.creator.photo.url }}"
-                                                        class="rounded-circle shadow-sm" width="50" height="50"
-                                                        alt="{{ comment.user.get_full_name|default:comment.user.username }}">
+                                                <li> {% if news.creator.photo %}
+                                                    <img src="{{ news.creator.photo.url }}"
+                                                        class="rounded-circle shadow-sm" width="35" height="35"
+                                                        alt="{{ news.creator.get_full_name|default:'Auteur' }}">
                                                     {% else %}
                                                     <div class="rounded-circle m-l-5 bg-success text-white d-flex justify-content-center align-items-center shadow-sm"
-                                                        style="width: 35px; height: 35px; font-size: 18px; font-weight: bold;">
-                                                        {{news.creator.get_full_name|default:news.creator.first_name|default:""|slice:":1"}}
-                                                        {{news.creator.get_full_name|default:news.creator.last_name|default:""|slice:":1"}}
+                                                        style="width: 35px; height: 35px; font-size: 14px; font-weight: bold;">
+                                                        {{ news.creator.first_name|default:""|slice:":1" }}{{ news.creator.last_name|default:""|slice:":1"|default:"M" }}
                                                     </div>
                                                     {% endif %}
                                                 </li>
-                                                <li> <a href="#">{{ news.creator.username }}</a></li>
+                                                <li>{{ news.creator.get_full_name|default:"Ministère des Finances" }}</li>
                                                 <li>{{ news.published_at|date:"d/m/Y" }}</li>
                                             </ul>
-                                            {{ news.resume }}
+                                            <p>{{ news.resume|default:"" }}</p>
+                                            <a href="{% url 'news_detail' news.id %}" class="text-success fw-bold">Lire la suite →</a>
 
                                         </div>
                                     </div>
@@ -392,34 +403,16 @@
     <!-- End Subscribe Section -->
 </div>
 
-
-<div class="modal fade video-modal" id="videoModal" tabindex="-1" role="dialog" aria-hidden="true"
-    style="display: none;">
-    <div class="modal-content-modal border-0 bg-transparent">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
-        <div class="modal-body">
-            <div class="embed-responsive embed-responsive-16by9">
-                <iframe class="embed-responsive-item"
-                    src="https://www.youtube.com/watch?v=s2d2i9qSNEU"
-                    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
-                </iframe>
-            </div>
-        </div>
-        <!-- <div class="modal-dialog modal-dialog-centered">
-        </div> -->
-    </div>
-</div>
 {% endblock content %}
 
 {% block script %}
 <script src="{% static 'assets/js/jquery.min.js' %}"></script>
-<script src="{% static 'assets/js/bootstrap.bundle.min.js' %}"></script>
 <script src="{% static 'assets/js/modernizr.custom.js' %}"></script>
 <script src="{% static 'assets/js/jquery-plugin-collection.js' %}"></script>
 <script src="{% static 'assets/js/script.js' %}"></script>
 <script>
+    const YOUTUBE_VIDEO_ID = "s2d2i9qSNEU"
+
     document.addEventListener("DOMContentLoaded", () => {
         // Créer le modal
         function createModal() {
@@ -459,10 +452,14 @@
             videoContainer.className = "video-container"
 
             // Créer l'iframe pour la vidéo YouTube
+            // - URL au format /embed/ : les pages /watch?v= refusent d'être affichées dans une iframe
+            // - referrerPolicy explicite : la politique "same-origin" du site n'envoie aucun referrer,
+            //   ce que YouTube rejette (erreur 153 « Erreur de configuration du lecteur vidéo »)
             const iframe = document.createElement("iframe")
-            iframe.src = "https://www.youtube.com/watch?v=s2d2i9qSNEU"
-            iframe.title = "YouTube video player"
-            iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            iframe.src = `https://www.youtube.com/embed/${YOUTUBE_VIDEO_ID}?autoplay=1&rel=0`
+            iframe.title = "Vidéo YouTube"
+            iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            iframe.referrerPolicy = "strict-origin-when-cross-origin"
             iframe.allowFullscreen = true
 
             // Créer le pied de page du modal

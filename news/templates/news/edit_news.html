@@ -13,6 +13,12 @@
       <input type="text" name="headline" id="headline" class="form-control" value="{{ news.headline }}" required>
     </div>
 
+    <!-- Résumé de l'actualité -->
+    <div class="mb-4">
+      <label for="resume" class="form-label">Résumé :</label>
+      <textarea name="resume" id="resume" class="form-control" maxlength="500">{{ news.resume|default:'' }}</textarea>
+    </div>
+
     <!-- Contenu de l'actualité avec Quill.js -->
     <div class="mb-4">
       <label for="content" class="form-label">Contenu :</label>
@@ -38,7 +44,7 @@
     <!-- Lien externe -->
     <div class="mb-4">
       <label for="external_link" class="form-label">Lien externe :</label>
-      <input type="url" name="external_link" id="external_link" class="form-control" value="{{ news.external_link }}">
+      <input type="url" name="external_link" id="external_link" class="form-control" value="{{ news.external_link|default:'' }}">
     </div>
 
     <!-- Bouton de modification -->
@@ -70,7 +76,7 @@
   // Lors de la soumission du formulaire, récupérer le contenu de Quill et le placer dans le champ caché
   document.querySelector('form').onsubmit = function() {
     var content = document.querySelector('#content-input');
-    content.value = quill.root.innerHTML;
+    content.value = quill.getText().trim() ? quill.root.innerHTML : '';
   };
 </script>
 

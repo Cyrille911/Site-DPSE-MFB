@@ -7,6 +7,21 @@
         <!-- Filtres -->
         <div class="row my-3 g-3 mx-0 animate-section" style="animation-delay: 0.2s;">
             <div class="col-12 col-sm-6 col-md-4">
+                <label class="mb-2">Filtrer par axe :</label>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-group="axe" data-bs-toggle="dropdown">
+                        Sélectionner les axes
+                    </button>
+                    <ul class="dropdown-menu w-100 overflow-auto" id="filter-axe">
+                        <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="axe" id="select-all-axe"> Tout sélectionner</label></li>
+                        {% for axe in axes %}
+                            <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="axe" value="{{ axe.titre }}">{{ axe.titre }}</label></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-md-4">
                 <label class="mb-2">Filtrer par effet :</label>
                 <div class="dropdown">
                     <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-group="effet" data-bs-toggle="dropdown">
@@ -31,21 +46,6 @@
                         <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="produit" id="select-all-produit"> Tout sélectionner</label></li>
                         {% for produit in produits %}
                             <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="produit" value="{{ produit.titre }}">{{ produit.titre }}</label></li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-
-            <div class="col-12 col-sm-6 col-md-4">
-                <label class="mb-2">Filtrer par action :</label>
-                <div class="dropdown">
-                    <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-group="action" data-bs-toggle="dropdown">
-                        Sélectionner les actions
-                    </button>
-                    <ul class="dropdown-menu w-100 overflow-auto" id="filter-action">
-                        <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="action" id="select-all-action"> Tout sélectionner</label></li>
-                        {% for action in actions %}
-                            <li><label class="dropdown-item"><input type="checkbox" class="checkbox-option" data-group="action" value="{{ action.titre }}">{{ action.titre }}</label></li>
                         {% endfor %}
                     </ul>
                 </div>
@@ -227,7 +227,9 @@
             }
 
             function updateCrosstab(data) {
-                const effets = data.effets || [];
+                const effets = (data.axes || []).flatMap((axe, a) =>
+                    axe.effets.map((effet, e) => ({ ...effet, ref: `${a + 1}.${e + 1}` }))
+                );
                 const types = [...new Set(effets.flatMap(effet => 
                     effet.produits.flatMap(produit => 
                         produit.actions.flatMap(action => 
@@ -267,7 +269,7 @@
                     const rowTotal = types.reduce((sum, type) => sum + crosstabData[effet.titre][type], 0);
                     const row = `
                         <tr>
-                            <td>Effet ${i + 1} : ${effet.titre}</td>
+                            <td>Effet ${effet.ref} : ${effet.titre}</td>
                             ${types.map(type => `<td>${crosstabData[effet.titre][type]}</td>`).join('')}
                             <td>${rowTotal}</td>
                         </tr>
@@ -308,8 +310,11 @@
                         tableBody.innerHTML = '';
 
                         // Calcul des coûts totaux par année pour chaque niveau
-                        const effets = data.effets || [];
-                        effets.forEach(effet => {
+                        const axes = data.axes || [];
+                        axes.forEach(axe => {
+                            axe.coutsParAnnee = Array(annees.length).fill(0);
+                            axe.totalCost = 0;
+                        axe.effets.forEach(effet => {
                             effet.coutsParAnnee = Array(annees.length).fill(0);
                             effet.totalCost = 0;
                             effet.produits.forEach(produit => {
@@ -327,6 +332,7 @@
                                             action.coutsParAnnee[index] += coutNum;
                                             produit.coutsParAnnee[index] += coutNum;
                                             effet.coutsParAnnee[index] += coutNum;
+                                            axe.coutsParAnnee[index] += coutNum;
                                         });
                                         action.totalCost += activite.totalCost;
                                     });
@@ -334,16 +340,8 @@
                                 });
                                 effet.totalCost += produit.totalCost;
                             });
+                            axe.totalCost += effet.totalCost;
                         });
-
-                        // Calcul du coût total global
-                        let totalCoutsParAnnee = Array(annees.length).fill(0);
-                        let totalCostGlobal = 0;
-                        effets.forEach(effet => {
-                            effet.coutsParAnnee.forEach((cout, index) => {
-                                totalCoutsParAnnee[index] += cout;
-                            });
-                            totalCostGlobal += effet.totalCost;
                         });
 
                         // Ajouter la ligne "Impact"
@@ -354,21 +352,22 @@
                             </tr>`;
                         tableBody.innerHTML += impactRow;
 
-                        // Ajouter la ligne "Coût Total"
-                        const colsJusquaProgramme = 7 + annees.length;
-                        let totalRow = `
-                            <tr class="hierarchy-row total-row">
-                                <td class="total-bg" colspan="${colsJusquaProgramme}">Coût Total</td>
-                        `;
-                        annees.forEach((annee, index) => totalRow += `<td class="total-bg">${totalCoutsParAnnee[index].toFixed(2)}</td>`);
-                        totalRow += `<td class="total-bg">${totalCostGlobal.toFixed(2)}</td></tr>`;
-                        tableBody.innerHTML += totalRow;
-
                         const colsIntituleAProgramme = 6 + annees.length;
-                        effets.forEach((effet, i) => {
+                        axes.forEach((axe, a) => {
+                            let axeRow = `
+                                <tr class="hierarchy-row axe-row">
+                                    <td class="axe-bg">Axe ${a + 1}</td>
+                                    <td class="axe-bg" colspan="${colsIntituleAProgramme}">${axe.titre}</td>
+                            `;
+                            annees.forEach((annee, index) => axeRow += `<td class="axe-bg">${axe.coutsParAnnee[index].toFixed(2)}</td>`);
+                            axeRow += `<td class="axe-bg">${axe.totalCost.toFixed(2)}</td></tr>`;
+                            tableBody.innerHTML += axeRow;
+
+                        axe.effets.forEach((effet, idxEffet) => {
+                            const i = `${a + 1}.${idxEffet + 1}`;
                             let effetRow = `
                                 <tr class="hierarchy-row effet-row">
-                                    <td class="effet-bg">Effet ${i + 1}</td>
+                                    <td class="effet-bg">Effet ${i}</td>
                                     <td class="effet-bg" colspan="${colsIntituleAProgramme}">${effet.titre}</td>
                             `;
                             annees.forEach((annee, index) => effetRow += `<td class="effet-bg">${effet.coutsParAnnee[index].toFixed(2)}</td>`);
@@ -391,7 +390,7 @@
                             effet.produits.forEach((produit, j) => {
                                 let produitRow = `
                                     <tr class="hierarchy-row produit-row">
-                                        <td class="produit-bg">Produit ${i + 1}.${j + 1}</td>
+                                        <td class="produit-bg">Produit ${i}.${j + 1}</td>
                                         <td class="produit-bg" colspan="${colsIntituleAProgramme}">${produit.titre}</td>
                                 `;
                                 annees.forEach((annee, index) => produitRow += `<td class="produit-bg">${produit.coutsParAnnee[index].toFixed(2)}</td>`);
@@ -414,7 +413,7 @@
                                 produit.actions.forEach((action, k) => {
                                     let actionRow = `
                                         <tr class="hierarchy-row action-row">
-                                            <td class="action-bg">Action ${i + 1}.${j + 1}.${k + 1}</td>
+                                            <td class="action-bg">Action ${i}.${j + 1}.${k + 1}</td>
                                             <td class="action-bg" colspan="${colsIntituleAProgramme}">${action.titre}</td>
                                     `;
                                     annees.forEach((annee, index) => actionRow += `<td class="action-bg">${action.coutsParAnnee[index].toFixed(2)}</td>`);
@@ -424,7 +423,7 @@
                                     action.activites.forEach((activite, l) => {
                                         let activiteRow = `
                                             <tr class="activite-row">
-                                                <td class="activite-bg">Activité ${i + 1}.${j + 1}.${k + 1}.${l + 1}</td>
+                                                <td class="activite-bg">Activité ${i}.${j + 1}.${k + 1}.${l + 1}</td>
                                                 <td class="activite-bg">${activite.titre}</td>
                                                 <td class="activite-bg">${activite.type || 'N/A'}</td>
                                                 <td class="activite-bg">${activite.indicateur_label || 'N/A'}</td>
@@ -446,8 +445,9 @@
                                 });
                             });
                         });
+                        });
 
-                        if (effets.length === 0) {
+                        if (axes.length === 0) {
                             tableBody.innerHTML += `<tr><td colspan="${annees.length * 2 + 8}" class="text-center">Aucune donnée trouvée</td></tr>`;
                         }
 
@@ -462,9 +462,6 @@
                                 <td class="impact-bg" colspan="${totalColonnes}">Impact : ${planImpact || 'Impact non défini'}</td>
                             </tr>
                             <tr><td colspan="${totalColonnes}" class="text-center text-danger">Erreur de chargement des données</td></tr>
-                            <tr class="hierarchy-row total-row">
-                                <td class="total-bg" colspan="${totalColonnes}">Coût Total</td>
-                            </tr>
                         `;
                         updateHierarchyPositions();
                         crosstabBody.innerHTML = `<tr><td colspan="${totalColonnes}" class="text-center">Erreur de chargement des données</td></tr>`;
@@ -613,6 +610,8 @@
                                 planSheet[cellAddress].s.fill = { fgColor: { rgb: 'D1E7DD' } };
                             } else if (tr.classList.contains('total-row')) {
                                 planSheet[cellAddress].s.fill = { fgColor: { rgb: 'B8D8C9' } };
+                            } else if (tr.classList.contains('axe-row')) {
+                                planSheet[cellAddress].s.fill = { fgColor: { rgb: 'E2D9F3' } };
                             } else if (tr.classList.contains('effet-row')) {
                                 planSheet[cellAddress].s.fill = { fgColor: { rgb: 'F8D7DA' } };
                             } else if (tr.classList.contains('produit-row')) {
@@ -766,49 +765,50 @@
                 cocherToutesLesCasesAuDemarrage();
             }
 
-            const effetCheckboxes = document.querySelectorAll(`input[data-group="effet"]`);
-            const effetSelectAllCheckbox = document.querySelector(`input[data-group="effet"]#select-all-effet`);
-            const effetButton = document.querySelector(`button[data-group="effet"]`);
+            function brancherFiltre(groupe, libelle, chargerAuDemarrage) {
+                const groupeCheckboxes = document.querySelectorAll(`input[data-group="${groupe}"]`);
+                const groupeSelectAll = document.querySelector(`input[data-group="${groupe}"]#select-all-${groupe}`);
+                const groupeButton = document.querySelector(`button[data-group="${groupe}"]`);
 
-            if (!effetSelectAllCheckbox || !effetButton || effetCheckboxes.length === 0) {
-                console.error(`Élément(s) manquant(s) pour le filtre "effet"`);
-            } else {
-                function updateEffetDropdownButton() {
-                    const selectedOptions = Array.from(effetCheckboxes)
-                        .filter(checkbox => checkbox.checked && checkbox !== effetSelectAllCheckbox)
+                if (!groupeSelectAll || !groupeButton || groupeCheckboxes.length === 0) {
+                    console.error(`Élément(s) manquant(s) pour le filtre "${groupe}"`);
+                    return;
+                }
+
+                function majBouton() {
+                    const selectedOptions = Array.from(groupeCheckboxes)
+                        .filter(checkbox => checkbox.checked && checkbox !== groupeSelectAll)
                         .map(checkbox => checkbox.value);
-                    effetButton.textContent = selectedOptions.length > 0 ? selectedOptions.join(', ') : `Sélectionner les effets`;
+                    groupeButton.textContent = selectedOptions.length > 0 ? selectedOptions.join(', ') : `Sélectionner les ${libelle}`;
                 }
 
-                function cocherToutesLesCasesEffet() {
-                    effetCheckboxes.forEach(checkbox => checkbox.checked = true);
-                    effetSelectAllCheckbox.checked = true;
-                    updateEffetDropdownButton();
-                    chargeTable("effet");
-                }
-
-                effetCheckboxes.forEach(checkbox => checkbox.addEventListener('change', function () {
-                    if (this !== effetSelectAllCheckbox) {
-                        effetSelectAllCheckbox.checked = Array.from(effetCheckboxes)
-                            .every(checkbox => checkbox.checked || checkbox === effetSelectAllCheckbox);
+                groupeCheckboxes.forEach(checkbox => checkbox.addEventListener('change', function () {
+                    if (this !== groupeSelectAll) {
+                        groupeSelectAll.checked = Array.from(groupeCheckboxes)
+                            .every(checkbox => checkbox.checked || checkbox === groupeSelectAll);
                     }
-                    updateEffetDropdownButton();
-                    chargeTable("effet");
+                    majBouton();
+                    chargeTable(groupe);
                 }));
 
-                effetSelectAllCheckbox.addEventListener('change', function () {
+                groupeSelectAll.addEventListener('change', function () {
                     const isChecked = this.checked;
-                    effetCheckboxes.forEach(checkbox => {
-                        if (checkbox !== effetSelectAllCheckbox) {
+                    groupeCheckboxes.forEach(checkbox => {
+                        if (checkbox !== groupeSelectAll) {
                             checkbox.checked = isChecked;
                         }
                     });
-                    updateEffetDropdownButton();
-                    chargeTable("effet");
+                    majBouton();
+                    chargeTable(groupe);
                 });
 
-                cocherToutesLesCasesEffet();
+                groupeCheckboxes.forEach(checkbox => checkbox.checked = true);
+                majBouton();
+                if (chargerAuDemarrage) chargeTable(groupe);
             }
+
+            brancherFiltre('axe', 'axes', false);
+            brancherFiltre('effet', 'effets', true);
 
             tableContainer.addEventListener('scroll', updateHierarchyPositions);
         });
@@ -884,6 +884,11 @@
 
         .total-bg {
             background-color: #b8d8c9; /* Vert légèrement plus foncé pour Coût Total */
+        }
+
+        .axe-bg {
+            background-color: #e2d9f3;
+            font-weight: 600;
         }
 
         .effet-bg {

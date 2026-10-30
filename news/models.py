@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
+from django.utils.html import strip_tags
 import os
 
 def news_directory_path(instance, filename):
@@ -23,7 +24,8 @@ class News(models.Model):
     def save(self, *args, **kwargs):
         # Auto-remplissage du résumé si non fourni : on prend les 200 premiers caractères du contenu
         if not self.resume and self.content:
-            self.resume = self.content[:200] + ("..." if len(self.content) > 200 else "")
+            texte = strip_tags(self.content).strip()
+            self.resume = texte[:200] + ("..." if len(texte) > 200 else "")
         super().save(*args, **kwargs)
 
     class Meta:

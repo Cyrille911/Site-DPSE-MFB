@@ -60,63 +60,6 @@ Matrice Opérationnelle - {{ plan.titre }} - {{ annee }}
                         <tr class="hierarchy-row impact-row">
                             <td class="impact-bg" colspan="14">Impact : {{ impact }}</td>
                         </tr>
-                        {% for effet in effets %}
-                            <tr class="hierarchy-row effet-row">
-                                <td class="effet-bg">Effet {{ forloop.counter }}</td>
-                                <td class="effet-bg" colspan="12">{{ effet.titre }}</td>
-                                <td class="effet-bg">{{ effet.cout }}</td>
-                            </tr>
-                            {% for ind in effet.indicateurs %}
-                                <tr class="indicateur-row">
-                                    <td class="indicateur-bg"></td>
-                                    <td class="indicateur-bg" colspan="2"><em>↳ {{ ind.label }}</em></td>
-                                    <td class="indicateur-bg">{{ ind.reference|default:"—" }}</td>
-                                    <td class="indicateur-bg">{{ ind.cible|default:"—" }}</td>
-                                    <td class="indicateur-bg" colspan="9"></td>
-                                </tr>
-                            {% endfor %}
-                            {% for produit in effet.produits %}
-                                <tr class="hierarchy-row produit-row">
-                                    <td class="produit-bg">Produit {{ forloop.parentloop.counter }}.{{ forloop.counter }}</td>
-                                    <td class="produit-bg" colspan="12">{{ produit.titre }}</td>
-                                    <td class="produit-bg">{{ produit.cout }}</td>
-                                </tr>
-                                {% for ind in produit.indicateurs %}
-                                    <tr class="indicateur-row">
-                                        <td class="indicateur-bg"></td>
-                                        <td class="indicateur-bg" colspan="2"><em>↳ {{ ind.label }}</em></td>
-                                        <td class="indicateur-bg">{{ ind.reference|default:"—" }}</td>
-                                        <td class="indicateur-bg">{{ ind.cible|default:"—" }}</td>
-                                        <td class="indicateur-bg" colspan="9"></td>
-                                    </tr>
-                                {% endfor %}
-                                {% for action in produit.actions %}
-                                    <tr class="hierarchy-row action-row">
-                                        <td class="action-bg">Action {{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}</td>
-                                        <td class="action-bg" colspan="12">{{ action.titre }}</td>
-                                        <td class="action-bg">{{ action.cout }}</td>
-                                    </tr>
-                                    {% for activite in action.activites %}
-                                        <tr class="activity-row">
-                                            <td class="activite-bg">Activité {{ forloop.parentloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}</td>
-                                            <td class="activite-bg">{{ activite.titre }}</td>
-                                            <td class="activite-bg">{{ activite.type }}</td>
-                                            <td class="activite-bg">{{ activite.indicateur_label }}</td>
-                                            <td class="activite-bg">{{ activite.indicateur_reference }}</td>
-                                            <td class="activite-bg">{{ activite.cible }}</td>
-                                            <td class="activite-bg">{{ activite.realisation }}</td>
-                                            <td class="activite-bg">{{ activite.structure }}</td>
-                                            <td class="activite-bg">{{ activite.etat_avancement }}</td>
-                                            <td class="activite-bg">{{ activite.commentaire }}</td>
-                                            <td class="activite-bg">{{ activite.commentaire_se }}</td>
-                                            <td class="activite-bg">{{ activite.status }}</td>
-                                            <td class="activite-bg">{{ activite.programme }}</td>
-                                            <td class="activite-bg">{{ activite.cout }}</td>
-                                        </tr>
-                                    {% endfor %}
-                                {% endfor %}
-                            {% endfor %}
-                        {% endfor %}
                     </tbody>
                 </table>
             </div>
@@ -191,6 +134,7 @@ Matrice Opérationnelle - {{ plan.titre }} - {{ annee }}
     </div>
 </div>
 
+{{ axes|json_script:"axes-data" }}
 <!-- Inclusion de SheetJS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
@@ -269,7 +213,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const crossData = {};
 
         visibleRows.forEach(row => {
-            const effetMatch = row.cells[0].textContent.match(/^(\d+)\./); // Extraire le numéro de l'effet
+            const effetMatch = row.cells[0].textContent.match(/(\d+\.\d+)\./); // Extraire la référence axe.effet
             const effet = effetMatch ? `Effet ${effetMatch[1]}` : 'Non défini';
             const type = row.cells[2].textContent.trim(); // Colonne "Nature d'activité"
 
@@ -502,10 +446,96 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    function lignesIndicateurs(indicateurs) {
+        return (indicateurs || []).map(ind => `
+            <tr class="indicateur-row">
+                <td class="indicateur-bg"></td>
+                <td class="indicateur-bg" colspan="2"><em>↳ ${ind.label}</em></td>
+                <td class="indicateur-bg">${ind.reference || '—'}</td>
+                <td class="indicateur-bg">${ind.cible || '—'}</td>
+                <td class="indicateur-bg" colspan="9"></td>
+            </tr>`).join('');
+    }
+
+    function echapper(texte) {
+        const div = document.createElement('div');
+        div.textContent = texte == null ? '' : String(texte);
+        return div.innerHTML.replace(/"/g, '&quot;');
+    }
+
+    function lienPreuves(preuves) {
+        if (!preuves || preuves.length === 0) return '';
+        const liens = preuves.map(p => p.url
+            ? `<a href="${echapper(p.url)}" target="_blank" rel="noopener">${echapper(p.libelle)}</a>`
+            : echapper(p.libelle)
+        ).join(' ; ');
+        return `<div class="preuves-cell"><i class="bi bi-paperclip"></i> Preuves : ${liens}</div>`;
+    }
+
+    function ligneHierarchie(niveau, libelle, titre, cout) {
+        return `
+            <tr class="hierarchy-row ${niveau}-row">
+                <td class="${niveau}-bg">${libelle}</td>
+                <td class="${niveau}-bg" colspan="12">${titre}</td>
+                <td class="${niveau}-bg">${cout}</td>
+            </tr>`;
+    }
+
+    // Rendu du tableau : Axe → Effet → Produit → Action → Activité
+    function renderBody(axes, impact) {
+        let html = `
+            <tr class="hierarchy-row impact-row">
+                <td class="impact-bg" colspan="14">Impact : ${impact}</td>
+            </tr>`;
+
+        axes.forEach((axe, a) => {
+            const refAxe = `${a + 1}`;
+            html += ligneHierarchie('axe', `Axe ${refAxe}`, axe.titre, axe.cout);
+            axe.effets.forEach((effet, e) => {
+                const refEffet = `${refAxe}.${e + 1}`;
+                html += ligneHierarchie('effet', `Effet ${refEffet}`, effet.titre, effet.cout);
+                html += lignesIndicateurs(effet.indicateurs);
+                effet.produits.forEach((produit, p) => {
+                    const refProduit = `${refEffet}.${p + 1}`;
+                    html += ligneHierarchie('produit', `Produit ${refProduit}`, produit.titre, produit.cout);
+                    html += lignesIndicateurs(produit.indicateurs);
+                    produit.actions.forEach((action, ac) => {
+                        const refAction = `${refProduit}.${ac + 1}`;
+                        html += ligneHierarchie('action', `Action ${refAction}`, action.titre, action.cout);
+                        action.activites.forEach((activite, act) => {
+                            html += `
+                                <tr class="activity-row">
+                                    <td class="activite-bg">Activité ${refAction}.${act + 1}</td>
+                                    <td class="activite-bg">${activite.titre}</td>
+                                    <td class="activite-bg">${activite.type}</td>
+                                    <td class="activite-bg">${activite.indicateur_label}</td>
+                                    <td class="activite-bg">${activite.indicateur_reference}</td>
+                                    <td class="activite-bg">${activite.cible}</td>
+                                    <td class="activite-bg">${activite.realisation}</td>
+                                    <td class="activite-bg">${activite.structure}</td>
+                                    <td class="activite-bg">${activite.etat_avancement}${lienPreuves(activite.preuves)}</td>
+                                    <td class="activite-bg">${activite.commentaire}</td>
+                                    <td class="activite-bg">${activite.commentaire_se}</td>
+                                    <td class="activite-bg">${activite.status}</td>
+                                    <td class="activite-bg">${activite.programme}</td>
+                                    <td class="activite-bg">${activite.cout}</td>
+                                </tr>`;
+                        });
+                    });
+                });
+            });
+        });
+
+        if (axes.length === 0) {
+            html += `<tr><td colspan="14" class="text-center">Aucune donnée trouvée</td></tr>`;
+        }
+        tableBody.innerHTML = html;
+    }
+
     // Gestion des filtres
     function chargeTable(group) {
         let params = new URLSearchParams();
-        const groups = ['effet', 'produit', 'action', 'type', 'structure'];
+        const groups = ['axe', 'effet', 'produit', 'type', 'structure'];
         groups.forEach(g => {
             const checkboxes = document.querySelectorAll(`input[data-group="${g}"]:checked`);
             checkboxes.forEach(cb => {
@@ -520,103 +550,7 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .then(response => response.json())
         .then(data => {
-            tableBody.innerHTML = `
-                <tr class="hierarchy-row impact-row">
-                    <td class="impact-bg" colspan="14">Impact : ${data.impact}</td>
-                </tr>
-            `;
-
-            let effetCounter = 1;
-            data.effets.forEach(effet => {
-                tableBody.innerHTML += `
-                    <tr class="hierarchy-row effet-row">
-                        <td class="effet-bg">Effet ${effetCounter}</td>
-                        <td class="effet-bg" colspan="12">${effet.titre}</td>
-                        <td class="effet-bg">${effet.cout}</td>
-                    </tr>
-                `;
-                // Indicateurs de l'effet (AJAX)
-                if (effet.indicateurs && effet.indicateurs.length > 0) {
-                    effet.indicateurs.forEach(ind => {
-                        tableBody.innerHTML += `
-                            <tr class="indicateur-row">
-                                <td class="indicateur-bg"></td>
-                                <td class="indicateur-bg" colspan="2"><em>↳ ${ind.label}</em></td>
-                                <td class="indicateur-bg">${ind.reference || '—'}</td>
-                                <td class="indicateur-bg">${ind.cible || '—'}</td>
-                                <td class="indicateur-bg" colspan="9"></td>
-                            </tr>
-                        `;
-                    });
-                }
-                effetCounter++;
-
-                let produitCounter = 1;
-                effet.produits.forEach(produit => {
-                    tableBody.innerHTML += `
-                        <tr class="hierarchy-row produit-row">
-                            <td class="produit-bg">Produit ${effetCounter - 1}.${produitCounter}</td>
-                            <td class="produit-bg" colspan="12">${produit.titre}</td>
-                            <td class="produit-bg">${produit.cout}</td>
-                        </tr>
-                    `;
-                    // Indicateurs du produit (AJAX)
-                    if (produit.indicateurs && produit.indicateurs.length > 0) {
-                        produit.indicateurs.forEach(ind => {
-                            tableBody.innerHTML += `
-                                <tr class="indicateur-row">
-                                    <td class="indicateur-bg"></td>
-                                    <td class="indicateur-bg" colspan="2"><em>↳ ${ind.label}</em></td>
-                                    <td class="indicateur-bg">${ind.reference || '—'}</td>
-                                    <td class="indicateur-bg">${ind.cible || '—'}</td>
-                                    <td class="indicateur-bg" colspan="9"></td>
-                                </tr>
-                            `;
-                        });
-                    }
-                    produitCounter++;
-
-                    let actionCounter = 1;
-                    produit.actions.forEach(action => {
-                        tableBody.innerHTML += `
-                            <tr class="hierarchy-row action-row">
-                                <td class="action-bg">Action ${effetCounter - 1}.${produitCounter - 1}.${actionCounter}</td>
-                                <td class="action-bg" colspan="12">${action.titre}</td>
-                                <td class="action-bg">${action.cout}</td>
-                            </tr>
-                        `;
-                        actionCounter++;
-
-                        let activiteCounter = 1;
-                        action.activites.forEach(activite => {
-                            tableBody.innerHTML += `
-                                <tr class="activity-row">
-                                    <td class="activite-bg">${effetCounter - 1}.${produitCounter - 1}.${actionCounter - 1}.${activiteCounter}</td>
-                                    <td class="activite-bg">${activite.titre}</td>
-                                    <td class="activite-bg">${activite.type}</td>
-                                    <td class="activite-bg">${activite.indicateur_label}</td>
-                                    <td class="activite-bg">${activite.indicateur_reference}</td>
-                                    <td class="activite-bg">${activite.cible}</td>
-                                    <td class="activite-bg">${activite.realisation}</td>
-                                    <td class="activite-bg">${activite.structure}</td>
-                                    <td class="activite-bg">${activite.etat_avancement}</td>
-                                    <td class="activite-bg">${activite.commentaire}</td>
-                                    <td class="activite-bg">${activite.commentaire_se}</td>
-                                    <td class="activite-bg">${activite.status}</td>
-                                    <td class="activite-bg">${activite.programme}</td>
-                                    <td class="activite-bg">${activite.cout}</td>
-                                </tr>
-                            `;
-                            activiteCounter++;
-                        });
-                    });
-                });
-            });
-
-            if (data.effets.length === 0) {
-                tableBody.innerHTML += `<tr><td colspan="14" class="text-center">Aucune donnée trouvée</td></tr>`;
-            }
-
+            renderBody(data.axes, data.impact);
             filterTable();
         })
         .catch(error => {
@@ -628,7 +562,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Gestion des filtres avec checkboxes
-    ['effet', 'produit', 'action', 'type', 'structure'].forEach(group => {
+    ['axe', 'effet', 'produit', 'type', 'structure'].forEach(group => {
         const checkboxes = document.querySelectorAll(`input[data-group="${group}"]`);
         const selectAllCheckbox = document.querySelector(`#select-all-${group}`);
         const button = document.querySelector(`button[data-group="${group}"]`);
@@ -661,6 +595,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Initialisation
+    renderBody(JSON.parse(document.getElementById('axes-data').textContent), "{{ impact|escapejs }}");
     updateCrossTable();
     updateHierarchyPositions();
     tableContainer.addEventListener('scroll', updateHierarchyPositions);
@@ -782,6 +717,9 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     .impact-bg { background-color: #d1e7dd; }
+    .axe-bg { background-color: #e2d9f3; font-weight: 600; }
+    .preuves-cell { margin-top: 6px; font-size: 0.85em; color: #0e7490; }
+    .preuves-cell a { color: #0e7490; text-decoration: underline; }
     .effet-bg { background-color: #f8d7da; }
     .produit-bg { background-color: #fff3cd; }
     .action-bg { background-color: #cce5ff; }

@@ -183,7 +183,8 @@
     }
 
     async function loadPreuves(activiteId) {
-        const url = PREUVE_LISTE_URL.replace('0', activiteId);
+        const annee = document.getElementById('preuveAnnee').value;
+        const url = PREUVE_LISTE_URL.replace('0', activiteId) + (annee ? `?annee=${encodeURIComponent(annee)}` : '');
         try {
             const resp = await fetch(url);
             const data = await resp.json();
@@ -222,10 +223,13 @@
         }
     }
 
-    function openPreuveModal(activiteId) {
+    function openPreuveModal(activiteId, annee) {
         const form = document.getElementById('preuveForm');
         form.dataset.activiteId = activiteId;
         form.reset();
+        const anneeInput = document.getElementById('preuveAnnee');
+        if (annee) anneeInput.value = annee;
+        document.getElementById('preuveModalLabel').textContent = `Preuves de réalisation ${anneeInput.value}`;
         document.getElementById('preuveMessages').innerHTML = '';
         loadPreuves(activiteId);
         const modal = new bootstrap.Modal(document.getElementById('preuveModal'));
@@ -275,7 +279,7 @@
 
     document.querySelectorAll('.preuve-btn').forEach(btn => {
         btn.addEventListener('click', function () {
-            openPreuveModal(this.dataset.activiteId);
+            openPreuveModal(this.dataset.activiteId, this.dataset.annee);
         });
     });
 </script>

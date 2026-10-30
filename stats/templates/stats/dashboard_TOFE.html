@@ -254,7 +254,7 @@
                                 <label for="ySelector" class="form-label">Variable Y :</label>
                                 <select id="ySelector" class="form-select">
                                     {% for categorie in all_data.keys %}
-                                        <option value="{{ categorie }}" {% if categorie == 'DÉPENSES TOTALES ET PRETS NET' %}selected{% endif %}>{{ categorie }}</option>
+                                        <option value="{{ categorie }}" {% if categorie == 'DEPENSES TOTALES ET PRETS NET' %}selected{% endif %}>{{ categorie }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -330,6 +330,8 @@
     <!--begin::Script-->
     <!--begin::Third Party Plugin(OverlayScrollbars)-->
     {% block scripts %}
+    {{ all_data|json_script:"tofe-all-data" }}
+    {{ chart_labels|json_script:"tofe-labels" }}
     <script
       src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.10.1/browser/overlayscrollbars.browser.es6.min.js"
       integrity="sha256-dghWARbRe2eLlIJ56wNB+b760ywulqK3DzZYEpsg2fQ="
@@ -402,8 +404,8 @@
     <!-- ChartJS -->
     <script>
       // Données brutes depuis la vue
-      const allData = {{ all_data|safe }};
-      const labels = {{ chart_labels|safe }};
+      const allData = JSON.parse(document.getElementById('tofe-all-data').textContent);
+      const labels = JSON.parse(document.getElementById('tofe-labels').textContent);
   
       // Debug
       console.log("Toutes les données :", allData);
@@ -586,7 +588,7 @@
       // Initialiser tous les graphiques
       updateEvolutionChart(['RECETTES'], 'line');
       updatePieChart('RECETTES');
-      updateCrossedHistogram('RECETTES', 'DÉPENSES TOTALES ET PRETS NET', 'stacked');
+      updateCrossedHistogram('RECETTES', 'DEPENSES TOTALES ET PRETS NET', 'stacked');
 
       // Écouter les changements pour le graphique linéaire/area
       document.getElementById('variableSelector').addEventListener('change', function () {

@@ -6,7 +6,17 @@ from django.conf import settings
 from django.db import migrations, models
 
 
+def create_table_if_missing(apps, schema_editor):
+    model = apps.get_model('planning', 'QuarterlyReport')
+    with schema_editor.connection.cursor() as cursor:
+        tables = schema_editor.connection.introspection.table_names(cursor)
+    if model._meta.db_table not in tables:
+        schema_editor.create_model(model)
+
+
 class Migration(migrations.Migration):
+
+    atomic = False
 
     dependencies = [
         ('planning', '0012_add_indicateur_models'),
@@ -14,23 +24,28 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.CreateModel(
-            name='QuarterlyReport',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('annee', models.PositiveIntegerField()),
-                ('trimestre', models.CharField(choices=[('T1', 'T1'), ('T2', 'T2'), ('T3', 'T3'), ('T4', 'T4')], max_length=2)),
-                ('fichier', models.FileField(upload_to=planning.models.rapport_directory_path)),
-                ('generated_at', models.DateTimeField(auto_now_add=True)),
-                ('recipients_emails', models.JSONField(blank=True, default=list)),
-                ('generated_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='rapports_generes', to=settings.AUTH_USER_MODEL)),
-                ('plan', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='rapports', to='planning.planaction')),
+        migrations.SeparateDatabaseAndState(
+            state_operations=[
+                migrations.CreateModel(
+                    name='QuarterlyReport',
+                    fields=[
+                        ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                        ('annee', models.PositiveIntegerField()),
+                        ('trimestre', models.CharField(choices=[('T1', 'T1'), ('T2', 'T2'), ('T3', 'T3'), ('T4', 'T4')], max_length=2)),
+                        ('fichier', models.FileField(upload_to=planning.models.rapport_directory_path)),
+                        ('generated_at', models.DateTimeField(auto_now_add=True)),
+                        ('recipients_emails', models.JSONField(blank=True, default=list)),
+                        ('generated_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='rapports_generes', to=settings.AUTH_USER_MODEL)),
+                        ('plan', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='rapports', to='planning.planaction')),
+                    ],
+                    options={
+                        'verbose_name': 'Rapport trimestriel',
+                        'verbose_name_plural': 'Rapports trimestriels',
+                        'ordering': ['-generated_at'],
+                        'unique_together': {('plan', 'annee', 'trimestre')},
+                    },
+                ),
             ],
-            options={
-                'verbose_name': 'Rapport trimestriel',
-                'verbose_name_plural': 'Rapports trimestriels',
-                'ordering': ['-generated_at'],
-                'unique_together': {('plan', 'annee', 'trimestre')},
-            },
         ),
+        migrations.RunPython(create_table_if_missing, migrations.RunPython.noop),
     ]

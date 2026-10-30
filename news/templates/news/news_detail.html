@@ -53,8 +53,8 @@
                         <!-- <h2>{{ news.headline }}</h2> -->
                         <h2>Actualités du MFB</h2>
                         <ul>
-                            <li><a href="#">Accueil</a></li>
-                            <li><span>Actualités</span></li>
+                            <li><a href="{% url 'accueil' %}">Accueil</a></li>
+                            <li><a href="{% url 'news_list' %}">Actualités</a></li>
                         </ul>
                     </div>
                 </div>
@@ -74,25 +74,51 @@
                                 {% if news.image %}
                                 <img src="{{news.image.url}}" alt="{{news.headline}}" class="img img-responsive">
                                 {% else %}
-                                <img src="{% static 'assets/images/blog/default.jpg' %}" alt="Image non disponible"
+                                <img src="{% static 'assets/images/blog/img-1.jpg' %}" alt="Image non disponible"
                                     class="img img-responsive">
                                 {% endif %}
                             </div>
                             <!-- Entry Meta -->
                             <div class="entry-meta">
                                 <ul>
-                                    <li><i class="fi flaticon-user"></i> By <a href="#">
-                                            {{news.creator.get_full_name|default:news.creator.username}}</a></li>
-                                    <li><i class="fi flaticon-comment-white-oval-bubble"></i> Comments
-                                        {{news.comment_count}}</li>
-                                    <li><i class="fi flaticon-calendar"></i> {{ news.published_at|date:"d M Y" }}</li>
+                                    <li><i class="fi flaticon-user"></i> Par
+                                            {{ news.creator.get_full_name|default:"Ministère des Finances" }}</li>
+                                    <li><i class="fi flaticon-comment-white-oval-bubble"></i>
+                                        {{ news.comment_count }} commentaire{{ news.comment_count|pluralize }}</li>
+                                    <li><i class="fi flaticon-calendar"></i> {{ news.published_at|date:"d/m/Y" }}</li>
                                 </ul>
                             </div>
                             <!-- Titre et Contenu -->
                             <h2>{{ news.headline }}</h2>
+                            {% if messages %}
+                                {% for message in messages %}
+                                <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">{{ message }}</div>
+                                {% endfor %}
+                            {% endif %}
                             <div class="post-content">
-                                {{ news.content|markdownify|safe }}
+                                {{ news.content|markdownify }}
                             </div>
+                            {% if news.external_link %}
+                            <p class="mt-3">
+                                <a href="{{ news.external_link }}" target="_blank" rel="noopener" class="text-success fw-bold">
+                                    Voir la source <i class="ti-new-window"></i>
+                                </a>
+                            </p>
+                            {% endif %}
+                            {% if peut_modifier or peut_supprimer %}
+                            <div class="d-flex gap-2 mt-3">
+                                {% if peut_modifier %}
+                                <a href="{% url 'edit_news' news.pk %}" class="btn btn-warning btn-sm">Modifier l'actualité</a>
+                                {% endif %}
+                                {% if peut_supprimer %}
+                                <form method="post" action="{% url 'delete_news' news.pk %}"
+                                      onsubmit="return confirm('Supprimer définitivement cette actualité ?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
+                                </form>
+                                {% endif %}
+                            </div>
+                            {% endif %}
                         </div>
 
                         <!-- Comments Area -->
@@ -110,7 +136,7 @@
                                                     {% else %}
                                                     <div class="rounded-circle bg-success text-white d-flex justify-content-center align-items-center"
                                                         style="width:80px; height:80px; font-size:18px; font-weight:bold;">
-                                                        {{comment.user.first_name|default:comment.user.username|slice:":1"}}
+                                                        {{ comment.user.first_name|default:comment.user.email|slice:":1"|upper }}
                                                     </div>
                                                     {% endif %}
                                                 </div>
@@ -120,15 +146,30 @@
                                                 <div class="comment-wrapper">
                                                     <div class="comments-meta">
                                                         <h4>
-                                                            {{comment.user.get_full_name|default:comment.user.username}}
-                                                            <span class="comments-date">Date
-                                                                {{ comment.created_at|date:"d M Y \\a\\t H:i" }}</span>
+                                                            {{ comment.user.get_full_name|default:"Utilisateur" }}
+                                                            <span class="comments-date">Le
+                                                                {{ comment.created_at|date:"d/m/Y à H:i" }}</span>
                                                         </h4>
                                                     </div>
                                                     <div class="comment-area">
-                                                        <p>{{ comment.content }}</p>
-                                                        <div class="comments-reply">
+                                                        <p id="comment-text-{{ comment.id }}">{{ comment.content|linebreaksbr }}</p>
+                                                        {% if user == comment.user %}
+                                                        <form method="post" action="{% url 'edit_newscomment' comment.id %}"
+                                                              id="edit-comment-{{ comment.id }}" style="display: none;">
+                                                            {% csrf_token %}
+                                                            <textarea name="comment" rows="3" class="form-control" required>{{ comment.content }}</textarea>
+                                                            <button type="submit" class="btn btn-success btn-sm mt-2">Enregistrer</button>
+                                                        </form>
+                                                        <div class="comments-reply d-flex gap-2">
+                                                            <button type="button" class="btn btn-link btn-sm p-0 edit-comment"
+                                                                    data-comment-id="{{ comment.id }}">Modifier</button>
+                                                            <form method="post" action="{% url 'delete_newscomment' comment.id %}"
+                                                                  onsubmit="return confirm('Supprimer ce commentaire ?');">
+                                                                {% csrf_token %}
+                                                                <button type="submit" class="btn btn-link btn-sm p-0 text-danger">Supprimer</button>
+                                                            </form>
                                                         </div>
+                                                        {% endif %}
                                                     </div>
                                                 </div>
                                             </div>
@@ -171,22 +212,21 @@
                                 <div class="col-1 m-2"></div>
                                 <div class="col-6">
                                     <!-- <img src="{% static 'assets/images/blog/about-widget.jpg' %}" alt="À propos"> -->
-                                    {% if comment.user.photo %}
-                                    <img src="{{ news.creator.get_full_name|default:news.creator.photo.url }}"
-                                        class="rounded-circle shadow-sm" width="50" height="50"
-                                        alt="{{ comment.user.get_full_name|default:comment.user.username }}">
+                                    {% if news.creator.photo %}
+                                    <img src="{{ news.creator.photo.url }}"
+                                        class="rounded-circle shadow-sm" width="200" height="200" style="object-fit: cover;"
+                                        alt="{{ news.creator.get_full_name|default:'Auteur' }}">
                                     {% else %}
                                     <div class="rounded-circle m-l-5 bg-success text-white d-flex justify-content-center align-items-center shadow-sm"
-                                        style="width: 200px; height: 200px; font-size: 18px; font-weight: bold;">
-                                        {{news.creator.get_full_name|default:news.creator.first_name|default:""|slice:":1"}}
-                                        {{news.creator.get_full_name|default:news.creator.last_name|default:""|slice:":1"}}
+                                        style="width: 200px; height: 200px; font-size: 48px; font-weight: bold;">
+                                        {{ news.creator.first_name|default:""|slice:":1" }}{{ news.creator.last_name|default:""|slice:":1"|default:"M" }}
                                     </div>
                                     {% endif %}
 
                                 </div>
 
                             </div>
-                            <h4>{{ news.creator.get_full_name|default:news.creator.username }}</h4>
+                            <h4>{{ news.creator.get_full_name|default:"Ministère des Finances" }}</h4>
                             <p>Découvrez les dernières actualités et analyses financières du Ministère des Finances de
                                 Côte d'Ivoire. </p>
                             <div class="social">
@@ -255,7 +295,6 @@
 
 {% block script %}
 <script src="{% static 'assets/js/jquery.min.js' %}"></script>
-<script src="{% static 'assets/js/bootstrap.bundle.min.js' %}"></script>
 <script src="{% static 'assets/js/modernizr.custom.js' %}"></script>
 <script src="{% static 'assets/js/jquery-plugin-collection.js' %}"></script>
 <script src="{% static 'assets/js/script.js' %}"></script>

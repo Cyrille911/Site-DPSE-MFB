@@ -25,6 +25,7 @@
             <div style="text-align: left; width: 85%;">
                 <p class="card-text mb-3"><strong>Email :</strong> {{ utilisateur.email }}</p>
                 <p class="card-text mb-3"><strong>Numéro de téléphone :</strong> {{ utilisateur.phone_number }}</p>
+                <p class="card-text mb-3"><strong>Structure :</strong> {{ utilisateur.get_entity_display|default:"Non spécifiée" }}</p>
                 <p class="card-text mb-3"><strong>Rôle :</strong> {{ utilisateur.get_role_display }}</p>
                 
                 {% if utilisateur.role == 'membre' %}

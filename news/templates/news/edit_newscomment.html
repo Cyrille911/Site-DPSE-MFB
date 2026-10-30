@@ -6,7 +6,7 @@
         <div class="card-body">
             <form method="post">
                 {% csrf_token %}
-                <textarea name="text" rows="4" class="form-control" required>{{ comment.text }}</textarea>
+                <textarea name="comment" rows="4" class="form-control" required>{{ comment.content }}</textarea>
                 <div class="mt-4 text-center">
                     <button type="submit" class="btn btn-success">Enregistrer les modifications 💾</button>
                     <a href="{% url 'news_detail' comment.news.pk %}" class="btn btn-secondary">Annuler 🔙</a>

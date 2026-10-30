@@ -173,38 +173,40 @@ def _build_report_doc(plan, annee, trimestre, activites_trimestre):
     p = doc.add_paragraph()
     p.add_run('L\'examen des activités conduites durant la période permet de relever les éléments figurant dans le tableau ci-après :')
 
-    table = doc.add_table(rows=1, cols=7)
+    table = doc.add_table(rows=1, cols=9)
     table.style = 'Table Grid'
     hdr = table.rows[0].cells
-    cols = ['Référence', 'Titre', 'Structure', 'Cible', 'Réalisation', 'Statut', 'Coût']
+    cols = ['Axe', 'Référence', 'Titre', 'Structure', 'Cible', 'Réalisation', 'Statut', 'Coût', 'Preuves']
     for i, text in enumerate(cols):
         hdr[i].text = text
         for r in hdr[i].paragraphs[0].runs:
             _set_run_font(r, bold=True)
     for a in activites_trimestre:
-        e = (a.point_focal.entity if a.point_focal and getattr(a.point_focal, 'entity', None) else
-             a.responsable.entity if a.responsable and getattr(a.responsable, 'entity', None) else 'Sans entité')
+        e = a.get_structure()
+        axe = a.action.produit.effet.axe
         row = table.add_row().cells
-        row[0].text = a.reference or ''
-        row[1].text = a.titre or ''
-        row[2].text = e
-        row[3].text = a.cibles[annee_index] if a.cibles and len(a.cibles) > annee_index else ''
-        row[4].text = a.realisation[annee_index] if a.realisation and len(a.realisation) > annee_index else ''
-        row[5].text = a.status[annee_index] if a.status and len(a.status) > annee_index else 'Non entamée'
-        row[6].text = f"{float(a.couts[annee_index] or 0):,.2f}" if a.couts and len(a.couts) > annee_index else '0.00'
+        row[0].text = f"Axe {axe.reference} : {axe.titre}"
+        row[1].text = a.reference or ''
+        row[2].text = a.titre or ''
+        row[3].text = e
+        row[4].text = str(a.cibles[annee_index]) if a.cibles and len(a.cibles) > annee_index and a.cibles[annee_index] is not None else ''
+        row[5].text = a.realisation[annee_index] if a.realisation and len(a.realisation) > annee_index else ''
+        row[6].text = a.status[annee_index] if a.status and len(a.status) > annee_index else 'Non entamée'
+        row[7].text = f"{float(a.couts[annee_index] or 0):,.2f}" if a.couts and len(a.couts) > annee_index else '0.00'
+        row[8].text = str(len(a.preuves_annee(annee)))
 
     if total > 0:
         p = doc.add_paragraph()
         p.add_run('En termes de conduite, il convient de souligner les points suivants :')
         for a in activites_trimestre:
-            e = (a.point_focal.entity if a.point_focal and getattr(a.point_focal, 'entity', None) else
-                 a.responsable.entity if a.responsable and getattr(a.responsable, 'entity', None) else 'Sans entité')
+            e = a.get_structure()
+            nb_preuves = len(a.preuves_annee(annee))
             st = a.status[annee_index] if a.status and len(a.status) > annee_index else 'Non entamée'
             cible = a.cibles[annee_index] if a.cibles and len(a.cibles) > annee_index else ''
             real = a.realisation[annee_index] if a.realisation and len(a.realisation) > annee_index else ''
             cout = float(a.couts[annee_index] or 0) if a.couts and len(a.couts) > annee_index else 0.0
             p = doc.add_paragraph(style='List Bullet')
-            p.add_run(f'L\'activité {a.reference or a.titre}, conduite par la structure {e}, poursuit l\'objectif suivant : {a.titre}. La cible fixée était « {cible} » et le niveau de réalisation enregistré s\'élève à « {real} ». Le statut actuel est « {st} », pour un coût de mise en œuvre de {cout:,.2f}.')
+            p.add_run(f'L\'activité {a.reference or a.titre}, conduite par la structure {e}, poursuit l\'objectif suivant : {a.titre}. La cible fixée était « {cible} » et le niveau de réalisation enregistré s\'élève à « {real} ». Le statut actuel est « {st} », pour un coût de mise en œuvre de {cout:,.2f}. {nb_preuves if nb_preuves else "Aucune"} preuve{"s" if nb_preuves > 1 else ""} de réalisation {"ont été versées" if nb_preuves > 1 else "a été versée"} pour l\'année {annee}.')
 
     # Section IV. Synthèse financière
     h = doc.add_heading('IV. SYNTHÈSE FINANCIÈRE', level=1)
@@ -219,8 +221,7 @@ def _build_report_doc(plan, annee, trimestre, activites_trimestre):
 
     by_entity = {}
     for a in activites_trimestre:
-        e = (a.point_focal.entity if a.point_focal and getattr(a.point_focal, 'entity', None) else
-             a.responsable.entity if a.responsable and getattr(a.responsable, 'entity', None) else 'Sans entité')
+        e = a.get_structure()
         c = by_entity.setdefault(e, {'cout': 0.0, 'count': 0})
         c['count'] += 1
         c['cout'] += float(a.couts[annee_index] or 0) if a.couts and len(a.couts) > annee_index else 0.0
@@ -285,8 +286,10 @@ def generate_quarterly_report(plan_id, annee, trimestre, user_id=None):
         raise ValueError("Année hors de l'horizon du plan.")
 
     activites = Activite.objects.filter(
-        action__produit__effet__plan=plan
-    ).select_related('action__produit__effet', 'point_focal', 'responsable')
+        action__produit__effet__axe__plan=plan
+    ).select_related('action__produit__effet__axe', 'point_focal', 'responsable').prefetch_related('preuves').order_by(
+        'action__produit__effet__axe_id', 'action__produit__effet_id', 'action__produit_id', 'action_id', 'id'
+    )
 
     activites_trimestre = []
     for a in activites:

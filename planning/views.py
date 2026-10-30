@@ -1,5 +1,6 @@
 # Modules Django
 from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse
 from .models import PlanAction, Axe, Effet, IndicateurEffet, Produit, IndicateurProduit, Action, Activite, ActiviteLog, PreuveRealisation, QuarterlyReport
 from django.core.exceptions import ValidationError
 from .tasks import generate_quarterly_report
@@ -529,9 +530,9 @@ def plan_action_detail(request, id):
     effets = Effet.objects.filter(axe__plan=plan)
     produits = Produit.objects.filter(effet__axe__plan=plan).select_related('effet')
     actions = Action.objects.filter(produit__effet__axe__plan=plan).select_related('produit__effet')
-    activites = Activite.objects.filter(action__produit__effet__axe__plan=plan).select_related('action__produit__effet', 'point_focal')
+    activites = Activite.objects.filter(action__produit__effet__axe__plan=plan).select_related('action__produit__effet', 'point_focal', 'responsable')
     types = list(set(activite.type or "N/A" for activite in activites))
-    structures = list(set(activite.point_focal.entity if activite.point_focal and hasattr(activite.point_focal, 'entity') else "N/A" for activite in activites))
+    structures = sorted(set(activite.get_structure() for activite in activites))
     annees = [str(plan.annee_debut + i) for i in range(plan.horizon)] if plan.annee_debut and plan.horizon else []
 
     def calculate_total_cost(couts):
@@ -543,15 +544,24 @@ def plan_action_detail(request, id):
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         try:
             # Récupérer les filtres depuis la requête GET
+            axes_selectionnes = request.GET.getlist('axe')
             effets_selectionnes = request.GET.getlist('effet')
             produits_selectionnes = request.GET.getlist('produit')
-            actions_selectionnees = request.GET.getlist('action')
             types_selectionnes = request.GET.getlist('type')
             structures_selectionnees = request.GET.getlist('structure')
             annees_selectionnees = request.GET.getlist('annee')
 
-            # Filtrer les effets
+            # Filtrer les axes
+            filtered_axes = axe_list
             filtered_effets = effets
+            if axes_selectionnes:
+                filtered_axes = filtered_axes.filter(titre__in=axes_selectionnes)
+                filtered_effets = filtered_effets.filter(axe__titre__in=axes_selectionnes)
+                produits = produits.filter(effet__axe__titre__in=axes_selectionnes)
+                actions = actions.filter(produit__effet__axe__titre__in=axes_selectionnes)
+                activites = activites.filter(action__produit__effet__axe__titre__in=axes_selectionnes)
+
+            # Filtrer les effets
             if effets_selectionnes:
                 filtered_effets = filtered_effets.filter(titre__in=effets_selectionnes)
                 produits = produits.filter(effet__titre__in=effets_selectionnes)
@@ -564,16 +574,14 @@ def plan_action_detail(request, id):
                 actions = actions.filter(produit__titre__in=produits_selectionnes)
                 activites = activites.filter(action__produit__titre__in=produits_selectionnes)
 
-            # Filtrer les actions
-            if actions_selectionnees:
-                actions = actions.filter(titre__in=actions_selectionnees)
-                activites = activites.filter(action__titre__in=actions_selectionnees)
-
             # Filtrer les activités
             if types_selectionnes:
                 activites = activites.filter(type__in=types_selectionnes)
             if structures_selectionnees:
-                activites = activites.filter(point_focal__entity__in=structures_selectionnees)
+                activites = activites.filter(
+                    Q(structure__in=structures_selectionnees)
+                    | Q(structure='', point_focal__entity__in=structures_selectionnees)
+                )
 
             # Filtrer les années
             filtered_annees = annees
@@ -609,8 +617,8 @@ def plan_action_detail(request, id):
                                     'status': activite.status,
                                     'indicateur_label': activite.indicateur_label,
                                     'indicateur_reference': activite.indicateur_reference,
-                                    'structure': activite.point_focal.entity if activite.point_focal and hasattr(activite.point_focal, 'entity') else 'N/A',
-                                    'programme': activite.point_focal.program if activite.point_focal and hasattr(activite.point_focal, 'program') else 'N/A'
+                                    'structure': activite.get_structure(),
+                                    'programme': getattr(activite.point_focal, 'program', None) or 'N/A'
                                 } for activite in action_activites
                             ]
                         })
@@ -627,6 +635,7 @@ def plan_action_detail(request, id):
                     })
                 effets_data.append({
                     'id': effet.id,
+                    'axe_id': effet.axe_id,
                     'titre': effet.titre,
                     'couts': effet.couts,
                     'total_cost': calculate_total_cost(effet.couts),
@@ -636,6 +645,18 @@ def plan_action_detail(request, id):
                         for ind in effet.indicateurs.all()
                     ]
                 })
+
+            axes_data = []
+            for axe in filtered_axes:
+                axe_effets = [e for e in effets_data if e['axe_id'] == axe.id]
+                if axe_effets or not (effets_selectionnes or produits_selectionnes):
+                    axes_data.append({
+                        'id': axe.id,
+                        'titre': axe.titre,
+                        'couts': axe.couts,
+                        'total_cost': calculate_total_cost(axe.couts),
+                        'effets': axe_effets,
+                    })
 
             # Calcul du coût total global
             total_couts = []
@@ -654,9 +675,10 @@ def plan_action_detail(request, id):
 
             # Mettre à jour les filtres dépendants
             types = list(set(activite.type or 'N/A' for activite in activites))
-            structures = list(set(activite.point_focal.entity if activite.point_focal and hasattr(activite.point_focal, 'entity') else 'N/A' for activite in activites))
+            structures = sorted(set(activite.get_structure() for activite in activites))
 
             data = {
+                'axes': axes_data,
                 'effets': effets_data,
                 'produits': [{'id': p.id, 'titre': p.titre, 'couts': p.couts, 'total_cost': calculate_total_cost(p.couts)} for p in produits],
                 'actions': [{'id': a.id, 'titre': a.titre, 'couts': a.couts, 'total_cost': calculate_total_cost(a.couts)} for a in actions],
@@ -736,9 +758,9 @@ def manage_activities(request, plan_id, entity):
         return render(request, 'planning/access_denied.html', {'message': "Année invalide."})
 
     filters = Q(action__produit__effet__axe__plan=plan)
-    filters &= Q(point_focal__entity=request.user.entity)
+    filters &= Q(structure=request.user.entity) | Q(structure='', point_focal__entity=request.user.entity)
     
-    activites = Activite.objects.filter(filters).distinct()
+    activites = Activite.objects.filter(filters).distinct().prefetch_related('preuves')
 
     is_responsable = any(a.responsable == request.user for a in activites)
     is_point_focal = any(a.point_focal == request.user for a in activites)
@@ -753,8 +775,7 @@ def manage_activities(request, plan_id, entity):
         data = request.POST
         activite = get_object_or_404(Activite, id=data.get('activite_id'))
 
-        activite_entity = getattr(activite.point_focal, 'entity', None)
-        if activite_entity != request.user.entity:
+        if activite.get_structure() != request.user.entity:
             return JsonResponse({'success': False, 'message': "Activité hors de votre structure."})
 
         horizon = plan.horizon
@@ -879,6 +900,8 @@ def manage_activities(request, plan_id, entity):
             'last_modified_by': last_modified_by,
             'last_is_responsable': last_is_responsable,
             'has_responsable': a.responsable is not None,
+            'structure': a.get_structure(),
+            'nb_preuves': len(a.preuves_annee(annee)),
         })
 
     context = {
@@ -937,7 +960,7 @@ def track_execution_detail(request, plan_id):
     pao_statut = plan.statut_pao[index]
     activites = Activite.objects.filter(
         action__produit__effet__axe__plan=plan
-    ).select_related('responsable', 'point_focal', 'action__produit__effet')
+    ).select_related('responsable', 'point_focal', 'action__produit__effet').prefetch_related('preuves')
 
     # Filtrer les activités
     modified_activite_ids = []
@@ -1058,8 +1081,7 @@ def track_execution_detail(request, plan_id):
         except (TypeError, IndexError):
             trimestres_suivi = [False, False, False, False]
 
-        entity = (a.point_focal.entity if a.point_focal and hasattr(a.point_focal, 'entity') else 
-                  a.responsable.entity if a.responsable and hasattr(a.responsable, 'entity') else 'Sans entité')
+        entity = a.get_structure()
         if entity not in activites_by_entity:
             activites_by_entity[entity] = []
         
@@ -1086,6 +1108,7 @@ def track_execution_detail(request, plan_id):
             'model_status': a.status[index],
             'model_commentaire_se': a.commentaire_se[index],
             'last_modified_by': last_modified_by,
+            'nb_preuves': len(a.preuves_annee(annee)),
         })
 
     context = {
@@ -1107,99 +1130,129 @@ def operational_plan_matrix(request, plan_id, annee):
         annee = annees[0]
     annee_index = annees.index(annee)
 
+    # Filtres sélectionnés (vides = tout)
+    sel = {g: set(request.GET.getlist(g)) for g in ['axe', 'effet', 'produit', 'type', 'structure']}
+
+    def garde(groupe, valeur):
+        return not sel[groupe] or valeur in sel[groupe]
+
+    def indicateurs_annee(objet):
+        return [
+            {'label': ind.label, 'reference': ind.reference, 'cible': ind.cibles[annee_index] if ind.cibles and len(ind.cibles) > annee_index else ''}
+            for ind in objet.indicateurs.all()
+        ]
+
+    def activite_data(activite):
+        horizon = plan.horizon
+        # Initialisation des champs JSONField avec vérification d'intégrité
+        for field, default in [
+            ('realisation', ''),
+            ('couts', 0.0),
+            ('cibles', None),
+            ('etat_avancement', ''),
+            ('commentaire', ''),
+            ('commentaire_se', ''),
+            ('status', 'Non entamée'),
+            ('matrix_status', 'en cours')
+        ]:
+            current = getattr(activite, field)
+            if not current or len(current) != horizon:
+                setattr(activite, field, [default] * horizon)
+                activite.save()
+
+        return {
+            'id': activite.id,
+            'titre': activite.titre,
+            'type': activite.type or 'N/A',
+            'indicateur_label': activite.indicateur_label or 'N/A',
+            'indicateur_reference': activite.indicateur_reference or 'N/A',
+            'cible': activite.cibles[annee_index],
+            'structure': activite.get_structure(),
+            'preuves': [
+                {
+                    'type': p.get_type_display(),
+                    'libelle': p.description or p.get_type_display(),
+                    'url': p.url if p.type == 'lien' else (p.fichier.url if p.fichier else ''),
+                }
+                for p in activite.preuves_annee(annee)
+            ],
+            'cout': float(activite.couts[annee_index] or 0),
+            'realisation': activite.realisation[annee_index],
+            'etat_avancement': activite.etat_avancement[annee_index],
+            'commentaire': activite.commentaire[annee_index],
+            'commentaire_se': activite.commentaire_se[annee_index],
+            'status': activite.status[annee_index],
+            'matrix_status': activite.matrix_status[annee_index],
+            'programme': getattr(activite.point_focal, 'program', None) or 'N/A',
+        }
+
     # Pré-chargement optimisé des relations avec prefetch_related
-    effets = Effet.objects.filter(axe__plan=plan).prefetch_related(
-        'indicateurs',
-        'effet_produit__indicateurs',
-        'effet_produit__produit_action__action_activite__point_focal',
-        'effet_produit__produit_action__action_activite__responsable'
+    axes = Axe.objects.filter(plan=plan).order_by('id').prefetch_related(
+        'axe_effet__indicateurs',
+        'axe_effet__effet_produit__indicateurs',
+        'axe_effet__effet_produit__produit_action__action_activite__point_focal',
+        'axe_effet__effet_produit__produit_action__action_activite__responsable',
+        'axe_effet__effet_produit__produit_action__action_activite__preuves'
     )
-    effets_data = []
+    axes_data = []
 
-    for effet in effets:
-        produits_data = []
-        for produit in effet.effet_produit.all():
-            actions_data = []
-            for action in produit.produit_action.all():
-                activites_data = []
-                for activite in action.action_activite.all():
-                    horizon = plan.horizon
-                    # Initialisation des champs JSONField avec vérification d'intégrité
-                    for field, default in [
-                        ('realisation', ''),
-                        ('couts', 0.0),
-                        ('cibles', None),
-                        ('etat_avancement', ''),
-                        ('commentaire', ''),
-                        ('commentaire_se', ''),
-                        ('status', 'Non entamée'),
-                        ('matrix_status', 'en cours')
-                    ]:
-                        current = getattr(activite, field)
-                        if not current or len(current) != horizon:
-                            setattr(activite, field, [default] * horizon)
-                            activite.save()
-
-                    activites_data.append({
-                        'id': activite.id,
-                        'titre': activite.titre,
-                        'type': activite.type or 'N/A',
-                        'indicateur_label': activite.indicateur_label or 'N/A',
-                        'indicateur_reference': activite.indicateur_reference or 'N/A',
-                        'cible': activite.cibles[annee_index],
-                        'structure': (
-                            activite.point_focal.entity if activite.point_focal and hasattr(activite.point_focal, 'entity') else 
-                            activite.responsable.entity if activite.responsable and hasattr(activite.responsable, 'entity') else 'Sans entité'
-                        ),
-                        'cout': float(activite.couts[annee_index]),
-                        'realisation': activite.realisation[annee_index],
-                        'etat_avancement': activite.etat_avancement[annee_index],
-                        'commentaire': activite.commentaire[annee_index],
-                        'commentaire_se': activite.commentaire_se[annee_index],
-                        'status': activite.status[annee_index],
-                        'matrix_status': activite.matrix_status[annee_index],
-                        'programme': activite.point_focal.program,
+    for axe in axes:
+        if not garde('axe', axe.titre):
+            continue
+        effets_data = []
+        for effet in axe.axe_effet.all():
+            if not garde('effet', effet.titre):
+                continue
+            produits_data = []
+            for produit in effet.effet_produit.all():
+                if not garde('produit', produit.titre):
+                    continue
+                actions_data = []
+                for action in produit.produit_action.all():
+                    activites_data = [
+                        d for d in (activite_data(a) for a in action.action_activite.all())
+                        if garde('type', d['type']) and garde('structure', d['structure'])
+                    ]
+                    if activites_data:
+                        actions_data.append({
+                            'titre': action.titre,
+                            'cout': sum(a['cout'] for a in activites_data),
+                            'activites': activites_data,
+                        })
+                if actions_data:
+                    produits_data.append({
+                        'titre': produit.titre,
+                        'cout': sum(a['cout'] for a in actions_data),
+                        'actions': actions_data,
+                        'indicateurs': indicateurs_annee(produit),
                     })
-                if activites_data:
-                    actions_data.append({
-                        'titre': action.titre,
-                        'cout': sum(a['cout'] for a in activites_data),
-                        'activites': activites_data,
-                    })
-            if actions_data:
-                produits_data.append({
-                    'titre': produit.titre,
-                    'cout': sum(a['cout'] for a in actions_data),
-                    'actions': actions_data,
-                    'indicateurs': [
-                        {'label': ind.label, 'reference': ind.reference, 'cible': ind.cibles[annee_index] if ind.cibles and len(ind.cibles) > annee_index else ''}
-                        for ind in produit.indicateurs.all()
-                    ],
+            if produits_data:
+                effets_data.append({
+                    'titre': effet.titre,
+                    'cout': sum(p['cout'] for p in produits_data),
+                    'produits': produits_data,
+                    'indicateurs': indicateurs_annee(effet),
                 })
-        if produits_data:
-            effets_data.append({
-                'titre': effet.titre,
-                'cout': sum(p['cout'] for p in produits_data),
-                'produits': produits_data,
-                'indicateurs': [
-                    {'label': ind.label, 'reference': ind.reference, 'cible': ind.cibles[annee_index] if ind.cibles and len(ind.cibles) > annee_index else ''}
-                    for ind in effet.indicateurs.all()
-                ],
+        if effets_data:
+            axes_data.append({
+                'titre': axe.titre,
+                'cout': sum(e['cout'] for e in effets_data),
+                'effets': effets_data,
             })
 
     # Options de filtre (optimisées pour éviter les doublons)
+    effets = Effet.objects.filter(axe__plan=plan).distinct()
     produits = Produit.objects.filter(effet__axe__plan=plan).distinct()
-    actions = Action.objects.filter(produit__effet__axe__plan=plan).distinct()
     types = Activite.objects.filter(action__produit__effet__axe__plan=plan).values_list('type', flat=True).distinct()
-    structures = Activite.objects.filter(action__produit__effet__axe__plan=plan).values_list(
-        'point_focal__entity', 'responsable__entity'
-    ).distinct().exclude(point_focal__entity__isnull=True, responsable__entity__isnull=True)
+    structures = sorted(set(
+        a.get_structure() for a in Activite.objects.filter(action__produit__effet__axe__plan=plan).select_related('point_focal', 'responsable')
+    ))
 
     # Réponse AJAX
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return JsonResponse({
             'impact': plan.impact or 'Impact non défini',
-            'effets': effets_data,
+            'axes': axes_data,
             'annees': annees,
             'annee': annee,
             'plan_titre': plan.titre,
@@ -1209,19 +1262,19 @@ def operational_plan_matrix(request, plan_id, annee):
     context = {
         'plan': plan,
         'impact': plan.impact or 'Impact non défini',
-        'effets': effets_data,
+        'axes': axes_data,
+        'axe_list': [{'id': a.id, 'titre': a.titre} for a in axes],
         'effet_list': [{'id': e.id, 'titre': e.titre} for e in effets],
         'produit_list': [{'id': p.id, 'titre': p.titre} for p in produits],
-        'action_list': [{'id': a.id, 'titre': a.titre} for a in actions],
         'types': list(types.exclude(type__isnull=True)),
-        'structures': list(set(s[0] or s[1] for s in structures if s[0] or s[1])),
+        'structures': structures,
         'annees': annees,
         'annee': annee,
     }
     filter_groups = [
+        {'group': 'axe', 'label': 'Filtrer par axe', 'items': context['axe_list'], 'col_width': 4},
         {'group': 'effet', 'label': 'Filtrer par effet', 'items': context['effet_list'], 'col_width': 4},
         {'group': 'produit', 'label': 'Filtrer par produit', 'items': context['produit_list'], 'col_width': 4},
-        {'group': 'action', 'label': 'Filtrer par action', 'items': context['action_list'], 'col_width': 4},
         {'group': 'type', 'label': 'Filtrer par type', 'items': [{'id': t, 'titre': t} for t in context['types']], 'col_width': 3},
         {'group': 'structure', 'label': 'Filtrer par structure', 'items': [{'id': s, 'titre': s} for s in context['structures']], 'col_width': 3},
     ]
@@ -1249,6 +1302,7 @@ def rapport_word(request, plan_id, annee):
     axes = Axe.objects.filter(plan=plan).prefetch_related(
         'axe_effet__effet_produit__produit_action__action_activite__point_focal',
         'axe_effet__effet_produit__produit_action__action_activite__responsable',
+        'axe_effet__effet_produit__produit_action__action_activite__preuves',
     )
 
     # Construire la hiérarchie avec les activités classées par statut
@@ -1272,17 +1326,18 @@ def rapport_word(request, plan_id, annee):
                                     etat = ''
                                     if activite.etat_avancement and len(activite.etat_avancement) > annee_index:
                                         etat = activite.etat_avancement[annee_index]
-                                    structure = 'N/A'
-                                    if activite.point_focal and hasattr(activite.point_focal, 'entity'):
-                                        structure = activite.point_focal.entity or 'N/A'
                                     produit_data['activites'].append({
                                         'titre': activite.titre,
                                         'reference': activite.reference,
                                         'indicateur_label': activite.indicateur_label or '',
                                         'realisation': realisation,
                                         'etat_avancement': etat,
-                                        'structure': structure,
+                                        'structure': activite.get_structure(),
                                         'status': activite.status[annee_index],
+                                        'preuves': '\n'.join(
+                                            f"{p.get_type_display()} : {p.description or (p.url if p.type == 'lien' else p.fichier.name.rsplit('/', 1)[-1] if p.fichier else '')}"
+                                            for p in activite.preuves_annee(annee)
+                                        ) or 'Aucune',
                                     })
                     if produit_data['activites']:
                         effet_data['produits'].append(produit_data)
@@ -1356,13 +1411,13 @@ def rapport_word(request, plan_id, annee):
                     produit_run.font.size = Pt(11)
 
                     # Tableau des activités
-                    table = doc.add_table(rows=1, cols=5)
+                    table = doc.add_table(rows=1, cols=6)
                     table.style = 'Table Grid'
                     table.alignment = WD_TABLE_ALIGNMENT.CENTER
 
                     # En-tête
                     hdr = table.rows[0]
-                    headers = ['Réf.', 'Activité', 'Indicateur', 'Réalisation', 'Structure']
+                    headers = ['Réf.', 'Activité', 'Indicateur', 'Réalisation', 'Structure', 'Preuves']
                     for i, h in enumerate(headers):
                         cell = hdr.cells[i]
                         cell.text = h
@@ -1379,6 +1434,7 @@ def rapport_word(request, plan_id, annee):
                         row.cells[2].text = act.get('indicateur_label', '')
                         row.cells[3].text = str(act.get('realisation', ''))
                         row.cells[4].text = act.get('structure', 'N/A')
+                        row.cells[5].text = act.get('preuves', 'Aucune')
                         for cell in row.cells:
                             for paragraph in cell.paragraphs:
                                 for run in paragraph.runs:
@@ -1421,9 +1477,10 @@ def performance_matrix(request, plan_id, annee):
     )
 
     axes_data = []
-    for axe in axes:
+    for num_axe, axe in enumerate(axes, 1):
         effets_data = []
-        for effet in axe.axe_effet.all():
+        for num_effet, effet in enumerate(axe.axe_effet.all(), 1):
+            ref_effet = f"{num_axe}.{num_effet}"
             indicateurs_effet = []
             for ind in effet.indicateurs.all():
                 cible_val = ind.cibles[annee_index] if ind.cibles and len(ind.cibles) > annee_index else ''
@@ -1435,7 +1492,7 @@ def performance_matrix(request, plan_id, annee):
                 })
 
             produits_data = []
-            for produit in effet.effet_produit.all():
+            for num_produit, produit in enumerate(effet.effet_produit.all(), 1):
                 indicateurs_produit = []
                 for ind in produit.indicateurs.all():
                     cible_val = ind.cibles[annee_index] if ind.cibles and len(ind.cibles) > annee_index else ''
@@ -1447,20 +1504,20 @@ def performance_matrix(request, plan_id, annee):
                     })
                 produits_data.append({
                     'titre': produit.titre,
-                    'reference': produit.reference,
+                    'reference': f"Produit {ref_effet}.{num_produit}",
                     'indicateurs': indicateurs_produit,
                 })
 
             effets_data.append({
                 'titre': effet.titre,
-                'reference': effet.reference,
+                'reference': f"Effet {ref_effet}",
                 'indicateurs': indicateurs_effet,
                 'produits': produits_data,
             })
 
         axes_data.append({
             'titre': axe.titre,
-            'reference': axe.reference,
+            'reference': f"Axe {num_axe}",
             'effets': effets_data,
         })
 
@@ -1500,29 +1557,58 @@ def hierarchy_review(request, plan_id):
     return render(request, 'planning/hierarchy_review.html', context)
 
 
+def _annees_plan_activite(activite):
+    plan = activite.action.produit.effet.axe.plan
+    return [plan.annee_debut + i for i in range(plan.horizon)]
+
+
+def _annee_preuves(request, activite):
+    """Année demandée (GET/POST), limitée à l'horizon du plan ; par défaut la première année."""
+    annees = _annees_plan_activite(activite)
+    try:
+        annee = int(request.POST.get('annee') or request.GET.get('annee') or annees[0])
+    except (TypeError, ValueError):
+        annee = annees[0]
+    return annee if annee in annees else annees[0]
+
+
+def _url_preuves(activite_id, annee):
+    return f"{reverse('preuves_activite', args=[activite_id])}?annee={annee}"
+
+
 @login_required
 def preuves_activite(request, activite_id):
-    """Affiche les preuves d'une activité et permet d'en ajouter."""
+    """Affiche les preuves d'une activité pour une année et permet d'en ajouter."""
     activite = get_object_or_404(Activite, id=activite_id)
-    preuves = activite.preuves.all()
-    annee = request.GET.get('annee', activite.action.produit.effet.axe.plan.annee_debut if hasattr(activite, 'action') else None)
+    annee = _annee_preuves(request, activite)
+    peut_gerer = _can_manage_preuves(request.user, activite)
     form = PreuveRealisationForm(initial={'annee': annee})
 
     if request.method == 'POST':
+        if not peut_gerer:
+            messages.error(request, "Vous n'avez pas la permission d'ajouter une preuve.")
+            return redirect(_url_preuves(activite.id, annee))
         form = PreuveRealisationForm(request.POST, request.FILES)
         if form.is_valid():
             preuve = form.save(commit=False)
             preuve.activite = activite
+            preuve.annee = annee
             preuve.uploaded_by = request.user
-            preuve.save()
-            messages.success(request, 'Preuve ajoutée avec succès.')
-            return redirect(f"{request.path}?annee={preuve.annee}")
+            try:
+                preuve.full_clean()
+                preuve.save()
+                messages.success(request, 'Preuve ajoutée avec succès.')
+                return redirect(_url_preuves(activite.id, annee))
+            except ValidationError as e:
+                form.add_error(None, ' '.join(e.messages))
 
     context = {
         'activite': activite,
-        'preuves': preuves,
+        'preuves': activite.preuves.filter(annee=annee),
         'form': form,
         'annee': annee,
+        'annees': _annees_plan_activite(activite),
+        'peut_gerer': peut_gerer,
         'title': f"Preuves - {activite.reference}",
     }
     return render(request, 'planning/preuves_activite.html', context)
@@ -1532,20 +1618,34 @@ def preuves_activite(request, activite_id):
 def modifier_preuve(request, preuve_id):
     """Modifier une preuve existante."""
     preuve = get_object_or_404(PreuveRealisation, id=preuve_id)
+    activite = preuve.activite
+    if not _can_manage_preuves(request.user, activite):
+        messages.error(request, "Vous n'avez pas la permission de modifier cette preuve.")
+        return redirect(_url_preuves(activite.id, preuve.annee))
 
     if request.method == 'POST':
         form = PreuveRealisationForm(request.POST, request.FILES, instance=preuve)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Preuve modifiée avec succès.')
-            return redirect(f"/planning/activite/{preuve.activite.id}/preuves/?annee={preuve.annee}")
+            preuve = form.save(commit=False)
+            preuve.annee = _annee_preuves(request, activite)
+            try:
+                preuve.full_clean()
+                preuve.save()
+                messages.success(request, 'Preuve modifiée avec succès.')
+                return redirect(_url_preuves(activite.id, preuve.annee))
+            except ValidationError as e:
+                form.add_error(None, ' '.join(e.messages))
     else:
         form = PreuveRealisationForm(instance=preuve)
 
     context = {
-        'activite': preuve.activite,
+        'activite': activite,
+        'preuves': activite.preuves.filter(annee=preuve.annee),
         'form': form,
         'preuve': preuve,
+        'annee': preuve.annee,
+        'annees': _annees_plan_activite(activite),
+        'peut_gerer': True,
         'title': f"Modifier preuve - {preuve.description or preuve.get_type_display()}",
         'is_edit': True,
     }
@@ -1554,15 +1654,17 @@ def modifier_preuve(request, preuve_id):
 
 @login_required
 def supprimer_preuve(request, preuve_id):
-    """Supprimer une preuve."""
+    """Supprimer une preuve (POST uniquement)."""
     preuve = get_object_or_404(PreuveRealisation, id=preuve_id)
-    activite_id = preuve.activite.id
-    annee = preuve.annee
+    activite_id, annee = preuve.activite_id, preuve.annee
+    if request.method != 'POST' or not _can_manage_preuves(request.user, preuve.activite):
+        messages.error(request, "Vous n'avez pas la permission de supprimer cette preuve.")
+        return redirect(_url_preuves(activite_id, annee))
     if preuve.fichier:
         preuve.fichier.delete(save=False)
     preuve.delete()
     messages.success(request, 'Preuve supprimée avec succès.')
-    return redirect(f"/planning/activite/{activite_id}/preuves/?annee={annee}")
+    return redirect(_url_preuves(activite_id, annee))
 
 
 def _can_manage_preuves(user, activite):
@@ -1574,8 +1676,12 @@ def _can_manage_preuves(user, activite):
 
 
 def preuve_liste(request, activite_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({'success': False, 'message': 'Authentification requise.'}, status=403)
     activite = get_object_or_404(Activite, id=activite_id)
     preuves = activite.preuves.all()
+    if request.GET.get('annee'):
+        preuves = preuves.filter(annee=_annee_preuves(request, activite))
     data = []
     for p in preuves:
         data.append({
@@ -1585,6 +1691,7 @@ def preuve_liste(request, activite_id):
             'fichier_url': p.fichier.url if p.fichier else None,
             'url': p.url,
             'description': p.description or '',
+            'annee': p.annee,
             'uploaded_by': f"{p.uploaded_by.first_name} {p.uploaded_by.last_name}" if p.uploaded_by else 'Inconnu',
             'can_delete': _can_manage_preuves(request.user, activite),
         })
@@ -1610,6 +1717,8 @@ def preuve_ajouter(request, activite_id):
         annee = int(annee)
     except (TypeError, ValueError):
         return JsonResponse({'success': False, 'message': 'Année invalide.'}, status=400)
+    if annee not in _annees_plan_activite(activite):
+        return JsonResponse({'success': False, 'message': "Année hors de l'horizon du plan."}, status=400)
 
     fichier = request.FILES.get('fichier')
     url = request.POST.get('url', '').strip()

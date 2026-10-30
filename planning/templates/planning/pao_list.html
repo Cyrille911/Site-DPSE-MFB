@@ -14,28 +14,27 @@ Plans d'Actions Opérationnels (PAO) - {{ plan.titre }}
     <div id="pao-list" class="row justify-content-center">
         {% for pao in paos %}
             <div class="col-md-6 col-sm-12 mb-4 animate-slide-up" style="animation-delay: {{ forloop.counter0|mul:0.1 }}s;">
-                <div class="card shadow-lg border-orange rounded-4 h-100">
-                    <div class="card-header bg-orange text-white text-center py-3">
-                        <h4 class="card-title mb-0">PAO {{ pao.annee }}</h4>
-                    </div>
-                    <div class="card-body d-flex flex-column justify-content-center">
-                        <p class="text-muted mb-3 text-center">
-                            <span class="fw-bold">Statut :</span> 
-                            <span class="{% if pao.statut == 'En cours' %}text-success{% elif pao.statut == 'Achevé' %}text-primary{% else %}text-warning{% endif %}">
-                                {{ pao.statut }}
-                            </span>
-                        </p>
-                        <div class="d-flex justify-content-center gap-2 flex-wrap">
-                            <a href="{% if pao.statut == 'En cours' %}{% url 'manage_activities' plan.id entity %}?annee={{ pao.annee }}{% elif pao.statut == 'Achevé' %}{% url 'operational_plan_matrix' plan.id pao.annee %}{% else %}#{% endif %}" 
-                               class="btn btn-sm btn-outline-primary {% if pao.statut == 'Non entamé' %}disabled{% endif %}">
-                                Matrice opérationnelle
-                            </a>
-                            <a href="{% url 'performance_matrix' plan.id pao.annee %}" 
-                               class="btn btn-sm btn-outline-success">
-                                Cadre de performance
-                            </a>
+                <!-- Carte PAO : cliquable pour modifier les activités lorsque le PAO est en cours -->
+                <div class="card shadow-lg border-orange rounded-4 pao-card {% if pao.statut != 'En cours' %}pao-card-inactive{% endif %}"
+                     data-statut="{{ pao.statut }}">
+                    <a {% if pao.statut == 'En cours' %}href="{% url 'manage_activities' plan.id entity %}?annee={{ pao.annee }}"{% else %}aria-disabled="true"{% endif %} class="card-link">
+                        <div class="card-header bg-orange text-white text-center py-3">
+                            <h4 class="card-title mb-0">PAO {{ pao.annee }}</h4>
                         </div>
-                    </div>
+                        <div class="card-body d-flex flex-column justify-content-center">
+                            <p class="text-muted mb-0 text-center">
+                                <span class="fw-bold">Statut :</span> 
+                                <span class="{% if pao.statut == 'En cours' %}text-success{% elif pao.statut == 'Achevé' %}text-primary{% else %}text-warning{% endif %}">
+                                    {{ pao.statut }}
+                                </span>
+                            </p>
+                        </div>
+                    </a>
+                </div>
+                <!-- Boutons Matrice opérationnelle et Cadre de performance sous la carte -->
+                <div class="d-flex justify-content-center gap-2 flex-nowrap mt-2 pao-actions">
+                    <a href="{% url 'operational_plan_matrix' plan.id pao.annee %}" class="btn btn-orange btn-sm px-4 py-2 fw-bold">Matrice opérationnelle</a>
+                    <a href="{% url 'performance_matrix' plan.id pao.annee %}" class="btn btn-success btn-sm px-4 py-2 fw-bold rounded-pill">Cadre de performance</a>
                 </div>
             </div>
         {% empty %}
@@ -64,13 +63,79 @@ Plans d'Actions Opérationnels (PAO) - {{ plan.titre }}
     .text-warning { color: #ffc107 !important; }
     .fw-bold { font-weight: bold; }
 
-    /* Style des cartes */
-    .card {
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    /* Style des cartes (même comportement que la liste de suivi du suiveur-évaluateur) */
+    .pao-card {
+        position: relative;
+        background: #ffffff;
+        transition: background 0.5s ease;
+        overflow: hidden;
+        cursor: pointer;
     }
-    .card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+    .pao-card-inactive {
+        cursor: not-allowed;
+    }
+    .pao-card:hover .card-body {
+        background: #fff3e6;
+    }
+    .card-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+    .card-link:hover {
+        text-decoration: none;
+        color: inherit;
+    }
+
+    /* Texte affiché au survol */
+    .pao-card::after {
+        content: attr(data-statut);
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        font-weight: bold;
+        text-align: center;
+        opacity: 0;
+        transition: opacity 0.5s ease;
+        pointer-events: none;
+    }
+    .pao-card:hover::after {
+        opacity: 1;
+    }
+    .pao-card[data-statut="En cours"]::after {
+        content: "Modifier";
+    }
+    .pao-card[data-statut="Achevé"]::after {
+        content: "PAO achevé";
+    }
+    .pao-card[data-statut="Non entamé"]::after {
+        content: "PAO non entamé";
+    }
+
+    /* Boutons sous les cartes */
+    .btn-orange {
+        background: #ff6200;
+        color: white;
+        border: none;
+        border-radius: 50px;
+        transition: background 0.5s ease;
+    }
+    .btn-orange:hover {
+        background: #e65b00;
+        color: white;
+    }
+    .pao-actions .btn {
+        white-space: nowrap;
+        font-size: 0.85rem;
+        padding: 6px 14px !important;
     }
 
     /* Bouton de retour */

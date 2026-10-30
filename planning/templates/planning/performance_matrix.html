@@ -40,10 +40,8 @@ Matrice de Cadre de Performance - {{ plan.titre }} ({{ annee }})
                 {% for axe in axes %}
                     <!-- Ligne Axe -->
                     <tr class="table-dark">
-                        <td colspan="5" class="fw-bold fs-6">
-                            {% for a in annees %}{% if a != annee %}{% endif %}{% endfor %}
-                            <span class="text-white">Axe {{ axe.reference }} : {{ axe.titre }}</span>
-                        </td>
+                        <td class="fw-bold fs-6 text-nowrap"><span class="text-white">{{ axe.reference }}</span></td>
+                        <td colspan="4" class="fw-bold fs-6"><span class="text-white">{{ axe.titre }}</span></td>
                         {% for a in annees %}
                             {% if a != annee %}
                             <td class="table-dark"></td>
@@ -54,7 +52,7 @@ Matrice de Cadre de Performance - {{ plan.titre }} ({{ annee }})
                     {% for effet in axe.effets %}
                         <!-- Ligne Effet -->
                         <tr class="table-success">
-                            <td class="fw-bold">{{ effet.reference }}</td>
+                            <td class="fw-bold text-nowrap">{{ effet.reference }}</td>
                             <td class="fw-bold">{{ effet.titre }}</td>
                             <td colspan="3">
                                 {% for a in annees %}{% if a != annee %}{% endif %}{% endfor %}
@@ -103,7 +101,7 @@ Matrice de Cadre de Performance - {{ plan.titre }} ({{ annee }})
                         {% for produit in effet.produits %}
                             <!-- Ligne Produit -->
                             <tr class="table-warning">
-                                <td class="fw-bold">{{ produit.reference }}</td>
+                                <td class="fw-bold text-nowrap">{{ produit.reference }}</td>
                                 <td class="fw-bold ps-3">{{ produit.titre }}</td>
                                 <td colspan="3">
                                     {% for a in annees %}{% if a != annee %}{% endif %}{% endfor %}

@@ -22,10 +22,23 @@
             <p class="text-muted mb-0">
                 <strong>{{ activite.reference }}</strong> - {{ activite.titre }}
             </p>
+            <p class="text-muted small mb-0">Structure : {{ activite.get_structure }}</p>
         </div>
-        <a href="javascript:history.back()" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left me-1"></i>Retour
-        </a>
+        <div class="d-flex gap-2 align-items-center">
+            {% if not is_edit %}
+            <form method="get" class="d-flex align-items-center gap-2">
+                <label for="select-annee" class="fw-bold mb-0">Année</label>
+                <select id="select-annee" name="annee" class="form-select" onchange="this.form.submit()">
+                    {% for a in annees %}
+                        <option value="{{ a }}" {% if a == annee %}selected{% endif %}>{{ a }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+            {% endif %}
+            <a href="javascript:history.back()" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Retour
+            </a>
+        </div>
     </div>
 
     {% if messages %}
@@ -40,6 +53,7 @@
     {% endif %}
 
     <div class="row g-4">
+        {% if peut_gerer %}
         <!-- Colonne formulaire -->
         <div class="col-md-5">
             <div class="card shadow-sm">
@@ -102,12 +116,13 @@
                 </div>
             </div>
         </div>
+        {% endif %}
 
         <!-- Colonne liste des preuves -->
-        <div class="col-md-7">
+        <div class="{% if peut_gerer %}col-md-7{% else %}col-12{% endif %}">
             <div class="card shadow-sm">
                 <div class="card-header bg-light">
-                    <h5 class="mb-0"><i class="bi bi-folder2-open me-2"></i>Preuves existantes ({{ preuves.count }})</h5>
+                    <h5 class="mb-0"><i class="bi bi-folder2-open me-2"></i>Preuves {{ annee }} ({{ preuves|length }})</h5>
                 </div>
                 <div class="card-body">
                     {% for preuve in preuves %}
@@ -145,6 +160,7 @@
                                         {% endif %}
                                     </div>
                                 </div>
+                                {% if peut_gerer %}
                                 <div class="d-flex gap-1">
                                     <a href="{% url 'modifier_preuve' preuve.id %}" class="btn btn-sm btn-outline-warning" title="Modifier">
                                         <i class="bi bi-pencil"></i>
@@ -154,10 +170,12 @@
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
 
+                    {% if peut_gerer %}
                     <!-- Modale de confirmation de suppression -->
                     <div class="modal fade" id="deleteModal{{ preuve.id }}" tabindex="-1" aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered modal-sm">
@@ -171,15 +189,19 @@
                                 </div>
                                 <div class="modal-footer py-1">
                                     <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                                    <a href="{% url 'supprimer_preuve' preuve.id %}" class="btn btn-sm btn-danger">Supprimer</a>
+                                    <form method="post" action="{% url 'supprimer_preuve' preuve.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-danger">Supprimer</button>
+                                    </form>
                                 </div>
                             </div>
                         </div>
                     </div>
+                    {% endif %}
                     {% empty %}
                     <div class="text-center py-4 text-muted">
                         <i class="bi bi-folder display-4 d-block mb-2"></i>
-                        Aucune preuve enregistrée pour cette activité.
+                        Aucune preuve enregistrée pour cette activité en {{ annee }}.
                     </div>
                     {% endfor %}
                 </div>
@@ -193,6 +215,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const typeSelect = document.getElementById('id_type_preuve');
     const fieldFichier = document.getElementById('field-fichier');
     const fieldLien = document.getElementById('field-lien');
+    if (!typeSelect) return;
 
     function toggleFields() {
         if (typeSelect.value === 'lien') {

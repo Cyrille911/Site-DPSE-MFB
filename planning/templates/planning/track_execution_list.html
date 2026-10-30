@@ -34,9 +34,10 @@ Suivi des Plans d'Actions Opérationnels (PAO) - {{ plan.titre }}
                         </div>
                     </a>
                 </div>
-                <!-- Bouton Matrice Opérationnelle sous la carte -->
-                <div class="text-center mt-2">
+                <!-- Boutons Matrice Opérationnelle et Cadre de performance sous la carte -->
+                <div class="d-flex justify-content-center gap-2 flex-nowrap mt-2 pao-actions">
                     <a href="{% url 'operational_plan_matrix' plan.id pao.annee %}" class="btn btn-orange btn-sm px-4 py-2 fw-bold">Matrice Opérationnelle</a>
+                    <a href="{% url 'performance_matrix' plan.id pao.annee %}" class="btn btn-success btn-sm px-4 py-2 fw-bold rounded-pill">Cadre de performance</a>
                 </div>
             </div>
         {% empty %}
@@ -149,6 +150,12 @@ Suivi des Plans d'Actions Opérationnels (PAO) - {{ plan.titre }}
     .btn-sm {
         padding: 6px 20px;
         font-size: 1rem;
+    }
+    /* Boutons sous les cartes : sur une seule ligne, côte à côte */
+    .pao-actions .btn {
+        white-space: nowrap;
+        font-size: 0.85rem;
+        padding: 6px 14px !important;
     }
     .btn-secondary {
         border-radius: 50px;

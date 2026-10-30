@@ -28,8 +28,13 @@ Liste des Plans d'Actions Stratégiques (PAS)
                             <span class="ms-1">{{ plan.impact|truncatewords:20 }}</span>
                         </div>
                     </div>
-                    <!-- Ligne 2 : Effets, Produits, Actions, Activités -->
+                    <!-- Ligne 2 : Axes, Effets, Produits, Actions, Activités -->
                     <div class="d-flex align-items-center text-dark mb-2 line-container" style="flex-wrap: wrap;">
+                        <div class="line-item">
+                            <i class="bi bi-diagram-3 text-dark me-1"></i>
+                            <span class="fw-bold">Axes :</span> 
+                            <span class="ms-1">{{ plan.plan_axe.count }}</span>
+                        </div>
                         <div class="line-item">
                             <i class="bi bi-bar-chart text-dark me-1"></i>
                             <span class="fw-bold">Effets :</span> 

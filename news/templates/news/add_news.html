@@ -74,11 +74,12 @@
   // Lors de la soumission du formulaire, récupérer le contenu de Quill et le placer dans le champ caché
   document.querySelector('form').onsubmit = function () {
     var content = document.querySelector('#content-input');
-    content.value = quill.root.innerHTML;
+    var texte = quill.getText().trim();
+    content.value = texte ? quill.root.innerHTML : '';
 
     var resume = document.querySelector('#resume');
-    if (!resume.value.trim()) {
-      resume.value = quill.getText().slice(0, 200) + "..."; // Générer un résumé auto si vide
+    if (!resume.value.trim() && texte) {
+      resume.value = texte.length > 200 ? texte.slice(0, 200) + "..." : texte; // Générer un résumé auto si vide
     }
   };
 </script>

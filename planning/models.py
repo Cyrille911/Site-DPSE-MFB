@@ -579,6 +579,19 @@ class Activite(models.Model):
     def __str__(self):
         return f"Activité {self.reference} : {self.titre}"
 
+    def get_structure(self):
+        """Structure de l'activité (champ du modèle), avec repli sur l'entité du point focal ou du responsable."""
+        return (
+            self.structure
+            or getattr(self.point_focal, 'entity', None)
+            or getattr(self.responsable, 'entity', None)
+            or 'Sans entité'
+        )
+
+    def preuves_annee(self, annee):
+        """Preuves de réalisation rattachées à l'année donnée."""
+        return [p for p in self.preuves.all() if p.annee == int(annee)]
+
     def clean(self):
         horizon = self.action.produit.effet.axe.plan.horizon
         fields_to_check = [
