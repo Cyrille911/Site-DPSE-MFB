@@ -167,6 +167,9 @@ USE_I18N = True
 
 USE_TZ = True
 
+# Page de connexion utilisée par @login_required (la valeur par défaut /accounts/login/ n'existe pas)
+LOGIN_URL = 'connexion_membre'
+
 MEDIA_URL = '/media/'
 
 MEDIA_ROOT = BASE_DIR / 'media'

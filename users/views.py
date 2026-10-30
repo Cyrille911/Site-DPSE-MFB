@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import Group
 from django.contrib.sites.shortcuts import get_current_site
 from django.template.loader import render_to_string
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode, url_has_allowed_host_and_scheme
 from django.utils.encoding import force_bytes
 from django.utils.html import strip_tags
 from django.contrib import messages
@@ -485,6 +485,10 @@ def connexion_membre(request):
                 if user_role in allowed_roles or user.role in allowed_roles:
                     login(request, user)
                     messages.success(request, f'Bienvenue, {user.first_name} !')
+                    # Retour à la page demandée avant la connexion (ex. : publier une actualité)
+                    next_url = request.GET.get('next') or request.POST.get('next')
+                    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+                        return redirect(next_url)
                     return redirect('accueil')
                 else:
                     messages.error(request, f"Vous n'avez pas les autorisations nécessaires. Votre rôle: {user.role}")
