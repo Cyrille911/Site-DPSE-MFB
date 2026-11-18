@@ -361,7 +361,7 @@ def activer_compte_membre(request, uidb64, token):
             })
             plain_message = strip_tags(message)
             try:
-                send_mail(subject, plain_message, settings.DEFAULT_FROM_EMAIL, ['cyrille.taha@ensea.edu.ci'], html_message=message)
+                send_mail(subject, plain_message, settings.DEFAULT_FROM_EMAIL, ['support@aidn.ci'], html_message=message)
             except Exception as mail_error:
                 logger.error(f"Erreur envoi email demande activation: {mail_error}")
 
