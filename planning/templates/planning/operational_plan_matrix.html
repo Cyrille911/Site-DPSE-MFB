@@ -68,7 +68,7 @@ Matrice Opérationnelle - {{ plan.titre }} - {{ annee }}
     <!-- Tableau des statuts des activités par effet (année affichée) -->
     <div class="stats-and-download-container mx-0 animate-fade-in">
         <div class="stats-container">
-            <h3>Statut des activités par effet - {{ annee }}</h3>
+            <h3>Statut des activités par axe et par effet - {{ annee }}</h3>
             <p>Activités : <span id="visible-rows">0</span> visibles sur <span id="total-rows">0</span> au total</p>
             <div class="table-responsive">
                 <table id="cross-table" class="stats-table">
@@ -198,6 +198,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const STATUTS = ['Non entamée', 'En cours', 'Réalisée', 'Non réalisée', 'Reprogrammée', 'Supprimée'];
     const COL_STATUT = 8; // Colonne "Statut" du tableau principal
     let titresEffets = {};  // référence "a.e" -> intitulé de l'effet (rempli par renderBody)
+    let titresAxes = {};    // référence "a" -> intitulé de l'axe (rempli par renderBody)
 
     function comparerReferences(a, b) {
         const pa = a.split('.').map(Number), pb = b.split('.').map(Number);
@@ -229,21 +230,37 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // En-tête
         crossTable.querySelector('thead tr').innerHTML =
-            '<th>Effet</th>' + colonnes.map(s => `<th>${s}</th>`).join('') +
+            '<th>Axe / Effet</th>' + colonnes.map(s => `<th>${s}</th>`).join('') +
             '<th>Total</th><th>Taux de réalisation</th>';
 
-        // Une ligne par effet
-        crossTableBody.innerHTML = '';
-        const refs = Object.keys(crossData).sort(comparerReferences);
-        refs.forEach(ref => {
-            const total = colonnes.reduce((s, c) => s + (crossData[ref][c] || 0), 0);
-            const taux = total ? Math.round(100 * (crossData[ref]['Réalisée'] || 0) / total) : 0;
-            const titre = titresEffets[ref] ? ` : ${titresEffets[ref]}` : '';
+        // Ligne de comptage (axe ou effet)
+        function ligneStatuts(libelle, compte, classe) {
+            const total = colonnes.reduce((s, c) => s + (compte[c] || 0), 0);
+            const taux = total ? Math.round(100 * (compte['Réalisée'] || 0) / total) : 0;
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td>Effet ${ref}${titre}</td>` +
-                colonnes.map(c => `<td>${crossData[ref][c] || 0}</td>`).join('') +
+            if (classe) tr.className = classe;
+            tr.innerHTML = `<td>${libelle}</td>` +
+                colonnes.map(c => `<td>${compte[c] || 0}</td>`).join('') +
                 `<td>${total}</td><td>${taux} %</td>`;
             crossTableBody.appendChild(tr);
+        }
+
+        // Pour chaque axe : une ligne de synthèse de l'axe, puis une ligne par effet
+        crossTableBody.innerHTML = '';
+        const refs = Object.keys(crossData).sort(comparerReferences);
+        const refsAxes = [...new Set(refs.map(ref => ref.split('.')[0]))];
+        refsAxes.forEach(refAxe => {
+            const refsEffets = refs.filter(ref => ref.split('.')[0] === refAxe);
+            const compteAxe = {};
+            refsEffets.forEach(ref => colonnes.forEach(c => {
+                compteAxe[c] = (compteAxe[c] || 0) + (crossData[ref][c] || 0);
+            }));
+            const titreAxe = titresAxes[refAxe] ? ` : ${titresAxes[refAxe]}` : '';
+            ligneStatuts(`Axe ${refAxe}${titreAxe}`, compteAxe, 'ligne-axe');
+            refsEffets.forEach(ref => {
+                const titre = titresEffets[ref] ? ` : ${titresEffets[ref]}` : '';
+                ligneStatuts(`Effet ${ref}${titre}`, crossData[ref], 'ligne-effet');
+            });
         });
         if (refs.length === 0) {
             crossTableBody.innerHTML = `<tr><td colspan="${colonnes.length + 3}" class="text-center">Aucune activité</td></tr>`;
@@ -482,9 +499,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 <td class="impact-bg" colspan="13">Impact : ${impact}</td>
             </tr>`;
         titresEffets = {};
+        titresAxes = {};
 
         axes.forEach((axe, a) => {
             const refAxe = `${a + 1}`;
+            titresAxes[refAxe] = axe.titre;
             html += ligneHierarchie('axe', `Axe ${refAxe}`, axe.titre, axe.cout);
             axe.effets.forEach((effet, e) => {
                 const refEffet = `${refAxe}.${e + 1}`;
@@ -737,6 +756,9 @@ document.addEventListener('DOMContentLoaded', function () {
     .stats-table th, .stats-table td { border: 1px solid #ccc; padding: 8px; text-align: center; background: white; }
     .stats-table th { background: #e0e0e0; font-weight: bold; }
     .stats-table tfoot th, .stats-table tfoot td { background: #d0d0d0; font-weight: bold; }
+    .stats-table tr.ligne-axe td { background: #e2d9f3; font-weight: bold; }
+    .stats-table tr.ligne-axe td:first-child, .stats-table tr.ligne-effet td:first-child { text-align: left; }
+    .stats-table tr.ligne-effet td:first-child { padding-left: 24px; }
     .table-responsive { max-height: 300px; overflow-y: auto; }
 
     .btn-orange { background: #ff6200; color: white; border: none; border-radius: 25px; padding: 6px 15px; }
