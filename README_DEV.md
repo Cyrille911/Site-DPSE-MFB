@@ -6,7 +6,7 @@ Le plus simple est d'utiliser Docker : le service `db` du `docker-compose.yml`
 démarre PostgreSQL 16 avec les identifiants du `.env`.
 
 ```bash
-cp .env.local .env     # puis renseigner DB_PASSWORD, SECRET_KEY, EMAIL_*
+cp env.template .env   # puis renseigner DB_PASSWORD, SECRET_KEY, EMAIL_*
 docker compose up -d --build
 docker compose exec web python manage.py migrate
 docker compose exec web python manage.py createsuperuser

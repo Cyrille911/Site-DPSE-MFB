@@ -25,7 +25,7 @@ fi
 # Vérifier le fichier .env
 if [ ! -f .env ]; then
     echo "ERREUR: Fichier .env manquant!"
-    echo "Copiez .env.example vers .env et configurez vos variables."
+    echo "Copiez env.template vers .env et configurez vos variables."
     exit 1
 fi
 
