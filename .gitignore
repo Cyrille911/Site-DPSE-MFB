@@ -56,4 +56,6 @@ Dockerfile
 # Archives locales
 *.tar.gz
 *.tar
-*.zip
+*.zipbackups/
+
+backups/

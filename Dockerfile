@@ -8,11 +8,10 @@ ENV PYTHONUNBUFFERED=1
 # Répertoire de travail
 WORKDIR /app
 
-# Installer les dépendances système pour MySQL
+# Installer les dépendances système pour PostgreSQL
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
-    default-libmysqlclient-dev \
-    pkg-config \
+    libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Copier les requirements et installer les dépendances Python

@@ -1,58 +1,37 @@
 # Guide de Développement Local - DPSE
 
-## Configuration MySQL pour le développement
+## Base de données PostgreSQL (développement)
 
-### 1. Installation de MySQL
-
-**Sur Ubuntu/Debian :**
-```bash
-sudo apt update
-sudo apt install mysql-server
-sudo systemctl start mysql
-sudo systemctl enable mysql
-```
-
-**Sur macOS :**
-```bash
-brew install mysql
-brew services start mysql
-```
-
-**Sur Windows :**
-Télécharger et installer MySQL depuis https://dev.mysql.com/downloads/mysql/
-
-### 2. Configuration de la base de données
+Le plus simple est d'utiliser Docker : le service `db` du `docker-compose.yml`
+démarre PostgreSQL 16 avec les identifiants du `.env`.
 
 ```bash
-# Connexion à MySQL
-sudo mysql -u root
-
-# Création de la base de données
-CREATE DATABASE dpse_dev CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
-# Création de l'utilisateur
-CREATE USER 'root'@'localhost' IDENTIFIED BY 'rootpassword';
-
-# Attribution des permissions
-GRANT ALL PRIVILEGES ON dpse_dev.* TO 'root'@'localhost';
-FLUSH PRIVILEGES;
-EXIT;
+cp .env.local .env     # puis renseigner DB_PASSWORD, SECRET_KEY, EMAIL_*
+docker compose up -d --build
+docker compose exec web python manage.py migrate
+docker compose exec web python manage.py createsuperuser
 ```
 
-### 3. Configuration du projet
+Le site est accessible sur http://localhost:8001 ; PostgreSQL est exposé sur
+le port hôte 5433 (`psql -h localhost -p 5433 -U dpse_user dpse_dev`).
 
-Copier le fichier d'environnement :
-```bash
-cp .env.local .env
+### Sans Docker (PostgreSQL installé en local)
+
+```sql
+CREATE USER dpse_user WITH PASSWORD 'motdepasse';
+CREATE DATABASE dpse_dev OWNER dpse_user;
 ```
 
-Le fichier `.env.local` est déjà configuré pour MySQL local :
+Dans `.env`, mettre `DB_HOST=localhost` et `DB_PORT=5432`.
+
+### Variables du fichier `.env`
+
 ```
 DB_NAME=dpse_dev
-DB_USER=root
-DB_PASSWORD=rootpassword
-DB_HOST=localhost
-DB_PORT=3306
+DB_USER=dpse_user
+DB_PASSWORD=...
+DB_HOST=db          # localhost sans Docker
+DB_PORT=5432
 ```
 
 ### 4. Installation des dépendances Python
@@ -66,7 +45,6 @@ venv\Scripts\activate  # Windows
 
 # Installation des dépendances
 pip install -r requirements.txt
-pip install mysqlclient
 ```
 
 ### 5. Migration de la base de données
@@ -99,12 +77,16 @@ docker compose -f docker-compose.prod.yml build
 docker compose -f docker-compose.prod.yml up -d
 ```
 
-## Architecture de la base de données MySQL
+## Base de données en production
 
-Le projet utilise MySQL en production et en développement local. Les variables d'environnement sont automatiquement détectées :
+PostgreSQL 16 (service `db` de `docker-compose.prod.yml`), données dans le
+volume `postgres_data`. Les variables `DB_*` viennent du `.env` du serveur.
 
-- **Production (Docker)** : Variables définies dans docker-compose.prod.yml
-- **Développement local** : Variables du fichier `.env.local`
+Sauvegarde / restauration :
+```bash
+docker compose -f docker-compose.prod.yml exec db pg_dump -U $DB_USER $DB_NAME > backup.sql
+docker compose -f docker-compose.prod.yml exec -T db psql -U $DB_USER $DB_NAME < backup.sql
+```
 
 ## Optimisation Responsives
 
@@ -121,7 +103,6 @@ Les classes Bootstrap sont utilisées pour une responsivité optimale :
 
 ## Points d'attention
 
-1. **MySQL requis** : Le projet ne fonctionne plus avec SQLite
-2. **Variables d'environnement** : Vérifier que `.env` est correctement configuré
-3. **Permissions MySQL** : L'utilisateur doit avoir les droits sur la base `dpse_dev`
-4. **Port MySQL** : Par défaut 3306, à vérifier si personnalisé
+1. **PostgreSQL requis** : le projet ne fonctionne ni avec SQLite ni avec MySQL
+2. **Variables d'environnement** : vérifier que `.env` est correctement configuré
+3. **Après modification du `.env`** : `docker compose up -d --force-recreate` (un simple `restart` ne relit pas les variables)
